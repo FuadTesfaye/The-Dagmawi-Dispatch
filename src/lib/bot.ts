@@ -3,7 +3,7 @@ import { db } from "@/db";
 import { subscribers, posts, guesses, userChannels } from "@/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { summarizeDay } from "@/lib/summarize";
-import { generateRoast, generateExcuse } from "@/lib/roasts";
+import { generatePersonalizedRoast, generateExcuse } from "@/lib/roasts";
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 if (!token) throw new Error("TELEGRAM_BOT_TOKEN is missing");
@@ -311,9 +311,12 @@ bot.command("roast", async (ctx) => {
     if (!ctx.from) return;
     const channel = await getUserChannel(String(ctx.from.id));
 
-    const roast = generateRoast(channel);
-    await ctx.reply(`🔥 *Royal Roast:*\n\n${roast}`, { parse_mode: "Markdown" });
+    await ctx.reply(`🔥 *Analyzing @${channel}'s posts for maximum destruction...*`, { parse_mode: "Markdown" });
+    
+    const roast = await generatePersonalizedRoast(channel);
+    await ctx.reply(`🔥 *Royal Roast of @${channel}:*\n\n${roast}`, { parse_mode: "Markdown" });
   } catch (err) {
+    console.error("roast error:", err);
     await ctx.reply("🔥 Even the roast failed. That's how much the internet broke today.");
   }
 });
