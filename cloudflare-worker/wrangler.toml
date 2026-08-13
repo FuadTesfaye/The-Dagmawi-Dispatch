@@ -1,0 +1,6 @@
+name = "supabase-load-balancer"
+main = "src/index.ts"
+compatibility_date = "2023-12-01"
+
+[placement]
+mode = "smart"
