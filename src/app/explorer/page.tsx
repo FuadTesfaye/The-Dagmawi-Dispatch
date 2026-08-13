@@ -41,7 +41,7 @@ export default async function HomePage() {
         {EXAMPLES.map((ex) => (
           <Link
             key={ex}
-            href={`/search?q=${encodeURIComponent(ex)}`}
+            href={`/explorer/search?q=${encodeURIComponent(ex)}`}
             className="rounded border border-border px-2 py-1 transition-colors hover:border-accent/40 hover:text-accent"
           >
             {ex}
@@ -53,7 +53,7 @@ export default async function HomePage() {
         <div className="mb-3 flex items-center justify-between">
           <span className="mono-label">browse by category</span>
           <Link
-            href="/categories"
+            href="/explorer/categories"
             className="font-mono text-xs text-muted hover:text-accent"
           >
             all →
@@ -74,7 +74,7 @@ export default async function HomePage() {
             {categories.map((c) => (
               <Link
                 key={c.category}
-                href={`/categories#${c.category}`}
+                href={`/explorer/categories#${c.category}`}
                 className="panel flex items-center justify-between px-3 py-2.5 transition-colors hover:border-border-bright hover:bg-surface-2/60"
               >
                 <span className="text-sm text-fg">{categoryLabel(c.category)}</span>

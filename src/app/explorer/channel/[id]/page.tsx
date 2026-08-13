@@ -36,7 +36,7 @@ export default async function ChannelPage({
   return (
     <div className="mx-auto max-w-3xl">
       <Link
-        href="/search"
+        href="/explorer/search"
         className="font-mono text-xs text-muted hover:text-accent"
       >
         ← back to search

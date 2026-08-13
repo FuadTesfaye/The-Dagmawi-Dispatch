@@ -6,11 +6,11 @@ import { useState } from "react";
 import { StarButton } from "./StarButton";
 
 const LINKS = [
-  { href: "/search", label: "search" },
-  { href: "/categories", label: "categories" },
-  { href: "/graph", label: "graph" },
-  { href: "/dashboard", label: "dashboard" },
-  { href: "/docs", label: "docs" },
+  { href: "/explorer/search", label: "search" },
+  { href: "/explorer/categories", label: "categories" },
+  { href: "/explorer/graph", label: "graph" },
+  { href: "/explorer/dashboard", label: "dashboard" },
+  { href: "/explorer/docs", label: "docs" },
 ];
 
 export function TopBar() {
@@ -20,7 +20,7 @@ export function TopBar() {
     <header className="relative border-b border-border py-4">
       <div className="flex items-center justify-between gap-2">
         <Link
-          href="/"
+          href="/explorer"
           className="group flex min-w-0 items-center gap-2.5"
           onClick={() => setOpen(false)}
         >

@@ -45,7 +45,7 @@ export default async function CategoriesPage() {
               <Link
                 key={c.category}
                 id={c.category}
-                href={`/search?q=${encodeURIComponent(c.category)}`}
+                href={`/explorer/search?q=${encodeURIComponent(c.category)}`}
                 className="group panel flex items-center justify-between p-4 transition-colors hover:border-border-bright hover:bg-surface-2/60"
               >
                 <div>

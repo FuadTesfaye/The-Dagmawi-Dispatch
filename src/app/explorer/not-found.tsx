@@ -11,7 +11,7 @@ export default function NotFound() {
         It may not have been crawled yet, or the id is wrong.
       </p>
       <Link
-        href="/"
+        href="/explorer"
         className="mt-6 inline-block rounded border border-accent/40 bg-accent/10 px-4 py-2 font-mono text-xs text-accent hover:bg-accent/20"
       >
         ← back to search
