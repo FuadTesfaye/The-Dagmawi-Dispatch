@@ -1,0 +1,45 @@
+[
+  {
+    "folderName": {
+      "text": "Personal",
+      "entities": [],
+      "className": "TextWithEntities"
+    },
+    "channels": [],
+    "channelCount": 0
+  },
+  {
+    "folderName": {
+      "text": "Class",
+      "entities": [],
+      "className": "TextWithEntities"
+    },
+    "channels": [
+      {
+        "title": "EPSU online market",
+        "username": "EPSUonliemart"
+      },
+      {
+        "title": "Module For All Freshman Courses",
+        "username": "modulesection3"
+      },
+      {
+        "title": "Ethiopian Public Service University Muslim Students' Jema'a‼",
+        "username": null
+      },
+      {
+        "title": "Ethiopian Public Service University",
+        "username": "epsutelegram"
+      },
+      {
+        "title": "5 Million and SSS courses freshman",
+        "username": "EPSUSSS"
+      },
+      {
+        "title": "EPSU NS5 (111)",
+        "username": null
+      }
+    ],
+    "channelCount": 6
+  }
+]
