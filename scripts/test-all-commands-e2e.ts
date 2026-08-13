@@ -11,19 +11,61 @@ const botUsername = "BabisummarizeBot";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function fetchBotReplies(client: TelegramClient, expectedCount: number, afterMessageId: number, timeoutMs: number = 20000) {
+type StepResult = { cmd: string; ok: boolean; replies: string[]; error?: string };
+
+async function fetchBotReplies(
+  client: TelegramClient,
+  expectedCount: number,
+  afterMessageId: number,
+  timeoutMs: number,
+) {
   const startTime = Date.now();
-  let replies: any[] = [];
+  let replies: { id: number; message: string }[] = [];
   while (Date.now() - startTime < timeoutMs) {
-    const messages = await client.getMessages(botUsername, { limit: 10 });
-    // Filter incoming messages that came after our command
-    replies = messages.filter(m => !m.out && m.id > afterMessageId);
-    if (replies.length >= expectedCount) {
-      break;
-    }
+    const messages = await client.getMessages(botUsername, { limit: 15 });
+    replies = messages
+      .filter((m) => !m.out && m.id > afterMessageId && m.message)
+      .map((m) => ({ id: m.id, message: m.message! }));
+    if (replies.length >= expectedCount) break;
     await sleep(2000);
   }
   return replies;
+}
+
+function preview(text: string, max = 180): string {
+  const flat = text.replace(/\n/g, " | ");
+  return flat.length > max ? flat.slice(0, max) + "..." : flat;
+}
+
+async function runCommand(
+  client: TelegramClient,
+  cmd: string,
+  expected: number,
+  wait: number,
+): Promise<StepResult> {
+  console.log(`\n▶️  ${cmd}`);
+  try {
+    const sentMsg = await client.sendMessage(botUsername, { message: cmd });
+    const replies = await fetchBotReplies(client, expected, sentMsg.id, wait);
+    const texts = replies.map((r) => r.message);
+
+    for (const text of texts) {
+      console.log(`   🤖 ${preview(text)}`);
+    }
+
+    const ok = texts.length >= expected && texts.every((t) => t.length > 0);
+    if (!ok) {
+      console.log(`   ❌ Expected ${expected} reply(ies), got ${texts.length}`);
+    } else {
+      console.log(`   ✅ OK (${texts.length} reply)`);
+    }
+
+    return { cmd, ok, replies: texts, error: ok ? undefined : `got ${texts.length}/${expected}` };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.log(`   ❌ Error: ${msg}`);
+    return { cmd, ok: false, replies: [], error: msg };
+  }
 }
 
 async function run() {
@@ -31,52 +73,46 @@ async function run() {
   const client = new TelegramClient(stringSession, apiId, apiHash, { connectionRetries: 5 });
   await client.connect();
 
-  console.log("✅ Connected. Testing ALL commands on deployed bot...\n");
+  console.log("✅ Connected to deployed bot @" + botUsername);
+  console.log("   Webhook: https://the-dagmawi-dispatch.vercel.app/api/telegram\n");
 
-  const testChannels = ["selfmadecoder", "Fuadbuild"];
+  const results: StepResult[] = [];
 
-  for (const channel of testChannels) {
-    console.log(`\n${"=".repeat(50)}`);
-    console.log(`🧪 TESTING CHANNEL: @${channel}`);
-    console.log(`${"=".repeat(50)}\n`);
+  // Channel switch (may include onboarding roast — allow 1 reply minimum)
+  results.push(await runCommand(client, "/channel @selfmadecoder", 1, 30000));
 
-    const commands = [
-      { cmd: `/channel @${channel}`, expected: 1, wait: 8000 },
-      { cmd: "/start", expected: 1, wait: 8000 },
-      { cmd: "/today", expected: 1, wait: 20000 }, // /today might trigger summarize AI
-      { cmd: "/babiometer", expected: 1, wait: 8000 },
-      { cmd: "/guess 50", expected: 1, wait: 8000 },
-      { cmd: "/excuse", expected: 1, wait: 8000 },
-      { cmd: "/roast", expected: 2, wait: 25000 } // Expects loading message + roast
-    ];
+  results.push(await runCommand(client, "/start", 1, 10000));
+  results.push(await runCommand(client, "/today", 1, 35000));
+  results.push(await runCommand(client, "/yesterday", 1, 35000));
+  results.push(await runCommand(client, "/babiometer", 1, 10000));
+  results.push(await runCommand(client, "/guess 50", 1, 10000));
+  results.push(await runCommand(client, "/excuse", 1, 10000));
+  // One-liner roast — single reply, no loading message
+  results.push(await runCommand(client, "/roast", 1, 25000));
+  results.push(await runCommand(client, "/channel", 1, 10000));
+  results.push(await runCommand(client, "/subscribe", 1, 10000));
+  results.push(await runCommand(client, "/unsubscribe", 1, 10000));
 
-    for (const step of commands) {
-      console.log(`▶️ Sending: ${step.cmd}`);
-      const sentMsg = await client.sendMessage(botUsername, { message: step.cmd });
-      
-      const replies = await fetchBotReplies(client, step.expected, sentMsg.id, step.wait);
-      
-      if (replies.length > 0) {
-        // Reverse to show chronological order
-        for (const reply of replies.reverse()) {
-          const textPreview = reply.message.length > 200 ? reply.message.substring(0, 200) + "..." : reply.message;
-          console.log(`   🤖 Bot: ${textPreview.replace(/\n/g, " | ")}`);
-        }
-      } else {
-         console.log(`   ⚠️ Timeout waiting for bot reply to ${step.cmd}`);
-      }
-      await sleep(2000);
-    }
-  }
-
-  // Restore channel to dagmawi_babi
-  console.log("\n🧹 Restoring channel to @dagmawi_babi");
-  await client.sendMessage(botUsername, { message: "/channel @dagmawi_babi" });
-  await sleep(3000);
+  // Restore default channel
+  await runCommand(client, "/channel @dagmawi_babi", 1, 30000);
 
   await client.disconnect();
-  console.log("\n✅ E2E tests complete!");
+
+  const passed = results.filter((r) => r.ok).length;
+  const failed = results.filter((r) => !r.ok);
+
+  console.log("\n" + "=".repeat(50));
+  console.log(`E2E results: ${passed}/${results.length} passed`);
+  if (failed.length > 0) {
+    console.log("Failed:");
+    for (const f of failed) console.log(`  - ${f.cmd}: ${f.error}`);
+    process.exit(1);
+  }
+  console.log("🎉 All deployed bot commands passed!");
   process.exit(0);
 }
 
-run().catch(console.error);
+run().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

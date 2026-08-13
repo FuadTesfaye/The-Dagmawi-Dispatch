@@ -128,11 +128,11 @@ async function main() {
   const { generateStaticRoast, generateExcuse } = await import('../src/lib/roasts.js');
 
   const roast = generateStaticRoast('dagmawi_babi');
-  ok(`roast generated for dagmawi_babi`, typeof roast === 'string' && roast.length > 20);
-  console.log(`  Roast: "${roast.slice(0, 100)}..."`);
+  ok(`roast generated for dagmawi_babi`, typeof roast === 'string' && roast.length > 0 && roast.length <= 80 && !roast.includes('\n'));
+  console.log(`  Roast: "${roast}"`);
 
   const roastOther = generateStaticRoast('cooliocodes');
-  ok(`roast works for other channels`, typeof roastOther === 'string' && roastOther.length > 20);
+  ok(`roast works for other channels`, typeof roastOther === 'string' && roastOther.length > 0 && roastOther.length <= 80);
 
   const excuse = generateExcuse('dagmawi_babi');
   ok(`excuse generated`, typeof excuse === 'string' && excuse.length > 10);

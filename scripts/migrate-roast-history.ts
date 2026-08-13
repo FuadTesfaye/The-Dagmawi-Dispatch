@@ -1,9 +1,19 @@
-import "dotenv/config";
+import * as fs from "fs";
+
+const envContent = fs.readFileSync(".env.local", "utf8");
+for (const line of envContent.split("\n")) {
+  const m = line.match(/^([A-Z_0-9]+)="?([^"#]*)"?\s*$/);
+  if (m && m[1] && m[2]) process.env[m[1]] = m[2].trim();
+}
+
 import postgres from "postgres";
 
-const sql = postgres(process.env.DATABASE_URL!, { prepare: false });
-
 async function run() {
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL not set");
+
+  const sql = postgres(url, { prepare: false, connect_timeout: 15 });
+
   await sql`
     CREATE TABLE IF NOT EXISTS roast_history (
       id SERIAL PRIMARY KEY,
@@ -26,7 +36,7 @@ async function run() {
   process.exit(0);
 }
 
-run().catch(err => {
+run().catch((err) => {
   console.error("Migration error:", err);
   process.exit(1);
 });

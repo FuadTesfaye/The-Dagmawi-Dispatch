@@ -3,7 +3,8 @@ import { db } from "@/db";
 import { subscribers, posts, guesses, userChannels } from "@/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { summarizeDay } from "@/lib/summarize";
-import { generatePersonalizedRoast, generateExcuse } from "@/lib/roasts";
+import { generateDailyRoast, generateOnboardingRoast, generateExcuse } from "@/lib/roasts";
+import { ensureChannelScraped } from "@/lib/telegram/scraper";
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 if (!token) throw new Error("TELEGRAM_BOT_TOKEN is missing");
@@ -108,9 +109,22 @@ bot.command("channel", async (ctx) => {
       set: { channel: cleanUsername, updated_at: new Date() },
     });
 
+    await ensureChannelScraped(cleanUsername);
+
+    let onboardingRoast = "";
+    try {
+      onboardingRoast = await generateOnboardingRoast(cleanUsername);
+    } catch (err) {
+      console.error("onboarding roast error:", err);
+    }
+
+    const roastLine = onboardingRoast
+      ? `\n\n🔥 _First impression:_ ${onboardingRoast}`
+      : "";
+
     await ctx.reply(
       `✅ *Channel Updated!*\n\n` +
-      `You are now tracking *@${cleanUsername}*.\n\n` +
+      `You are now tracking *@${cleanUsername}*.${roastLine}\n\n` +
       `_Note: Our scribes fetch scrolls every few hours. If this is a new channel, it may take a little while for the archives to populate._`,
       { parse_mode: "Markdown" }
     );
@@ -314,16 +328,8 @@ bot.command("roast", async (ctx) => {
     if (!ctx.from) return;
     const channel = await getUserChannel(String(ctx.from.id));
 
-    await ctx.reply(`🔥 Analyzing @${channel}'s posts for maximum destruction...`);
-    
-    const roast = await generatePersonalizedRoast(channel);
-    
-    // Try with Markdown first, fall back to plain text if AI content has bad formatting
-    try {
-      await ctx.reply(`🔥 *Royal Roast of @${channel}:*\n\n${roast}`, { parse_mode: "Markdown" });
-    } catch {
-      await ctx.reply(`🔥 Royal Roast of @${channel}:\n\n${roast}`);
-    }
+    const roast = await generateDailyRoast(channel);
+    await ctx.reply(`🔥 ${roast}`);
   } catch (err) {
     console.error("roast error:", err);
     await ctx.reply("🔥 Even the roast failed. That's how much the internet broke today.");
