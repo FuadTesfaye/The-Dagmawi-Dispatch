@@ -35,3 +35,12 @@ export const ingestionCursor = pgTable('ingestion_cursor', {
   last_message_id: integer('last_message_id').notNull(),
   last_synced_at: timestamp('last_synced_at', { withTimezone: true }).defaultNow(),
 });
+
+export const guesses = pgTable('guesses', {
+  id: text('id').primaryKey(), // `${local_date}:${telegram_user_id}`
+  local_date: date('local_date').notNull(),
+  telegram_user_id: varchar('telegram_user_id', { length: 100 }).notNull(),
+  display_name: varchar('display_name', { length: 200 }).notNull(),
+  guess: integer('guess').notNull(),
+  created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
