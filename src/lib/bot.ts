@@ -64,7 +64,8 @@ bot.command("start", async (ctx) => {
     `/channel — Select a different channel to track\n` +
     `/subscribe — Auto-deliver the daily digest\n` +
     `/unsubscribe — Leave the kingdom\n` +
-    `/babiometer — How loud are they today?\n\n` +
+    `/babiometer — How loud are they today?\n` +
+    `/recommend — Hyper-personalized channel suggestions\n\n` +
     `🎭  *ENTERTAINMENT*\n` +
     `━━━━━━━━━━━━━━━━━━━━━━━━\n` +
     `/roast — Affectionately roast them\n` +
@@ -455,6 +456,52 @@ bot.command("streak", async (ctx) => {
   );
 });
 
+// ─── /recommend ───────────────────────────────────────────────────
+bot.command("recommend", async (ctx) => {
+  try {
+    if (!ctx.from) return;
+    const channel = await getUserChannel(String(ctx.from.id));
+    
+    await ctx.reply(`🔍 Consulting the Royal Archives to find channels similar to @${channel}...`);
+    
+    const { searchDb } = await import("@/db");
+    const { sql } = await import("drizzle-orm");
+    
+    // Query the graph to find out who this channel mentions the most!
+    const query = sql`
+      SELECT target_username, sum(weight) as total_weight
+      FROM channel_edges 
+      WHERE source_id IN (SELECT id FROM channels WHERE lower(username) = lower(${channel}))
+      GROUP BY target_username
+      ORDER BY total_weight DESC
+      LIMIT 3
+    `;
+    
+    const result = await searchDb.execute(query);
+    
+    if (result.length === 0) {
+      await ctx.reply(`🤷‍♂️ The scribes couldn't find any connections for @${channel} yet. Try again later!`);
+      return;
+    }
+    
+    const recs = result.map((r: any, i: number) => {
+      const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉";
+      return `${medal} *@${r.target_username}* (Mentioned ${r.total_weight} times)`;
+    }).join("\n\n");
+    
+    await ctx.reply(
+      `🎯 *Hyper-Personalized Recommendations*\n\n` +
+      `Because you follow *@${channel}*, you might also enjoy these channels in the same community:\n\n` +
+      `${recs}\n\n` +
+      `_Type \`/channel @username\` to start tracking one of these!_`,
+      { parse_mode: "Markdown" }
+    );
+  } catch (err) {
+    console.error("recommend error:", err);
+    await ctx.reply("⚠️ The recommendation engine overheated. Try again later.");
+  }
+});
+
 // ─── FALLBACK HANDLER ───────────────────────────────────────────
 bot.on("message", async (ctx) => {
   // If the user sent a valid command that wasn't matched above,
@@ -476,7 +523,8 @@ bot.on("message", async (ctx) => {
     `🐴 /yesterday — Yesterday's summary\n` +
     `🎲 /guess — Bet on the post count\n` +
     `📡 /channel — Switch the channel you track\n` +
-    `🎺 /babiometer — Check the chaos level\n\n` +
+    `🎺 /babiometer — Check the chaos level\n` +
+    `🎯 /recommend — Hyper-personalized suggestions\n\n` +
     `_Hit the / menu button to see all commands._`,
     { parse_mode: "Markdown" }
   );
