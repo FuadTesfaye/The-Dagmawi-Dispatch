@@ -1,9 +1,9 @@
-import Groq from "groq-sdk";
 import { readDb, writeDb } from "@/db";
 import { posts, roastHistory } from "@/db/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { ensureChannelScraped } from "./telegram/scraper";
 import { aiPool } from "./concurrency-pool";
+import { createGroqCompletion } from "./groq-pool";
 import {
   ROAST_SYSTEM_PROMPT,
   CHANNEL_ONBOARDING_ROAST_PROMPT,
@@ -13,14 +13,6 @@ import {
 const MODEL = "llama-3.3-70b-versatile";
 const MAX_WORDS = 12;
 const RECENT_ROAST_LIMIT = 10;
-
-let _groq: Groq | null = null;
-function getGroq(): Groq {
-  if (!_groq) {
-    _groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-  }
-  return _groq;
-}
 
 function getEATDateStr(offsetDays = 0): string {
   const now = new Date();
@@ -149,7 +141,7 @@ function pickFallbackRoast(n: number, recent: string[]): string {
 async function callGroqRoast(systemPrompt: string, extraUserHint?: string): Promise<string | null> {
   try {
     return await aiPool.run(async () => {
-      const completion = await getGroq().chat.completions.create({
+      const completion = await createGroqCompletion({
         messages: [
           { role: "system", content: systemPrompt },
           ...(extraUserHint ? [{ role: "user" as const, content: extraUserHint }] : []),

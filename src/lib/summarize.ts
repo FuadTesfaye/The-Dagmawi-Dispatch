@@ -1,25 +1,15 @@
-import Groq from "groq-sdk";
 import { writeDb, withReadDb } from "@/db";
 import { posts, dailySummaries } from "@/db/schema";
 import { eq, and, asc } from "drizzle-orm";
 import { ensureChannelScraped } from "./telegram/scraper";
 import { aiPool } from "./concurrency-pool";
+import { createGroqCompletion } from "./groq-pool";
 
 const MODEL = "llama-3.3-70b-versatile";
 /** Bumped when prompt/style changes so cached summaries regenerate. */
 export const SUMMARY_LANGUAGE = "en-clean";
 
 const inflightSummaries = new Map<string, Promise<string>>();
-
-// Lazy-load the Groq client
-let groqClient: Groq | null = null;
-function getGroq(): Groq {
-  if (!groqClient) {
-    if (!process.env.GROQ_API_KEY) throw new Error("GROQ_API_KEY is missing");
-    groqClient = new Groq({ apiKey: process.env.GROQ_API_KEY });
-  }
-  return groqClient;
-}
 
 // Format the posts into a text blob
 function formatPostsForPrompt(dayPosts: any[]) {
@@ -79,7 +69,7 @@ Rules:
 - Keep it short: 3–5 bullet points, or 2 compact paragraphs. About 80–100 words max.`;
 
   const summary = await aiPool.run(async () => {
-    const completion = await getGroq().chat.completions.create({
+    const completion = await createGroqCompletion({
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: `Here are the posts for ${localDate}:\n\n${postsText}` },

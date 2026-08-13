@@ -2,7 +2,7 @@ import "dotenv/config";
 import { db } from "../src/db";
 import { posts, dailySummaries } from "../src/db/schema";
 import { eq, asc } from "drizzle-orm";
-import Groq from "groq-sdk";
+import { createGroqCompletion } from "../src/lib/groq-pool";
 
 const MODEL = "llama-3.3-70b-versatile";
 
@@ -32,8 +32,7 @@ async function run() {
   
   // 3. Test Groq with new model
   console.log("\n--- Testing Groq API with new model ---");
-  const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-  const completion = await groq.chat.completions.create({
+  const completion = await createGroqCompletion({
     messages: [
       { role: "system", content: "You are a helpful assistant. Respond in one sentence." },
       { role: "user", content: "Say hello." }
@@ -63,7 +62,7 @@ Group by topic rather than just listing posts in order. Preserve named entities,
 Speak like a self-important town crier. Weave in Amharic words naturally (Selam, Betam, Ayzosh, Chigger yellem) — first use gets a parenthetical translation.
 Be slightly dramatic but affectionate. Do not include any generic intro, just the royal summary.`;
 
-    const summaryCompletion = await groq.chat.completions.create({
+    const summaryCompletion = await createGroqCompletion({
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: `Here are the posts for ${testDate}:\n\n${postsText}` }
