@@ -3,27 +3,14 @@ import { db } from "@/db";
 import { subscribers, posts, guesses, userChannels } from "@/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { summarizeDay } from "@/lib/summarize";
+import { generateRoast } from "@/lib/roasts";
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 if (!token) throw new Error("TELEGRAM_BOT_TOKEN is missing");
 
 export const bot = new Bot(token);
 
-// ─── ROAST POOL ─────────────────────────────────────────────────
-const ROASTS = [
-  "Babi posted 37 times today. That's not a channel, that's a hostage situation for your notification bar.",
-  "Dagmawi the Second has decreed 28 messages before noon. Even his phone is filing for workers' comp.",
-  "I tried to summarize his posts but my AI asked for hazard pay. Ayzosh (take courage), we'll get through this.",
-  "He posts so much, archaeologists in 3026 will assume he was an entire news agency, not one man with WiFi.",
-  "Babi's posting frequency just broke the Geneva Convention. Somebody notify the UN.",
-  "His thumbs have their own Wikipedia page under 'Weapons of Mass Communication.'",
-  "If Babi stopped posting for 24 hours, Telegram's stock price would drop 12%. He IS the economy.",
-  "Scientists have discovered a new unit of measurement: 1 Babi = 47 posts/day. It replaced the light-year for measuring distance between sanity and his channel.",
-  "Legend says if you scroll to the top of his channel, you'll find a post that simply says 'testing 1 2 3.' That was yesterday.",
-  "His keyboard doesn't have a backspace key. He doesn't make mistakes. He makes content.",
-  "Babi doesn't sleep. He just switches to drafts.",
-  "Breaking: Telegram is adding a new feature called 'Babi Mode' — it removes the character limit entirely.",
-];
+
 
 // ─── EXCUSE POOL ────────────────────────────────────────────────
 const EXCUSES = [
@@ -332,12 +319,8 @@ bot.command("roast", async (ctx) => {
   try {
     if (!ctx.from) return;
     const channel = await getUserChannel(String(ctx.from.id));
-    if (channel.toLowerCase() !== "dagmawi_babi") {
-      await ctx.reply(`🔥 *Roast for @${channel}:*\n\nWe don't have pre-written roasts for them yet. But judging by their channel, they probably need a hobby.`, { parse_mode: "Markdown" });
-      return;
-    }
 
-    const roast = ROASTS[Math.floor(Math.random() * ROASTS.length)];
+    const roast = generateRoast(channel);
     await ctx.reply(`🔥 *Royal Roast:*\n\n${roast}`, { parse_mode: "Markdown" });
   } catch (err) {
     await ctx.reply("🔥 Even the roast failed. That's how much the internet broke today.");
