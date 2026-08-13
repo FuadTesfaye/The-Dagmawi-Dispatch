@@ -21,7 +21,7 @@ export function SearchBar({
     const q = value.trim();
     if (!q) return;
     startTransition(() => {
-      router.push(`/search?q=${encodeURIComponent(q)}`);
+      router.push(`/explorer/search?q=${encodeURIComponent(q)}`);
     });
   }
 

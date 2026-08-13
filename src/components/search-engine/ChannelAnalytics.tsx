@@ -64,7 +64,7 @@ function ConnList({
             </div>
           );
           return c.channel_id ? (
-            <Link key={i} href={`/channel/${c.channel_id}`}>
+            <Link key={i} href={`/explorer/channel/${c.channel_id}`}>
               {inner}
             </Link>
           ) : (

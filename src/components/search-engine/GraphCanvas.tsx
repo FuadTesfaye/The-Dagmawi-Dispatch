@@ -323,7 +323,7 @@ export function GraphCanvas({ data }: { data: GraphOut }) {
       const moved = Math.hypot(p.x - downAt.x, p.y - downAt.y);
       if (dragNode) {
         if (moved < 4) {
-          window.location.href = `/channel/${dragNode.id}`;
+          window.location.href = `/explorer/channel/${dragNode.id}`;
         } else {
           dragNode.fx = null; dragNode.fy = null; // release to settle
         }

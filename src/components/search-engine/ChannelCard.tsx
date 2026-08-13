@@ -14,7 +14,7 @@ export function ChannelCard({
 }) {
   return (
     <Link
-      href={`/channel/${channel.id}`}
+      href={`/explorer/channel/${channel.id}`}
       className="group block animate-fade-up panel p-4 transition-colors hover:border-border-bright hover:bg-surface-2/60"
     >
       <div className="flex items-start gap-4">

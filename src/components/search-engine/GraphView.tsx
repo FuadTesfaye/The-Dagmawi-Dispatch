@@ -15,7 +15,7 @@ function HubRow({ h, metric }: { h: HubOut; metric: "pagerank" | "betweenness" }
       : ((h.betweenness ?? 0) * 100).toFixed(1);
   return (
     <Link
-      href={`/channel/${h.id}`}
+      href={`/explorer/channel/${h.id}`}
       className="flex items-center justify-between rounded px-2 py-1.5 transition-colors hover:bg-surface-2/60"
     >
       <div className="min-w-0">
