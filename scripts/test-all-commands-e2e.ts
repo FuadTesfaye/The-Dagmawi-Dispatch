@@ -4,10 +4,21 @@ dotenv.config({ path: ".env.local" });
 import { TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions";
 
-const apiId = parseInt(process.env.TELEGRAM_API_ID!);
-const apiHash = process.env.TELEGRAM_API_HASH!;
-const sessionString = process.env.TELEGRAM_USERBOT_SESSION!;
 const botUsername = "BabisummarizeBot";
+
+const ERROR_PHRASES = [
+  "something went wrong",
+  "high demand right now",
+  "could not generate",
+  "we couldn't reach",
+  "couldn't fetch",
+  "temporarily unavailable",
+];
+
+function looksLikeError(text: string): boolean {
+  const lower = text.toLowerCase();
+  return ERROR_PHRASES.some((p) => lower.includes(p));
+}
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -53,14 +64,15 @@ async function runCommand(
       console.log(`   🤖 ${preview(text)}`);
     }
 
-    const ok = texts.length >= expected && texts.every((t) => t.length > 0);
+    const ok = texts.length >= expected && texts.every((t) => t.length > 0 && !looksLikeError(t));
     if (!ok) {
-      console.log(`   ❌ Expected ${expected} reply(ies), got ${texts.length}`);
+      const reason = texts.some(looksLikeError) ? "humanized error in reply" : `got ${texts.length}/${expected}`;
+      console.log(`   ❌ Expected ${expected} ok reply(ies) — ${reason}`);
     } else {
       console.log(`   ✅ OK (${texts.length} reply)`);
     }
 
-    return { cmd, ok, replies: texts, error: ok ? undefined : `got ${texts.length}/${expected}` };
+    return { cmd, ok, replies: texts, error: ok ? undefined : (texts.find(looksLikeError) ?? `got ${texts.length}/${expected}`) };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.log(`   ❌ Error: ${msg}`);
@@ -69,6 +81,10 @@ async function runCommand(
 }
 
 async function run() {
+  const apiId = parseInt(process.env.TELEGRAM_API_ID!);
+  const apiHash = process.env.TELEGRAM_API_HASH!;
+  const sessionString = process.env.TELEGRAM_USERBOT_SESSION!;
+
   const stringSession = new StringSession(sessionString);
   const client = new TelegramClient(stringSession, apiId, apiHash, { connectionRetries: 5 });
   await client.connect();

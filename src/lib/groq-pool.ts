@@ -148,12 +148,10 @@ export async function createGroqCompletion(
       lastError = err;
       if (isRateLimitError(err)) {
         markRateLimited(keyIndex);
-        console.warn(`Groq key #${keyIndex} rate-limited, trying next key`);
         continue;
       }
       if (isAuthError(err)) {
         markRateLimited(keyIndex, AUTH_COOLDOWN_MS);
-        console.warn(`Groq key #${keyIndex} auth error, trying next key`);
         continue;
       }
       throw err;

@@ -58,11 +58,14 @@ export async function withReadDb<T>(fn: (db: AppDb) => Promise<T>): Promise<T> {
       return await fn(instance);
     } catch (err) {
       lastError = err;
-      console.warn("readDb fallback:", err instanceof Error ? err.message : err);
     }
   }
 
-  return fn(writeDb);
+  try {
+    return await fn(writeDb);
+  } catch (err) {
+    throw lastError ?? err;
+  }
 }
 
 /** @deprecated Use readDb() instead. */

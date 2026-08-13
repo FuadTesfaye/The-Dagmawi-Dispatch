@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { summarizeDay, SUMMARY_LANGUAGE } from "@/lib/summarize";
 import { handlerPool } from "@/lib/concurrency-pool";
+import { toHumanError } from "@/lib/human-errors";
 
 export const maxDuration = 60;
 
@@ -20,7 +21,7 @@ export async function GET(request: Request) {
       summarizeDay(channel, date, SUMMARY_LANGUAGE, false)
     );
     return NextResponse.json({ summary, date, channel });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    return NextResponse.json({ error: toHumanError(err, "api") }, { status: 500 });
   }
 }

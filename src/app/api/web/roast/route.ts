@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { generatePersonalizedRoast } from "@/lib/roasts";
+import { toHumanError } from "@/lib/human-errors";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -8,7 +9,7 @@ export async function GET(request: Request) {
   try {
     const roast = await generatePersonalizedRoast(channel);
     return NextResponse.json({ roast, channel });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    return NextResponse.json({ error: toHumanError(err, "api") }, { status: 500 });
   }
 }

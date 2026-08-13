@@ -7,6 +7,18 @@ import { generateDailyRoast, generateOnboardingRoast, generateExcuse } from "@/l
 import { ensureChannelScraped } from "@/lib/telegram/scraper";
 import { checkRateLimit, retryAfterSeconds } from "@/lib/rate-limiter";
 import { handlerPool } from "@/lib/concurrency-pool";
+import { toHumanError, isErrorLikeContent } from "@/lib/human-errors";
+
+async function replyError(ctx: { reply: (text: string) => Promise<unknown> }, err: unknown) {
+  await ctx.reply(toHumanError(err, "command"));
+}
+
+function formatSummaryReply(channel: string, date: string, summary: string): string {
+  if (isErrorLikeContent(summary)) {
+    return summary;
+  }
+  return `@${channel} — ${date}\n\n${summary}`;
+}
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 if (!token) throw new Error("TELEGRAM_BOT_TOKEN is missing");
@@ -24,7 +36,7 @@ bot.use(async (ctx, next) => {
 
   if (!checkRateLimit(userId, command)) {
     const wait = retryAfterSeconds(userId, command);
-    await ctx.reply(`Too many requests. Try again in ${wait}s.`);
+    await ctx.reply(`High demand right now — please wait ${wait}s before trying again.`);
     return;
   }
 
@@ -53,8 +65,15 @@ async function getUserChannel(userId: string): Promise<string> {
 }
 
 // Global error handler — ensures the webhook ALWAYS returns 200
-bot.catch((err) => {
-  console.error("Bot error (caught globally):", err);
+bot.catch(async (err) => {
+  const ctx = err.ctx;
+  if (ctx) {
+    try {
+      await ctx.reply(toHumanError(err.error, "command"));
+    } catch {
+      // ignore reply failures
+    }
+  }
 });
 
 // ─── /start ─────────────────────────────────────────────────────
@@ -134,8 +153,8 @@ bot.command("channel", async (ctx) => {
     let onboardingRoast = "";
     try {
       onboardingRoast = await generateOnboardingRoast(cleanUsername);
-    } catch (err) {
-      console.error("onboarding roast error:", err);
+    } catch {
+      // onboarding roast is optional
     }
 
     const roastLine = onboardingRoast
@@ -149,8 +168,7 @@ bot.command("channel", async (ctx) => {
       { parse_mode: "Markdown" }
     );
   } catch (err) {
-    console.error("channel error:", err);
-    await ctx.reply("⚠️ The scribes dropped the ink. Try `/channel @username` again.", { parse_mode: "Markdown" });
+    await replyError(ctx, err);
   }
 });
 
@@ -177,8 +195,7 @@ bot.command("subscribe", async (ctx) => {
       { parse_mode: "Markdown" }
     );
   } catch (err) {
-    console.error("subscribe error:", err);
-    await ctx.reply("⚠️ The royal pigeon got lost in a sandstorm. Please try /subscribe again.");
+    await replyError(ctx, err);
   }
 });
 
@@ -200,8 +217,7 @@ bot.command("unsubscribe", async (ctx) => {
       { parse_mode: "Markdown" }
     );
   } catch (err) {
-    console.error("unsubscribe error:", err);
-    await ctx.reply("⚠️ Something went wrong. Please try /unsubscribe again.");
+    await replyError(ctx, err);
   }
 });
 
@@ -221,11 +237,10 @@ bot.command("today", async (ctx) => {
         "No posts yet for this date. Check back later."
       );
     } else {
-      await ctx.reply(`@${channel} — ${localDateStr}\n\n${summary}`);
+      await ctx.reply(formatSummaryReply(channel, localDateStr, summary));
     }
   } catch (err) {
-    console.error("today error:", err);
-    await ctx.reply("Something went wrong. Please try /today again.");
+    await replyError(ctx, err);
   }
 });
 
@@ -245,11 +260,10 @@ bot.command("yesterday", async (ctx) => {
         "No posts on this date."
       );
     } else {
-      await ctx.reply(`@${channel} — ${localDateStr}\n\n${summary}`);
+      await ctx.reply(formatSummaryReply(channel, localDateStr, summary));
     }
   } catch (err) {
-    console.error("yesterday error:", err);
-    await ctx.reply("Something went wrong. Please try /yesterday again.");
+    await replyError(ctx, err);
   }
 });
 
@@ -265,10 +279,9 @@ bot.command("date", async (ctx) => {
     
     await ctx.reply(`Fetching posts for ${dateStr} from @${channel}...`);
     const summary = await summarizeDay(channel, dateStr, SUMMARY_LANGUAGE, false);
-    await ctx.reply(`@${channel} — ${dateStr}\n\n${summary}`);
+    await ctx.reply(formatSummaryReply(channel, dateStr, summary));
   } catch (err) {
-    console.error("date error:", err);
-    await ctx.reply("Something went wrong. Please try again.");
+    await replyError(ctx, err);
   }
 });
 
@@ -336,8 +349,7 @@ bot.command("babiometer", async (ctx) => {
       { parse_mode: "Markdown" }
     );
   } catch (err) {
-    console.error("babiometer error:", err);
-    await ctx.reply("⚠️ The royal measuring device exploded. Try again.");
+    await replyError(ctx, err);
   }
 });
 
@@ -350,8 +362,7 @@ bot.command("roast", async (ctx) => {
     const roast = await generateDailyRoast(channel);
     await ctx.reply(`🔥 ${roast}`);
   } catch (err) {
-    console.error("roast error:", err);
-    await ctx.reply("🔥 Even the roast failed. That's how much the internet broke today.");
+    await replyError(ctx, err);
   }
 });
 
@@ -366,7 +377,7 @@ bot.command("excuse", async (ctx) => {
       { parse_mode: "Markdown" }
     );
   } catch (err) {
-    await ctx.reply("🛡️ Even the excuse generator broke. Just tell them you were busy. Chigger yellem.");
+    await replyError(ctx, err);
   }
 });
 
@@ -465,8 +476,7 @@ bot.command("guess", async (ctx) => {
       { parse_mode: "Markdown" }
     );
   } catch (err) {
-    console.error("guess error:", err);
-    await ctx.reply("⚠️ The royal bookkeeper spilled ink. Try `/guess 25` again.", { parse_mode: "Markdown" });
+    await replyError(ctx, err);
   }
 });
 
@@ -522,8 +532,7 @@ bot.command("recommend", async (ctx) => {
       { parse_mode: "Markdown" }
     );
   } catch (err) {
-    console.error("recommend error:", err);
-    await ctx.reply("⚠️ The recommendation engine overheated. Try again later.");
+    await replyError(ctx, err);
   }
 });
 

@@ -4,6 +4,7 @@ import { eq, and, asc } from "drizzle-orm";
 import { ensureChannelScraped } from "./telegram/scraper";
 import { aiPool } from "./concurrency-pool";
 import { createGroqCompletion } from "./groq-pool";
+import { toHumanError } from "./human-errors";
 
 const MODEL = "llama-3.3-70b-versatile";
 /** Bumped when prompt/style changes so cached summaries regenerate. */
@@ -130,9 +131,8 @@ export async function summarizeDay(channel: string, localDate: string, targetLan
   const work = (async () => {
     try {
       return await summarizeDayImpl(channel, localDate, targetLanguage);
-    } catch (err: any) {
-      console.error("summarizeDay error:", err);
-      return `Could not generate summary: ${err.message || "Unknown error"}. Please try again.`;
+    } catch (err: unknown) {
+      return toHumanError(err, "summary");
     }
   })();
 

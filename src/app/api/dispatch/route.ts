@@ -5,6 +5,7 @@ import { eq, and } from "drizzle-orm";
 import { summarizeDay, SUMMARY_LANGUAGE } from "@/lib/summarize";
 import { generatePersonalizedRoast } from "@/lib/roasts";
 import { handlerPool } from "@/lib/concurrency-pool";
+import { toHumanError } from "@/lib/human-errors";
 
 function getEATDateStr(offsetDays = 0) {
   const now = new Date();
@@ -51,7 +52,6 @@ export async function GET(request: NextRequest) {
     });
     });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: toHumanError(error, "api") }, { status: 500 });
   }
 }

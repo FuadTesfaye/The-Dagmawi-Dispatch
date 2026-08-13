@@ -85,8 +85,8 @@ async function saveRoast(channel: string, line: string, kind: "daily" | "onboard
         OFFSET ${RECENT_ROAST_LIMIT}
       )
     `);
-  } catch (err) {
-    console.error("Failed to save roast history:", err);
+  } catch {
+    // non-fatal
   }
 }
 
@@ -152,8 +152,7 @@ async function callGroqRoast(systemPrompt: string, extraUserHint?: string): Prom
       });
       return completion.choices[0]?.message?.content ?? null;
     });
-  } catch (err) {
-    console.error("AI roast generation failed:", err);
+  } catch {
     return null;
   }
 }
@@ -196,8 +195,8 @@ export async function generateDailyRoast(channel: string): Promise<string> {
   let n = 0;
   try {
     n = await getTodayPostCount(cleanChannel);
-  } catch (err) {
-    console.error("Failed to fetch post count for roast:", err);
+  } catch {
+    // use n=0 fallback
   }
 
   return generateWithPrompt(cleanChannel, ROAST_SYSTEM_PROMPT, n, "daily");
@@ -218,8 +217,8 @@ export async function generateOnboardingRoast(
     if (recentPosts.length > 0) {
       postSample = buildPostSample(recentPosts);
     }
-  } catch (err) {
-    console.error("Failed to fetch posts for onboarding roast:", err);
+  } catch {
+    // use empty postSample
   }
 
   return generateWithPrompt(cleanChannel, CHANNEL_ONBOARDING_ROAST_PROMPT, n, "onboarding", {
