@@ -311,10 +311,16 @@ bot.command("roast", async (ctx) => {
     if (!ctx.from) return;
     const channel = await getUserChannel(String(ctx.from.id));
 
-    await ctx.reply(`🔥 *Analyzing @${channel}'s posts for maximum destruction...*`, { parse_mode: "Markdown" });
+    await ctx.reply(`🔥 Analyzing @${channel}'s posts for maximum destruction...`);
     
     const roast = await generatePersonalizedRoast(channel);
-    await ctx.reply(`🔥 *Royal Roast of @${channel}:*\n\n${roast}`, { parse_mode: "Markdown" });
+    
+    // Try with Markdown first, fall back to plain text if AI content has bad formatting
+    try {
+      await ctx.reply(`🔥 *Royal Roast of @${channel}:*\n\n${roast}`, { parse_mode: "Markdown" });
+    } catch {
+      await ctx.reply(`🔥 Royal Roast of @${channel}:\n\n${roast}`);
+    }
   } catch (err) {
     console.error("roast error:", err);
     await ctx.reply("🔥 Even the roast failed. That's how much the internet broke today.");
