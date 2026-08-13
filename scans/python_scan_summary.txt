@@ -1,0 +1,33 @@
+Python scan summary (automated run)
+
+Tools run:
+- pip-audit
+- bandit
+- safety
+- ruff
+- mypy
+
+Key findings (summary):
+- Bandit: Possible binding to all interfaces in `app/config.py` (B104).
+- Bandit: Non-crypto RNG (`random.uniform`) used in `app/ingestion/throttle.py` (B311).
+- Bandit: `try/except: pass` detected in `app/search/meili.py` (B110) and should log exceptions.
+- Safety: 0 reported vulnerabilities, but warnings about unpinned packages (python-dotenv, pydantic-settings).
+- pip-audit: no immediate CVEs reported for pinned packages; many packages are unpinned and should be pinned for reproducible scans.
+- ruff/mypy: import ordering and formatting issues; type errors in `app/analysis/scoring.py`, `app/analysis/analyzer.py`, and `app/db/database.py`.
+
+Saved at: run performed locally inside `search-engine` venv; re-run commands used:
+```
+cd search-engine
+. .venv/bin/activate
+python -m pip install pip-audit bandit safety ruff mypy
+python -m pip-audit -r requirements.txt --strict
+bandit -r app
+safety check -r requirements.txt
+r uff check .
+python -m mypy --ignore-missing-imports app
+```
+
+Recommendations:
+- Pin Python dependencies in `requirements.txt` and re-run audits.
+- Fix Bandit issues (make host configurable, replace bare except, review RNG needs).
+- Apply `ruff --fix` and address `mypy` type errors before merging larger changes.

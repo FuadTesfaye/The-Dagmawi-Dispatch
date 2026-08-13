@@ -1,0 +1,20 @@
+Frontend `npm audit` summary (automated run)
+
+Context: executed in `search-engine/web` where `package.json` lists `next@14.2.15`.
+
+Key findings (summary):
+- `next@14.2.15`: multiple advisories reported (DoS, information exposure, SSRF, cache poisoning, XSS, image optimization DoS) affecting ranges below later patched releases. Upgrade to the patched Next.js release is recommended.
+- `nanoid` dependency reported with a high severity advisory; fix available.
+- `eslint` auto-configuration step added `.eslintrc.json`.
+
+Actions taken / commands used:
+```
+cd search-engine/web
+npm ci --no-audit --no-fund
+npm audit --json > ../scans/npm_audit_raw.json || true
+```
+
+Recommendations:
+- Upgrade `next` to the latest patched release and run full frontend tests and builds.
+- Pin frontend dependencies in `package-lock.json` / `package.json` and re-run `npm audit`.
+- Review usage of `next/image`, server components, and middleware to ensure safe configurations (remotePatterns, CSP).

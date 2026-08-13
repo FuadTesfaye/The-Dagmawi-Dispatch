@@ -1,0 +1,14 @@
+{
+  "name": "The Dagmawi Dispatch",
+  "short_name": "Dispatch",
+  "description": "AI-powered summaries and roasts of your favorite Telegram channels",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/logo.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
