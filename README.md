@@ -208,7 +208,7 @@ Before running the project locally, make sure you have:
 ### 1. Install dependencies
 
 ```bash
-npm install
+bun install
 ```
 
 ### 2. Create environment variables
@@ -228,7 +228,7 @@ CRON_SECRET=some_secure_random_string
 ### 3. Start the app
 
 ```bash
-npm run dev
+bun run dev
 ```
 
 Then open:
@@ -261,8 +261,8 @@ curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/summ
 ## Running the build and checks
 
 ```bash
-npm run build
-npm run lint
+bun run build
+bun run lint
 ```
 
 The project is set up for a standard Next.js app workflow, and linting is configured through the repo’s ESLint setup.
