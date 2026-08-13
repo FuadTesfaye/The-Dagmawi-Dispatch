@@ -11,6 +11,7 @@
   "dependencies": {
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.112.3",
+    "cheerio": "^1.2.0",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
     "grammy": "^1.45.1",

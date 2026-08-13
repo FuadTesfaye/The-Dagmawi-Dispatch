@@ -2,12 +2,19 @@ import Groq from "groq-sdk";
 import { db } from "@/db";
 import { posts, dailySummaries } from "@/db/schema";
 import { eq, and, asc } from "drizzle-orm";
+import { ensureChannelScraped } from "./telegram/scraper";
 
 const MODEL = "llama-3.3-70b-versatile";
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
+// Lazy-load the Groq client
+let groqClient: Groq | null = null;
+function getGroq(): Groq {
+  if (!groqClient) {
+    if (!process.env.GROQ_API_KEY) throw new Error("GROQ_API_KEY is missing");
+    groqClient = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  }
+  return groqClient;
+}
 
 // Format the posts into a text blob
 function formatPostsForPrompt(dayPosts: any[]) {
@@ -26,6 +33,9 @@ function formatPostsForPrompt(dayPosts: any[]) {
 export async function summarizeDay(channel: string, localDate: string, targetLanguage: string = "am", forceRegenerate = false): Promise<string> {
   try {
     const summaryId = `${channel}:${localDate}`;
+
+    // 1. Ensure we have the latest posts scraped on-demand
+    await ensureChannelScraped(channel);
 
     // Check if final summary exists
     if (!forceRegenerate) {

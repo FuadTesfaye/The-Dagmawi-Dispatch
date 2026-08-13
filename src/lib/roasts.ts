@@ -2,6 +2,7 @@ import Groq from "groq-sdk";
 import { db } from "@/db";
 import { posts } from "@/db/schema";
 import { eq, and, desc } from "drizzle-orm";
+import { ensureChannelScraped } from "./telegram/scraper";
 
 const MODEL = "llama-3.3-70b-versatile";
 
@@ -266,6 +267,9 @@ export async function generatePersonalizedRoast(channel: string): Promise<string
 
   // Fetch recent posts from the channel
   try {
+    // 1. Ensure we have the latest posts scraped on-demand
+    await ensureChannelScraped(channel);
+
     const recentPosts = await db.select({
       text: posts.text,
       media_type: posts.media_type,

@@ -247,6 +247,10 @@ bot.command("babiometer", async (ctx) => {
     const localDateStr = getEATDateStr(0);
     const channel = await getUserChannel(String(ctx.from.id));
     
+    // Ensure we have fresh posts
+    const { ensureChannelScraped } = await import("@/lib/telegram/scraper");
+    await ensureChannelScraped(channel);
+    
     const dayPosts = await db.select().from(posts)
       .where(and(eq(posts.local_date, localDateStr), eq(posts.channel, channel)))
       .execute();
@@ -354,6 +358,9 @@ bot.command("guess", async (ctx) => {
 
     // No argument — show today's guesses and results
     if (!input) {
+      const { ensureChannelScraped } = await import("@/lib/telegram/scraper");
+      await ensureChannelScraped(channel);
+
       const todayGuesses = await db.select().from(guesses)
         .where(and(eq(guesses.local_date, localDateStr), eq(guesses.channel, channel))).execute();
       
