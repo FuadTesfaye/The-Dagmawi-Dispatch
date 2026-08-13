@@ -16,6 +16,10 @@ export async function GET(request: Request) {
     // Check how many we have now
     const channelPosts = await db.select().from(posts).where(eq(posts.channel, channel)).execute();
     
+    const { dailySummaries } = await import("@/db/schema");
+    const { like } = await import("drizzle-orm");
+    await db.delete(dailySummaries).where(like(dailySummaries.id, `${channel}:%`)).execute();
+    
     return NextResponse.json({
       success: true,
       inserted,
