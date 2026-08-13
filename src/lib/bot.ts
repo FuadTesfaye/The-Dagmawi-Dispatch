@@ -60,20 +60,32 @@ bot.catch((err) => {
 
 // ─── /start ─────────────────────────────────────────────────────
 bot.command("start", async (ctx) => {
+  const name = ctx.from?.first_name || "stranger";
   await ctx.reply(
-    "📜 *Hear ye, hear ye!* Welcome to the *Dagmawi Dispatch*.\n\n" +
-    "I am the Royal Herald — your shield against scroll fatigue.\n\n" +
-    "*Royal Decrees:*\n" +
-    "📖 /today — Today's scrolls (so far)\n" +
-    "📖 /yesterday — Yesterday's final proclamation\n" +
-    "📖 /date YYYY-MM-DD — Ancient history\n\n" +
-    "*Royal Services:*\n" +
-    "🕊️ /subscribe — Daily pigeon delivery\n" +
-    "🎺 /babiometer — The royal noise gauge\n\n" +
-    "*Royal Entertainment:*\n" +
-    "🔥 /roast — Roast His Majesty\n" +
-    "🛡️ /excuse — Didn't read the scrolls?\n" +
-    "🎲 /guess N — Bet on today's post count",
+    `📜 *Selam (peace), ${name}!*\n` +
+    `━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+    `Welcome to *The Dagmawi Dispatch* — the only bot brave enough to read ALL of Babi's posts so you don't have to.\n\n` +
+    `We know you love him. We know you follow him. We also know you opened Telegram, saw 47 unread messages from one man, and quietly closed the app.\n\n` +
+    `*No judgment. That's why I exist.*\n\n` +
+    `I scrape his channel, feed it to an AI, and hand you a clean summary every day. Your friendships are saved. Your FOMO is cured. Chigger yellem (no problem).\n\n` +
+    `━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+    `📖  *THE SCROLLS*\n` +
+    `━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+    `/today — What he said today (so far)\n` +
+    `/yesterday — Yesterday's royal recap\n` +
+    `/date — Dig up any date's archive\n\n` +
+    `🕊️  *SERVICES*\n` +
+    `━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+    `/subscribe — Auto-deliver the daily digest\n` +
+    `/unsubscribe — Leave the kingdom\n` +
+    `/babiometer — How loud is he today?\n\n` +
+    `🎭  *ENTERTAINMENT*\n` +
+    `━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+    `/roast — Affectionately roast the man\n` +
+    `/excuse — Didn't read? We got you\n` +
+    `/guess — Bet on his daily post count\n\n` +
+    `━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+    `_Powered by caffeine, Groq, and Babi's relentless output._`,
     { parse_mode: "Markdown" }
   );
 });
