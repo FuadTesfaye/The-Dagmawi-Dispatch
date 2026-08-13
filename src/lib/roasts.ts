@@ -234,7 +234,26 @@ async function generateAIRoast(channel: string, recentPosts: any[]): Promise<str
 8. DO NOT use any markdown formatting. Just plain text.
 9. Speak as a self-important, unhinged royal herald / AI commentator who is slowly losing its mind because it is forced to process this garbage data daily.`;
 
-    const userPrompt = `Here are the most recent posts from ${channelLabel}'s channel. Read them and deliver a PERSONALIZED, SAVAGE roast that references their specific content:\n\n${postDigest}\n\nTotal posts analyzed: ${recentPosts.length}. Now ROAST them based on what you actually see.`;
+    let extraContext = "";
+    try {
+      const { searchChannels } = await import("@/lib/search-engine/api");
+      const searchResults = await searchChannels(channel, 1);
+      
+      const textPosts = recentPosts.filter(p => p.text);
+      const avgLength = textPosts.length > 0 ? textPosts.reduce((acc, p) => acc + p.text.length, 0) / textPosts.length : 0;
+      const mediaRatio = Math.round((recentPosts.filter(p => p.media_type !== "none").length / recentPosts.length) * 100) || 0;
+      
+      extraContext = `\n\n**POSTING HABITS ANALYTICS:**\n- Average Wordiness: ${Math.round(avgLength)} characters per post\n- Media Obsession: ${mediaRatio}% of posts contain media (images/video/audio)`;
+
+      if (searchResults && searchResults.length > 0 && (searchResults[0].username?.toLowerCase() === channel.toLowerCase())) {
+        const metadata = searchResults[0];
+        extraContext += `\n\n**ADDITIONAL CHANNEL METADATA:**\n- Primary Category: ${metadata.category || "Unknown"}\n- Channel Description: ${metadata.summary || "None"}\n- Influence/Clout Score: ${metadata.score}\n- Subscriber Count: ${metadata.subscribers || "Unknown"}\n(Use this metadata and analytics to brutally mock their relevance, their chosen niche, their wordiness, or their clout).`;
+      }
+    } catch (e) {
+      // Backend might be down, ignore
+    }
+
+    const userPrompt = `Here are the most recent posts from ${channelLabel}'s channel. Read them and deliver a PERSONALIZED, SAVAGE roast that references their specific content:\n\n${postDigest}\n\nTotal posts analyzed: ${recentPosts.length}.${extraContext}\n\nNow ROAST them based on what you actually see.`;
 
     const completion = await getGroq().chat.completions.create({
       messages: [
