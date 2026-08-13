@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, integer, jsonb, date, varchar, primaryKey } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, boolean, integer, jsonb, date, varchar, primaryKey, serial } from 'drizzle-orm/pg-core';
 
 export const posts = pgTable('posts', {
   channel: varchar('channel', { length: 100 }).notNull().default('dagmawi_babi'),
@@ -57,4 +57,12 @@ export const userChannels = pgTable('user_channels', {
   telegram_user_id: varchar('telegram_user_id', { length: 100 }).primaryKey(),
   channel: varchar('channel', { length: 100 }).notNull().default('dagmawi_babi'),
   updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+export const roastHistory = pgTable('roast_history', {
+  id: serial('id').primaryKey(),
+  channel: varchar('channel', { length: 100 }).notNull(),
+  line: text('line').notNull(),
+  kind: varchar('kind', { length: 20 }).notNull().default('daily'),
+  created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
