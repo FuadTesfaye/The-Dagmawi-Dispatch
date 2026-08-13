@@ -1,4 +1,4 @@
-import { TelegramClient } from "telegram";
+import { TelegramClient, Api } from "telegram";
 import { StringSession } from "telegram/sessions";
 import { db } from "@/db";
 import { posts, ingestionCursor, userChannels } from "@/db/schema";
@@ -35,6 +35,13 @@ export async function fetchNewMessages() {
         // Get cursor
         let cursor = await db.select().from(ingestionCursor).where(eq(ingestionCursor.id, cleanChannelUsername)).execute();
         let lastMessageId = cursor.length > 0 ? cursor[0].last_message_id : 0;
+
+        // Try to join the channel if not already joined
+        try {
+          await client.invoke(new Api.channels.JoinChannel({ channel: cleanChannelUsername }));
+        } catch (joinErr: any) {
+          // Ignore errors if already joined or if it fails (it will just try to read publicly)
+        }
 
         // Fetch messages
         const messages = await client.getMessages(cleanChannelUsername, {
