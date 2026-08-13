@@ -8,9 +8,7 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [],
   },
-  experimental: {
-    serverActions: false,
-  },
+  experimental: {},
 };
 
 export default nextConfig;

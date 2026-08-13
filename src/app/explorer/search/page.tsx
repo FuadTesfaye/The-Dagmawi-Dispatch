@@ -52,12 +52,13 @@ function ResultsSkeleton() {
   );
 }
 
-export default function SearchPage({
+export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: { q?: string };
+  searchParams: Promise<{ q?: string }>;
 }) {
-  const q = (searchParams.q ?? "").trim();
+  const resolvedParams = await searchParams;
+  const q = (resolvedParams.q ?? "").trim();
 
   return (
     <div className="mx-auto max-w-3xl">

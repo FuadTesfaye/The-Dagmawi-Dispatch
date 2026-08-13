@@ -15,9 +15,10 @@ export const dynamic = "force-dynamic";
 export default async function ChannelPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const id = Number(params.id);
+  const resolvedParams = await params;
+  const id = Number(resolvedParams.id);
   if (!Number.isInteger(id)) notFound();
 
   let channel: ChannelDetail;
