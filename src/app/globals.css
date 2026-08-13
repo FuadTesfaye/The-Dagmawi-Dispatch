@@ -39,3 +39,25 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* ─── Search Engine UI Styles ─── */
+.search-engine-theme {
+  background-image:
+    linear-gradient(rgba(34, 42, 54, 0.35) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 42, 54, 0.35) 1px, transparent 1px);
+  background-size: 44px 44px;
+  background-position: -1px -1px;
+}
+
+@layer components {
+  .panel {
+    @apply rounded-lg border border-border bg-surface/80 backdrop-blur-sm;
+  }
+  .mono-label {
+    @apply font-mono text-[11px] uppercase tracking-[0.18em] text-muted;
+  }
+  .focus-ring {
+    @apply outline-none ring-1 ring-transparent focus-visible:ring-accent/60;
+  }
+}
+
