@@ -36,6 +36,7 @@ export function toHumanError(err: unknown, _context: ErrorContext = "generic"): 
     msg.includes("database") ||
     msg.includes("postgres") ||
     msg.includes("relation") ||
+    msg.includes("failed query") ||
     status === 503
   ) {
     return "We couldn't reach our servers. Please try again shortly.";

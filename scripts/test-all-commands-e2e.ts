@@ -96,11 +96,15 @@ async function run() {
 
   // Channel switch (may include onboarding roast — allow 1 reply minimum)
   results.push(await runCommand(client, "/channel @selfmadecoder", 1, 30000));
+  await sleep(2000);
 
   results.push(await runCommand(client, "/start", 1, 10000));
-  results.push(await runCommand(client, "/today", 1, 35000));
-  results.push(await runCommand(client, "/yesterday", 1, 35000));
-  results.push(await runCommand(client, "/babiometer", 1, 10000));
+  await sleep(1500);
+  results.push(await runCommand(client, "/today", 2, 45000));
+  await sleep(3000);
+  results.push(await runCommand(client, "/yesterday", 2, 45000));
+  await sleep(3000);
+  results.push(await runCommand(client, "/babiometer", 1, 15000));
   results.push(await runCommand(client, "/guess 50", 1, 10000));
   results.push(await runCommand(client, "/excuse", 1, 10000));
   // One-liner roast — single reply, no loading message
