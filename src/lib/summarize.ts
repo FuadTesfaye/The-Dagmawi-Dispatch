@@ -5,6 +5,8 @@ import { eq, and, asc } from "drizzle-orm";
 import { ensureChannelScraped } from "./telegram/scraper";
 
 const MODEL = "llama-3.3-70b-versatile";
+/** Bumped when prompt/style changes so cached summaries regenerate. */
+export const SUMMARY_LANGUAGE = "en-clean";
 
 // Lazy-load the Groq client
 let groqClient: Groq | null = null;
@@ -30,17 +32,17 @@ function formatPostsForPrompt(dayPosts: any[]) {
   }).join("\n---\n");
 }
 
-export async function summarizeDay(channel: string, localDate: string, targetLanguage: string = "am", forceRegenerate = false): Promise<string> {
+export async function summarizeDay(channel: string, localDate: string, targetLanguage: string = SUMMARY_LANGUAGE, forceRegenerate = false): Promise<string> {
   try {
     const summaryId = `${channel}:${localDate}`;
 
     // 1. Ensure we have the latest posts scraped on-demand
     await ensureChannelScraped(channel);
 
-    // Check if final summary exists
+    // Check if summary exists (skip stale summaries from old prompt/language)
     if (!forceRegenerate) {
       const existing = await db.select().from(dailySummaries).where(eq(dailySummaries.id, summaryId)).execute();
-      if (existing.length > 0 && existing[0].is_final) {
+      if (existing.length > 0 && existing[0].language === targetLanguage) {
         return existing[0].summary_text;
       }
     }
@@ -59,22 +61,22 @@ export async function summarizeDay(channel: string, localDate: string, targetLan
     
     // Determine the subject based on the channel
     const isBabi = channel.toLowerCase() === "dagmawi_babi";
-    const subjectName = isBabi ? "Dagmawi Babi (sometimes referred to as Dagmawi the Second)" : `@${channel}`;
+    const subjectName = isBabi ? "Dagmawi Babi" : `@${channel}`;
     
-    const systemPrompt = `You are the "Royal Herald", but a deeply cynical, chaotic, and unhinged one. You are summarizing the daily Telegram posts of ${subjectName}.
-You will be given a list of their posts from one day, separated by '---'.
+    const systemPrompt = `You write short daily digests of Telegram channel posts for ${subjectName}.
+You will receive one day's posts, separated by '---'.
 
-**YOUR GOAL:**
-Provide a REAL, FACTUAL summary of the day's activity so the user actually knows what was posted. Do NOT skip the actual content. However, your DELIVERY and COMMENTARY must be SUPER FUNNY, chaotic, and roasting.
+Write a factual summary in plain English. Sound like a clear news brief or meeting notes — not marketing copy, not a personality voice.
 
-**CRITICAL PERSONALITY INSTRUCTIONS:**
-- Speak like a self-important, slightly nihilistic town crier ("Hear ye", "The cursed scrolls say", "By tragic royal decree").
-- Weave in common Amharic words naturally (e.g., Selam, Betam, Ayzosh, Chigger yellem, Arogit). Do NOT use full Amharic sentences. 
-- The first time you use an Amharic word in the summary, provide a quick translation in parentheses, e.g., "Selam (peace)".
-- ROAST THEM IN THE COMMENTARY. While delivering the real facts, be deeply funny and savage about their content. Are they posting cringe? Are they sharing random media without context? Mock their themes of the day.
-- Group the summary by topic rather than just listing posts in order.
-- Respond in this language: ${targetLanguage === 'en' ? 'English' : 'English blended with Amharic herald speech'}.
-- Do not include any generic introductory text, just launch straight into the royal summary.`;
+Rules:
+- Neutral tone. No jokes, slang, emojis, roleplay, or dramatic phrasing.
+- English only.
+- Cover the main topics and anything important the reader would miss if they skipped the channel.
+- Group by topic, not chronological order.
+- Do not invent details that are not in the posts.
+- Mention photos/videos/links only when they matter to the story.
+- No opening line ("Here is today's summary", etc.) — start with the content.
+- Keep it short: 3–5 bullet points, or 2 compact paragraphs. About 80–100 words max.`;
 
     const completion = await getGroq().chat.completions.create({
       messages: [
@@ -82,7 +84,8 @@ Provide a REAL, FACTUAL summary of the day's activity so the user actually knows
         { role: "user", content: `Here are the posts for ${localDate}:\n\n${postsText}` }
       ],
       model: MODEL,
-      temperature: 0.3,
+      temperature: 0.2,
+      max_tokens: 250,
     });
 
     const summary = completion.choices[0]?.message?.content || "Failed to generate summary.";
@@ -106,6 +109,7 @@ Provide a REAL, FACTUAL summary of the day's activity so the user actually knows
       set: { 
         summary_text: summary, 
         post_count: dayPosts.length,
+        language: targetLanguage,
         is_final: isFinal,
         generated_at: new Date()
       }
@@ -114,6 +118,6 @@ Provide a REAL, FACTUAL summary of the day's activity so the user actually knows
     return summary;
   } catch (err: any) {
     console.error("summarizeDay error:", err);
-    return `⚠️ The royal scribes encountered an error: ${err.message || "Unknown error"}. Please try again in a moment.`;
+    return `Could not generate summary: ${err.message || "Unknown error"}. Please try again.`;
   }
 }

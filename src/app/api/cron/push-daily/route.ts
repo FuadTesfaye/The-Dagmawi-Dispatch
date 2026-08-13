@@ -39,8 +39,7 @@ export async function GET(request: Request) {
       try {
         await bot.api.sendMessage(
           sub.chat_id,
-          `📅 **Daily Digest for ${localDateStr}:**\n\n${summaryText}`,
-          { parse_mode: "Markdown" }
+          `@${summaries[0].channel} — ${localDateStr}\n\n${summaryText}`
         );
         sent++;
       } catch (err) {

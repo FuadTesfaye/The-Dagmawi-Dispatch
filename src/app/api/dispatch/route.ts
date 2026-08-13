@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { posts, dailySummaries } from "@/db/schema";
 import { eq, and, desc, asc } from "drizzle-orm";
-import { summarizeDay } from "@/lib/summarize";
+import { summarizeDay, SUMMARY_LANGUAGE } from "@/lib/summarize";
 import { generatePersonalizedRoast } from "@/lib/roasts";
 
 function getEATDateStr(offsetDays = 0) {
@@ -32,8 +32,8 @@ export async function GET(request: NextRequest) {
     ]);
 
     const [todaySummary, yesterdaySummary, roast] = await Promise.all([
-      todaySummaryRow[0]?.summary_text || summarizeDay(channel, todayDate, "am", false),
-      yesterdaySummaryRow[0]?.summary_text || summarizeDay(channel, yesterdayDate, "am", false),
+      todaySummaryRow[0]?.language === SUMMARY_LANGUAGE ? todaySummaryRow[0].summary_text : summarizeDay(channel, todayDate, SUMMARY_LANGUAGE, false),
+      yesterdaySummaryRow[0]?.language === SUMMARY_LANGUAGE ? yesterdaySummaryRow[0].summary_text : summarizeDay(channel, yesterdayDate, SUMMARY_LANGUAGE, false),
       generatePersonalizedRoast(channel),
     ]);
 

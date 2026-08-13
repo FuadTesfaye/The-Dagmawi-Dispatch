@@ -2,7 +2,7 @@ import { Bot } from "grammy";
 import { db } from "@/db";
 import { subscribers, posts, guesses, userChannels } from "@/db/schema";
 import { eq, and, sql } from "drizzle-orm";
-import { summarizeDay } from "@/lib/summarize";
+import { summarizeDay, SUMMARY_LANGUAGE } from "@/lib/summarize";
 import { generateDailyRoast, generateOnboardingRoast, generateExcuse } from "@/lib/roasts";
 import { ensureChannelScraped } from "@/lib/telegram/scraper";
 
@@ -192,21 +192,20 @@ bot.command("today", async (ctx) => {
     const localDateStr = getEATDateStr(0);
     const channel = await getUserChannel(String(ctx.from.id));
     
-    await ctx.reply(`🎺 Sounding the trumpets... reading today's scrolls from @${channel}...`);
-    const summary = await summarizeDay(channel, localDateStr, "am", false);
+    await ctx.reply(`Fetching today's posts from @${channel}...`);
+    const summary = await summarizeDay(channel, localDateStr, SUMMARY_LANGUAGE, false);
     
     if (summary.includes("No posts found")) {
       await ctx.reply(
-        `📜 Today's Dispatch for @${channel} (${localDateStr}):\n\n` +
-        "The scrolls are quiet so far, townsfolk. Thumbs appear to be resting.\n\n" +
-        "Check back later. Chigger yellem (no problem)."
+        `@${channel} — ${localDateStr}\n\n` +
+        "No posts yet for this date. Check back later."
       );
     } else {
-      await ctx.reply(`📜 Today's Dispatch for @${channel} (${localDateStr}):\n\n${summary}`);
+      await ctx.reply(`@${channel} — ${localDateStr}\n\n${summary}`);
     }
   } catch (err) {
     console.error("today error:", err);
-    await ctx.reply("⚠️ The herald tripped over his scrolls. Please try /today again in a moment.");
+    await ctx.reply("Something went wrong. Please try /today again.");
   }
 });
 
@@ -217,20 +216,20 @@ bot.command("yesterday", async (ctx) => {
     const localDateStr = getEATDateStr(-1);
     const channel = await getUserChannel(String(ctx.from.id));
     
-    await ctx.reply(`🐴 Riding to yesterday's vault for @${channel}...`);
-    const summary = await summarizeDay(channel, localDateStr, "am", false);
+    await ctx.reply(`Fetching yesterday's posts from @${channel}...`);
+    const summary = await summarizeDay(channel, localDateStr, SUMMARY_LANGUAGE, false);
     
     if (summary.includes("No posts found")) {
       await ctx.reply(
-        `📜 Yesterday's Dispatch for @${channel} (${localDateStr}):\n\n` +
-        "Silence from the throne. A rare blessing. The kingdom breathed."
+        `@${channel} — ${localDateStr}\n\n` +
+        "No posts on this date."
       );
     } else {
-      await ctx.reply(`📜 Yesterday's Dispatch for @${channel} (${localDateStr}):\n\n${summary}`);
+      await ctx.reply(`@${channel} — ${localDateStr}\n\n${summary}`);
     }
   } catch (err) {
     console.error("yesterday error:", err);
-    await ctx.reply("⚠️ The herald tripped over his scrolls. Please try /yesterday again.");
+    await ctx.reply("Something went wrong. Please try /yesterday again.");
   }
 });
 
@@ -244,12 +243,12 @@ bot.command("date", async (ctx) => {
       return ctx.reply("📅 Usage: /date 2026-08-12");
     }
     
-    await ctx.reply(`🐴 Riding back to ${dateStr} for @${channel}...`);
-    const summary = await summarizeDay(channel, dateStr, "am", false);
-    await ctx.reply(`📜 Dispatch for @${channel} on ${dateStr}:\n\n${summary}`);
+    await ctx.reply(`Fetching posts for ${dateStr} from @${channel}...`);
+    const summary = await summarizeDay(channel, dateStr, SUMMARY_LANGUAGE, false);
+    await ctx.reply(`@${channel} — ${dateStr}\n\n${summary}`);
   } catch (err) {
     console.error("date error:", err);
-    await ctx.reply("⚠️ The herald tripped. Please try again.");
+    await ctx.reply("Something went wrong. Please try again.");
   }
 });
 

@@ -1,4 +1,4 @@
-import { summarizeDay } from "@/lib/summarize";
+import { summarizeDay, SUMMARY_LANGUAGE } from "@/lib/summarize";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     eatDate.setDate(eatDate.getDate() - 1); // Yesterday
     const localDateStr = eatDate.toISOString().split('T')[0];
 
-    const summary = await summarizeDay("dagmawi_babi", localDateStr, "am", false);
+    const summary = await summarizeDay("dagmawi_babi", localDateStr, SUMMARY_LANGUAGE, false);
     
     return NextResponse.json({ date: localDateStr, summaryLength: summary.length });
   } catch (error: any) {

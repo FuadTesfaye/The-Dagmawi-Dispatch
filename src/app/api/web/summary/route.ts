@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { summarizeDay } from "@/lib/summarize";
+import { summarizeDay, SUMMARY_LANGUAGE } from "@/lib/summarize";
 
 function getEATDateStr(offsetDays = 0) {
   const eat = new Date(Date.now() + 3 * 60 * 60 * 1000);
@@ -13,7 +13,7 @@ export async function GET(request: Request) {
   const date = searchParams.get("date") || getEATDateStr(0);
 
   try {
-    const summary = await summarizeDay(channel, date, "am", false);
+    const summary = await summarizeDay(channel, date, SUMMARY_LANGUAGE, false);
     return NextResponse.json({ summary, date, channel });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
