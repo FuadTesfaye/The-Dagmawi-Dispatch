@@ -1,6 +1,6 @@
 import { Bot } from "grammy";
 import { db } from "@/db";
-import { subscribers, posts, guesses } from "@/db/schema";
+import { subscribers, posts, guesses, userChannels } from "@/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { summarizeDay } from "@/lib/summarize";
 
@@ -53,6 +53,13 @@ function getDisplayName(ctx: any): string {
   return ctx.from.first_name + (ctx.from.last_name ? ` ${ctx.from.last_name}` : "");
 }
 
+// Helper: get user's selected channel
+async function getUserChannel(userId: string): Promise<string> {
+  const result = await db.select().from(userChannels).where(eq(userChannels.telegram_user_id, userId)).execute();
+  if (result.length > 0) return result[0].channel;
+  return "dagmawi_babi"; // Default
+}
+
 // Global error handler — ensures the webhook ALWAYS returns 200
 bot.catch((err) => {
   console.error("Bot error (caught globally):", err);
@@ -76,6 +83,7 @@ bot.command("start", async (ctx) => {
     `/date — Dig up any date's archive\n\n` +
     `🕊️  *SERVICES*\n` +
     `━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+    `/channel — Select a different channel to track\n` +
     `/subscribe — Auto-deliver the daily digest\n` +
     `/unsubscribe — Leave the kingdom\n` +
     `/babiometer — How loud is he today?\n\n` +
@@ -90,12 +98,56 @@ bot.command("start", async (ctx) => {
   );
 });
 
+// ─── /channel ───────────────────────────────────────────────────
+bot.command("channel", async (ctx) => {
+  try {
+    if (!ctx.from) return;
+    const userId = String(ctx.from.id);
+    const input = ctx.match?.trim();
+
+    if (!input) {
+      const currentChannel = await getUserChannel(userId);
+      await ctx.reply(
+        `📡 *Royal Courier Service*\n\n` +
+        `You are currently tracking: *@${currentChannel}*\n\n` +
+        `To switch channels, type:\n\n` +
+        `\`/channel @some_username\`\n\n` +
+        `_The scribes will start fetching scrolls from the new channel automatically._`,
+        { parse_mode: "Markdown" }
+      );
+      return;
+    }
+
+    // Clean username
+    const cleanUsername = input.replace(/^@/, "").replace(/[^a-zA-Z0-9_]/g, "");
+
+    await db.insert(userChannels).values({
+      telegram_user_id: userId,
+      channel: cleanUsername,
+    }).onConflictDoUpdate({
+      target: userChannels.telegram_user_id,
+      set: { channel: cleanUsername, updated_at: new Date() },
+    });
+
+    await ctx.reply(
+      `✅ *Channel Updated!*\n\n` +
+      `You are now tracking *@${cleanUsername}*.\n\n` +
+      `_Note: Our scribes fetch scrolls every few hours. If this is a new channel, it may take a little while for the archives to populate._`,
+      { parse_mode: "Markdown" }
+    );
+  } catch (err) {
+    console.error("channel error:", err);
+    await ctx.reply("⚠️ The scribes dropped the ink. Try `/channel @username` again.", { parse_mode: "Markdown" });
+  }
+});
+
 // ─── /subscribe ─────────────────────────────────────────────────
 bot.command("subscribe", async (ctx) => {
   try {
     if (!ctx.from) return;
     const userId = String(ctx.from.id);
     const chatId = String(ctx.chat.id);
+    const channel = await getUserChannel(userId);
     
     await db.insert(subscribers)
       .values({ telegram_user_id: userId, chat_id: chatId, active: true })
@@ -106,8 +158,8 @@ bot.command("subscribe", async (ctx) => {
       
     await ctx.reply(
       "🕊️ *The royal pigeon has been dispatched!*\n\n" +
-      "Every morning, a freshly summarized scroll of Babi's daily output will arrive at your doorstep.\n\n" +
-      "No more drowning in 40+ posts. No more FOMO. Just vibes and a clean summary.\n\n" +
+      `Every morning, a freshly summarized scroll of @${channel}'s daily output will arrive at your doorstep.\n\n` +
+      "No more drowning in posts. No more FOMO. Just vibes and a clean summary.\n\n" +
       "_Selam (peace) be with you, loyal subject._",
       { parse_mode: "Markdown" }
     );
@@ -130,7 +182,7 @@ bot.command("unsubscribe", async (ctx) => {
     await ctx.reply(
       "❌ *You have been banished from the pigeon route.*\n\n" +
       "The royal pigeon will no longer visit your dwelling. " +
-      "You are now on your own in the wilderness of his channel. " +
+      "You are now on your own in the wilderness. " +
       "Ayzosh (take courage). You will need it.",
       { parse_mode: "Markdown" }
     );
@@ -143,20 +195,22 @@ bot.command("unsubscribe", async (ctx) => {
 // ─── /today ─────────────────────────────────────────────────────
 bot.command("today", async (ctx) => {
   try {
+    if (!ctx.from) return;
     const localDateStr = getEATDateStr(0);
+    const channel = await getUserChannel(String(ctx.from.id));
     
-    await ctx.reply("🎺 Sounding the trumpets... reading today's scrolls...");
-    const summary = await summarizeDay(localDateStr, "am", false);
+    await ctx.reply(`🎺 Sounding the trumpets... reading today's scrolls from @${channel}...`);
+    const summary = await summarizeDay(channel, localDateStr, "am", false);
     
     if (summary.includes("No posts found")) {
       await ctx.reply(
-        `📜 *Today's Dispatch (${localDateStr}):*\n\n` +
-        "The scrolls are quiet so far, townsfolk. His Majesty's thumbs appear to be resting.\n\n" +
+        `📜 *Today's Dispatch for @${channel} (${localDateStr}):*\n\n` +
+        "The scrolls are quiet so far, townsfolk. Thumbs appear to be resting.\n\n" +
         "_Check back later. Chigger yellem (no problem)._",
         { parse_mode: "Markdown" }
       );
     } else {
-      await ctx.reply(`📜 *Today's Dispatch (${localDateStr}):*\n\n${summary}`, { parse_mode: "Markdown" });
+      await ctx.reply(`📜 *Today's Dispatch for @${channel} (${localDateStr}):*\n\n${summary}`, { parse_mode: "Markdown" });
     }
   } catch (err) {
     console.error("today error:", err);
@@ -167,19 +221,21 @@ bot.command("today", async (ctx) => {
 // ─── /yesterday ─────────────────────────────────────────────────
 bot.command("yesterday", async (ctx) => {
   try {
+    if (!ctx.from) return;
     const localDateStr = getEATDateStr(-1);
+    const channel = await getUserChannel(String(ctx.from.id));
     
-    await ctx.reply("🐴 Riding to yesterday's vault...");
-    const summary = await summarizeDay(localDateStr, "am", false);
+    await ctx.reply(`🐴 Riding to yesterday's vault for @${channel}...`);
+    const summary = await summarizeDay(channel, localDateStr, "am", false);
     
     if (summary.includes("No posts found")) {
       await ctx.reply(
-        `📜 *Yesterday's Dispatch (${localDateStr}):*\n\n` +
+        `📜 *Yesterday's Dispatch for @${channel} (${localDateStr}):*\n\n` +
         "Silence from the throne. A rare blessing. The kingdom breathed.",
         { parse_mode: "Markdown" }
       );
     } else {
-      await ctx.reply(`📜 *Yesterday's Dispatch (${localDateStr}):*\n\n${summary}`, { parse_mode: "Markdown" });
+      await ctx.reply(`📜 *Yesterday's Dispatch for @${channel} (${localDateStr}):*\n\n${summary}`, { parse_mode: "Markdown" });
     }
   } catch (err) {
     console.error("yesterday error:", err);
@@ -190,14 +246,16 @@ bot.command("yesterday", async (ctx) => {
 // ─── /date ──────────────────────────────────────────────────────
 bot.command("date", async (ctx) => {
   try {
+    if (!ctx.from) return;
+    const channel = await getUserChannel(String(ctx.from.id));
     const dateStr = ctx.match;
     if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
       return ctx.reply("📅 Usage: `/date 2026-08-12`", { parse_mode: "Markdown" });
     }
     
-    await ctx.reply(`🐴 Riding back to ${dateStr}...`);
-    const summary = await summarizeDay(dateStr, "am", false);
-    await ctx.reply(`📜 *Dispatch for ${dateStr}:*\n\n${summary}`, { parse_mode: "Markdown" });
+    await ctx.reply(`🐴 Riding back to ${dateStr} for @${channel}...`);
+    const summary = await summarizeDay(channel, dateStr, "am", false);
+    await ctx.reply(`📜 *Dispatch for @${channel} on ${dateStr}:*\n\n${summary}`, { parse_mode: "Markdown" });
   } catch (err) {
     console.error("date error:", err);
     await ctx.reply("⚠️ The herald tripped. Please try again.");
@@ -207,47 +265,55 @@ bot.command("date", async (ctx) => {
 // ─── /babiometer ────────────────────────────────────────────────
 bot.command("babiometer", async (ctx) => {
   try {
+    if (!ctx.from) return;
     const localDateStr = getEATDateStr(0);
+    const channel = await getUserChannel(String(ctx.from.id));
     
-    const dayPosts = await db.select().from(posts).where(eq(posts.local_date, localDateStr)).execute();
+    const dayPosts = await db.select().from(posts)
+      .where(and(eq(posts.local_date, localDateStr), eq(posts.channel, channel)))
+      .execute();
     const count = dayPosts.length;
     
     let blasts: string;
     let verdict: string;
     let emoji: string;
+
+    const isBabi = channel.toLowerCase() === "dagmawi_babi";
     
     if (count === 0) {
       blasts = "🔇";
-      verdict = "Total silence. Either Babi is sleeping, meditating, or his WiFi is down. All three are equally unlikely.";
+      verdict = isBabi ? "Total silence. Either Babi is sleeping, meditating, or his WiFi is down. All three are equally unlikely." : "Total silence. A peaceful day in the kingdom.";
       emoji = "💤";
     } else if (count <= 3) {
       blasts = "🎺";
-      verdict = "A whisper from the throne. He's warming up. Or maybe this IS the warm-up and we should all run.";
+      verdict = isBabi ? "A whisper from the throne. He's warming up." : "Low activity. Just a few decrees.";
       emoji = "😌";
     } else if (count <= 8) {
       blasts = "🎺🎺";
-      verdict = "Moderate activity. A normal person's entire week of content. For Babi, this is a slow morning.";
+      verdict = isBabi ? "Moderate activity. A normal person's entire week of content. For Babi, this is a slow morning." : "Moderate activity. The channel is alive.";
       emoji = "📝";
     } else if (count <= 15) {
       blasts = "🎺🎺🎺";
-      verdict = "The town criers are losing their voices. The scrolls are piling up. Notifications are crying for mercy.";
+      verdict = isBabi ? "The town criers are losing their voices. The scrolls are piling up. Notifications are crying for mercy." : "High activity. The scribe's hand is cramping.";
       emoji = "📢";
     } else if (count <= 25) {
       blasts = "🎺🎺🎺🎺";
-      verdict = "CODE ORANGE. He's in his zone. Your 'mark as read' button is filing a restraining order.";
+      verdict = isBabi ? "CODE ORANGE. He's in his zone. Your 'mark as read' button is filing a restraining order." : "Heavy deluge. Notifications incoming.";
       emoji = "🔥";
     } else if (count <= 40) {
       blasts = "🎺🎺🎺🎺🎺";
-      verdict = "DEFCON 2. Babi has entered hyperdrive. Telegram engineers are being woken up. Pray for your battery.";
+      verdict = isBabi ? "DEFCON 2. Babi has entered hyperdrive. Telegram engineers are being woken up. Pray for your battery." : "EXTREME VOLUME. Take cover.";
       emoji = "🚨";
     } else {
       blasts = "🎺🎺🎺🎺🎺🎺 🚨🚨🚨";
-      verdict = "DEFCON 1. HE'S COMPOSING A NOVEL. Abandon your phone. Touch grass. Save yourself. This is not a drill.";
+      verdict = isBabi ? "DEFCON 1. HE'S COMPOSING A NOVEL. Abandon your phone. Touch grass. Save yourself. This is not a drill." : "Absolute chaos. A novel has been written.";
       emoji = "☠️";
     }
     
+    const title = isBabi ? "*THE BABI-O-METER*" : `*THE @${channel.toUpperCase()} METER*`;
+
     await ctx.reply(
-      `${emoji} *THE BABI-O-METER* ${emoji}\n` +
+      `${emoji} ${title} ${emoji}\n` +
       `━━━━━━━━━━━━━━━━━━━━\n\n` +
       `${blasts}\n\n` +
       `*Posts today:* ${count}\n` +
@@ -257,17 +323,24 @@ bot.command("babiometer", async (ctx) => {
     );
   } catch (err) {
     console.error("babiometer error:", err);
-    await ctx.reply("⚠️ The royal measuring device exploded. Try /babiometer again.");
+    await ctx.reply("⚠️ The royal measuring device exploded. Try again.");
   }
 });
 
 // ─── /roast ─────────────────────────────────────────────────────
 bot.command("roast", async (ctx) => {
   try {
+    if (!ctx.from) return;
+    const channel = await getUserChannel(String(ctx.from.id));
+    if (channel.toLowerCase() !== "dagmawi_babi") {
+      await ctx.reply(`🔥 *Roast for @${channel}:*\n\nWe don't have pre-written roasts for them yet. But judging by their channel, they probably need a hobby.`, { parse_mode: "Markdown" });
+      return;
+    }
+
     const roast = ROASTS[Math.floor(Math.random() * ROASTS.length)];
     await ctx.reply(`🔥 *Royal Roast:*\n\n${roast}`, { parse_mode: "Markdown" });
   } catch (err) {
-    await ctx.reply("🔥 Even the roast failed. That's how much Babi has broken the internet today.");
+    await ctx.reply("🔥 Even the roast failed. That's how much the internet broke today.");
   }
 });
 
@@ -292,23 +365,24 @@ bot.command("guess", async (ctx) => {
     const localDateStr = getEATDateStr(0);
     const userId = String(ctx.from.id);
     const displayName = getDisplayName(ctx);
+    const channel = await getUserChannel(userId);
 
     // No argument — show today's guesses and results
     if (!input) {
       const todayGuesses = await db.select().from(guesses)
-        .where(eq(guesses.local_date, localDateStr)).execute();
+        .where(and(eq(guesses.local_date, localDateStr), eq(guesses.channel, channel))).execute();
       
       const dayPosts = await db.select().from(posts)
-        .where(eq(posts.local_date, localDateStr)).execute();
+        .where(and(eq(posts.local_date, localDateStr), eq(posts.channel, channel))).execute();
       const actualCount = dayPosts.length;
 
       if (todayGuesses.length === 0) {
         await ctx.reply(
-          "🎲 *The Royal Betting Pool*\n\n" +
+          `🎲 *The Betting Pool for @${channel}*\n\n` +
           "No one has placed a bet yet today!\n\n" +
           `Current post count: *${actualCount}* (and counting...)\n\n` +
           "Place your bet: `/guess 25`\n" +
-          "_How many posts will Babi make today?_",
+          `_How many posts will @${channel} make today?_`,
           { parse_mode: "Markdown" }
         );
         return;
@@ -325,7 +399,7 @@ bot.command("guess", async (ctx) => {
       }).join("\n");
 
       await ctx.reply(
-        `🎲 *The Royal Betting Pool — ${localDateStr}*\n\n` +
+        `🎲 *The Betting Pool for @${channel} — ${localDateStr}*\n\n` +
         `📊 Actual post count so far: *${actualCount}*\n\n` +
         `${board}\n\n` +
         `_${sorted[0].diff === 0 ? `${sorted[0].display_name} nailed it! Betam (very) impressive!` : `${sorted[0].display_name} is closest! The day isn't over yet...`}_`,
@@ -342,9 +416,10 @@ bot.command("guess", async (ctx) => {
     }
 
     // Save the guess (upsert)
-    const guessId = `${localDateStr}:${userId}`;
+    const guessId = `${channel}:${localDateStr}:${userId}`;
     await db.insert(guesses).values({
       id: guessId,
+      channel: channel,
       local_date: localDateStr,
       telegram_user_id: userId,
       display_name: displayName,
@@ -355,18 +430,18 @@ bot.command("guess", async (ctx) => {
     });
 
     const dayPosts = await db.select().from(posts)
-      .where(eq(posts.local_date, localDateStr)).execute();
+      .where(and(eq(posts.local_date, localDateStr), eq(posts.channel, channel))).execute();
 
     const reactions = [
       `Bold move. ${guessNum} posts. The court awaits.`,
       `${guessNum}? Either you have inside information or you're delusional. Either way, respect.`,
       `A bet of ${guessNum}. The royal bookkeeper has noted it in ink that cannot be erased.`,
-      `${guessNum} posts? That's ${guessNum > 30 ? "ambitious even for Babi" : guessNum < 5 ? "dangerously optimistic about his self-control" : "a reasonable wager"}.`,
+      `${guessNum} posts? That's ${guessNum > 30 ? "ambitious" : guessNum < 5 ? "dangerously optimistic" : "a reasonable wager"}.`,
     ];
     const reaction = reactions[Math.floor(Math.random() * reactions.length)];
 
     await ctx.reply(
-      `🎲 *Bet Placed!*\n\n` +
+      `🎲 *Bet Placed for @${channel}!*\n\n` +
       `${displayName} bets *${guessNum}* posts today.\n` +
       `_${reaction}_\n\n` +
       `📊 Current count: *${dayPosts.length}* (and counting...)\n\n` +
