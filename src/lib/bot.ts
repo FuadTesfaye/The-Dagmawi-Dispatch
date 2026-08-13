@@ -1,15 +1,35 @@
 import { Bot } from "grammy";
-import { db } from "@/db";
+import { readDb, writeDb } from "@/db";
 import { subscribers, posts, guesses, userChannels } from "@/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { summarizeDay, SUMMARY_LANGUAGE } from "@/lib/summarize";
 import { generateDailyRoast, generateOnboardingRoast, generateExcuse } from "@/lib/roasts";
 import { ensureChannelScraped } from "@/lib/telegram/scraper";
+import { checkRateLimit, retryAfterSeconds } from "@/lib/rate-limiter";
+import { handlerPool } from "@/lib/concurrency-pool";
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 if (!token) throw new Error("TELEGRAM_BOT_TOKEN is missing");
 
 export const bot = new Bot(token);
+
+bot.use(async (ctx, next) => {
+  if (!ctx.from) return next();
+
+  const text = ctx.message?.text || "";
+  const command = text.startsWith("/")
+    ? (text.split(/\s/)[0].slice(1).split("@")[0] || "default")
+    : "default";
+  const userId = String(ctx.from.id);
+
+  if (!checkRateLimit(userId, command)) {
+    const wait = retryAfterSeconds(userId, command);
+    await ctx.reply(`Too many requests. Try again in ${wait}s.`);
+    return;
+  }
+
+  await handlerPool.run(() => next());
+});
 
 // Helper: get date string in EAT (UTC+3)
 function getEATDateStr(offsetDays = 0): string {
@@ -27,7 +47,7 @@ function getDisplayName(ctx: any): string {
 
 // Helper: get user's selected channel
 async function getUserChannel(userId: string): Promise<string> {
-  const result = await db.select().from(userChannels).where(eq(userChannels.telegram_user_id, userId)).execute();
+  const result = await readDb().select().from(userChannels).where(eq(userChannels.telegram_user_id, userId)).execute();
   if (result.length > 0) return result[0].channel;
   return "dagmawi_babi"; // Default
 }
@@ -101,7 +121,7 @@ bot.command("channel", async (ctx) => {
     // Clean username
     const cleanUsername = input.replace(/^@/, "").replace(/[^a-zA-Z0-9_]/g, "");
 
-    await db.insert(userChannels).values({
+    await writeDb.insert(userChannels).values({
       telegram_user_id: userId,
       channel: cleanUsername,
     }).onConflictDoUpdate({
@@ -142,7 +162,7 @@ bot.command("subscribe", async (ctx) => {
     const chatId = String(ctx.chat.id);
     const channel = await getUserChannel(userId);
     
-    await db.insert(subscribers)
+    await writeDb.insert(subscribers)
       .values({ telegram_user_id: userId, chat_id: chatId, active: true })
       .onConflictDoUpdate({
         target: subscribers.telegram_user_id,
@@ -168,7 +188,7 @@ bot.command("unsubscribe", async (ctx) => {
     if (!ctx.from) return;
     const userId = String(ctx.from.id);
     
-    await db.update(subscribers)
+    await writeDb.update(subscribers)
       .set({ active: false })
       .where(eq(subscribers.telegram_user_id, userId));
       
@@ -263,7 +283,7 @@ bot.command("babiometer", async (ctx) => {
     const { ensureChannelScraped } = await import("@/lib/telegram/scraper");
     await ensureChannelScraped(channel);
     
-    const dayPosts = await db.select().from(posts)
+    const dayPosts = await readDb().select().from(posts)
       .where(and(eq(posts.local_date, localDateStr), eq(posts.channel, channel)))
       .execute();
     const count = dayPosts.length;
@@ -365,10 +385,10 @@ bot.command("guess", async (ctx) => {
       const { ensureChannelScraped } = await import("@/lib/telegram/scraper");
       await ensureChannelScraped(channel);
 
-      const todayGuesses = await db.select().from(guesses)
+      const todayGuesses = await readDb().select().from(guesses)
         .where(and(eq(guesses.local_date, localDateStr), eq(guesses.channel, channel))).execute();
       
-      const dayPosts = await db.select().from(posts)
+      const dayPosts = await readDb().select().from(posts)
         .where(and(eq(posts.local_date, localDateStr), eq(posts.channel, channel))).execute();
       const actualCount = dayPosts.length;
 
@@ -413,7 +433,7 @@ bot.command("guess", async (ctx) => {
 
     // Save the guess (upsert)
     const guessId = `${channel}:${localDateStr}:${userId}`;
-    await db.insert(guesses).values({
+    await writeDb.insert(guesses).values({
       id: guessId,
       channel: channel,
       local_date: localDateStr,
@@ -425,7 +445,7 @@ bot.command("guess", async (ctx) => {
       set: { guess: guessNum, display_name: displayName },
     });
 
-    const dayPosts = await db.select().from(posts)
+    const dayPosts = await readDb().select().from(posts)
       .where(and(eq(posts.local_date, localDateStr), eq(posts.channel, channel))).execute();
 
     const reactions = [

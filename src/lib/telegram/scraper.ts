@@ -1,7 +1,8 @@
 import * as cheerio from "cheerio";
-import { db } from "@/db";
+import { readDb, writeDb } from "@/db";
 import { posts, ingestionCursor } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { scrapePool } from "@/lib/concurrency-pool";
 
 /**
  * Rapidly scrapes the public Telegram web preview for a channel (https://t.me/s/channel)
@@ -9,6 +10,10 @@ import { eq } from "drizzle-orm";
  * It's ideal for "on-demand" fetching when a channel is first added.
  */
 export async function scrapePublicChannelFast(channel: string): Promise<number> {
+  return scrapePool.run(() => scrapePublicChannelFastImpl(channel));
+}
+
+async function scrapePublicChannelFastImpl(channel: string): Promise<number> {
   const cleanChannel = channel.replace(/^@/, "");
   const url = `https://t.me/s/${cleanChannel}`;
 
@@ -92,7 +97,7 @@ export async function scrapePublicChannelFast(channel: string): Promise<number> 
 
     // Insert all collected posts ignoring conflicts
     for (const post of newPosts) {
-      const res = await db.insert(posts).values(post).onConflictDoNothing({ target: [posts.channel, posts.id] }).execute();
+      const res = await writeDb.insert(posts).values(post).onConflictDoNothing({ target: [posts.channel, posts.id] }).execute();
       // If affectedRows exists and is > 0, we inserted it (varies by DB driver, so we just increment loosely)
       // For simplicity, we just count them.
       inserted++;
@@ -100,11 +105,11 @@ export async function scrapePublicChannelFast(channel: string): Promise<number> 
 
     // Update cursor if we got a new high ID
     if (highestId > 0) {
-      const cursor = await db.select().from(ingestionCursor).where(eq(ingestionCursor.id, cleanChannel)).execute();
+      const cursor = await readDb().select().from(ingestionCursor).where(eq(ingestionCursor.id, cleanChannel)).execute();
       const lastMessageId = cursor.length > 0 ? cursor[0].last_message_id : 0;
       
       if (highestId > lastMessageId) {
-        await db.insert(ingestionCursor).values({
+        await writeDb.insert(ingestionCursor).values({
           id: cleanChannel,
           last_message_id: highestId,
           last_synced_at: new Date()
@@ -132,7 +137,7 @@ export async function ensureChannelScraped(channel: string) {
   const cleanChannel = channel.replace(/^@/, "");
   
   // Check if we have any posts at all for this channel
-  const existingPosts = await db.select({ id: posts.id })
+  const existingPosts = await readDb().select({ id: posts.id })
     .from(posts)
     .where(eq(posts.channel, cleanChannel))
     .limit(1)

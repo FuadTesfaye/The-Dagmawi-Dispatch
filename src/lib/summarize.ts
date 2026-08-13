@@ -1,12 +1,15 @@
 import Groq from "groq-sdk";
-import { db } from "@/db";
+import { readDb, writeDb, withReadDb } from "@/db";
 import { posts, dailySummaries } from "@/db/schema";
 import { eq, and, asc } from "drizzle-orm";
 import { ensureChannelScraped } from "./telegram/scraper";
+import { aiPool } from "./concurrency-pool";
 
 const MODEL = "llama-3.3-70b-versatile";
 /** Bumped when prompt/style changes so cached summaries regenerate. */
 export const SUMMARY_LANGUAGE = "en-clean";
+
+const inflightSummaries = new Map<string, Promise<string>>();
 
 // Lazy-load the Groq client
 let groqClient: Groq | null = null;
@@ -32,38 +35,35 @@ function formatPostsForPrompt(dayPosts: any[]) {
   }).join("\n---\n");
 }
 
-export async function summarizeDay(channel: string, localDate: string, targetLanguage: string = SUMMARY_LANGUAGE, forceRegenerate = false): Promise<string> {
-  try {
-    const summaryId = `${channel}:${localDate}`;
+async function summarizeDayImpl(channel: string, localDate: string, targetLanguage: string): Promise<string> {
+  const summaryId = `${channel}:${localDate}`;
 
-    // 1. Ensure we have the latest posts scraped on-demand
-    await ensureChannelScraped(channel);
+  await ensureChannelScraped(channel);
 
-    // Check if summary exists (skip stale summaries from old prompt/language)
-    if (!forceRegenerate) {
-      const existing = await db.select().from(dailySummaries).where(eq(dailySummaries.id, summaryId)).execute();
-      if (existing.length > 0 && existing[0].language === targetLanguage) {
-        return existing[0].summary_text;
-      }
-    }
+  const existing = await withReadDb((db) =>
+    db.select().from(dailySummaries).where(eq(dailySummaries.id, summaryId)).execute()
+  );
+  if (existing.length > 0 && existing[0].language === targetLanguage) {
+    return existing[0].summary_text;
+  }
 
-    // Get posts
-    const dayPosts = await db.select().from(posts)
+  const dayPosts = await withReadDb((db) =>
+    db.select().from(posts)
       .where(and(eq(posts.local_date, localDate), eq(posts.channel, channel)))
       .orderBy(asc(posts.date))
-      .execute();
-    
-    if (dayPosts.length === 0) {
-      return "No posts found for this date.";
-    }
+      .execute()
+  );
 
-    const postsText = formatPostsForPrompt(dayPosts);
-    
-    // Determine the subject based on the channel
-    const isBabi = channel.toLowerCase() === "dagmawi_babi";
-    const subjectName = isBabi ? "Dagmawi Babi" : `@${channel}`;
-    
-    const systemPrompt = `You write short daily digests of Telegram channel posts for ${subjectName}.
+  if (dayPosts.length === 0) {
+    return "No posts found for this date.";
+  }
+
+  const postsText = formatPostsForPrompt(dayPosts);
+
+  const isBabi = channel.toLowerCase() === "dagmawi_babi";
+  const subjectName = isBabi ? "Dagmawi Babi" : `@${channel}`;
+
+  const systemPrompt = `You write short daily digests of Telegram channel posts for ${subjectName}.
 You will receive one day's posts, separated by '---'.
 
 Write a factual summary in plain English. Sound like a clear news brief or meeting notes — not marketing copy, not a personality voice.
@@ -78,46 +78,78 @@ Rules:
 - No opening line ("Here is today's summary", etc.) — start with the content.
 - Keep it short: 3–5 bullet points, or 2 compact paragraphs. About 80–100 words max.`;
 
+  const summary = await aiPool.run(async () => {
     const completion = await getGroq().chat.completions.create({
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: `Here are the posts for ${localDate}:\n\n${postsText}` }
+        { role: "user", content: `Here are the posts for ${localDate}:\n\n${postsText}` },
       ],
       model: MODEL,
       temperature: 0.2,
       max_tokens: 250,
     });
+    return completion.choices[0]?.message?.content || "Failed to generate summary.";
+  });
 
-    const summary = completion.choices[0]?.message?.content || "Failed to generate summary.";
-    
-    // Is this date in the past?
-    const todayStr = new Date().toISOString().split('T')[0];
-    const isFinal = localDate < todayStr;
+  const todayStr = new Date().toISOString().split('T')[0];
+  const isFinal = localDate < todayStr;
 
-    await db.insert(dailySummaries).values({
-      id: summaryId,
-      channel: channel,
-      local_date: localDate,
+  await writeDb.insert(dailySummaries).values({
+    id: summaryId,
+    channel: channel,
+    local_date: localDate,
+    summary_text: summary,
+    post_count: dayPosts.length,
+    language: targetLanguage,
+    model_used: MODEL,
+    is_final: isFinal,
+    generated_at: new Date()
+  }).onConflictDoUpdate({
+    target: dailySummaries.id,
+    set: {
       summary_text: summary,
       post_count: dayPosts.length,
       language: targetLanguage,
-      model_used: MODEL,
       is_final: isFinal,
       generated_at: new Date()
-    }).onConflictDoUpdate({
-      target: dailySummaries.id,
-      set: { 
-        summary_text: summary, 
-        post_count: dayPosts.length,
-        language: targetLanguage,
-        is_final: isFinal,
-        generated_at: new Date()
-      }
-    });
+    }
+  });
 
-    return summary;
-  } catch (err: any) {
-    console.error("summarizeDay error:", err);
-    return `Could not generate summary: ${err.message || "Unknown error"}. Please try again.`;
+  return summary;
+}
+
+export async function summarizeDay(channel: string, localDate: string, targetLanguage: string = SUMMARY_LANGUAGE, forceRegenerate = false): Promise<string> {
+  const inflightKey = `${channel}:${localDate}:${targetLanguage}`;
+
+  if (!forceRegenerate) {
+    const inflight = inflightSummaries.get(inflightKey);
+    if (inflight) return inflight;
+
+    try {
+      const cached = await withReadDb((db) =>
+        db.select().from(dailySummaries).where(eq(dailySummaries.id, inflightKey)).execute()
+      );
+      if (cached.length > 0 && cached[0].language === targetLanguage) {
+        return cached[0].summary_text;
+      }
+    } catch {
+      // fall through to generation
+    }
+  }
+
+  const work = (async () => {
+    try {
+      return await summarizeDayImpl(channel, localDate, targetLanguage);
+    } catch (err: any) {
+      console.error("summarizeDay error:", err);
+      return `Could not generate summary: ${err.message || "Unknown error"}. Please try again.`;
+    }
+  })();
+
+  inflightSummaries.set(inflightKey, work);
+  try {
+    return await work;
+  } finally {
+    inflightSummaries.delete(inflightKey);
   }
 }

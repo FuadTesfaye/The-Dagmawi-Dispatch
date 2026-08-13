@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/db";
+import { readDb, writeDb } from "@/db";
 import { guesses, posts } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 
@@ -13,8 +13,8 @@ export async function GET(request: Request) {
   const date = getEATDateStr();
 
   const [todayGuesses, dayPosts] = await Promise.all([
-    db.select().from(guesses).where(and(eq(guesses.local_date, date), eq(guesses.channel, channel))).execute(),
-    db.select().from(posts).where(and(eq(posts.local_date, date), eq(posts.channel, channel))).execute(),
+    readDb().select().from(guesses).where(and(eq(guesses.local_date, date), eq(guesses.channel, channel))).execute(),
+    readDb().select().from(posts).where(and(eq(posts.local_date, date), eq(posts.channel, channel))).execute(),
   ]);
 
   const actualCount = dayPosts.length;
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Guess must be 0–200" }, { status: 400 });
     }
 
-    await db.insert(guesses).values({
+    await writeDb.insert(guesses).values({
       id: guessId,
       channel,
       local_date: date,

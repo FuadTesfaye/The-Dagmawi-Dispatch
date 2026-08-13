@@ -1,37 +1,78 @@
-import { drizzle } from 'drizzle-orm/postgres-js'
-import postgres from 'postgres'
-import { users } from '../../drizzle/schema'
+import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 
-// Initialize all 3 Supabase Database connections
-const dbUrls = [
+const poolConfig = {
+  prepare: false as const,
+  max: Number(process.env.DB_POOL_MAX ?? 10),
+  idle_timeout: 20,
+  connect_timeout: 10,
+  max_lifetime: 60 * 30,
+};
+
+const botDbUrls = [
   process.env.DB_URL_1,
   process.env.DB_URL_2,
   process.env.DB_URL_3,
 ].filter(Boolean) as string[];
 
-// Create connection pools for each database
-const clients = dbUrls.map(url => postgres(url, { prepare: false }));
-const dbs = clients.map(client => drizzle(client));
+const uniqueBotUrls = [...new Set(botDbUrls.length > 0 ? botDbUrls : [process.env.DATABASE_URL].filter(Boolean) as string[])];
+
+if (uniqueBotUrls.length === 0) {
+  throw new Error("No database URLs configured (DB_URL_1, DB_URL_2, DB_URL_3, or DATABASE_URL).");
+}
+
+const clients = uniqueBotUrls.map((url) => postgres(url, poolConfig));
+const dbs = clients.map((client) => drizzle(client));
+
+export type AppDb = PostgresJsDatabase<Record<string, never>>;
+
+/** Primary database — all writes go here. */
+export const writeDb: AppDb = dbs[0];
+
+/** @deprecated Prefer readDb() for selects and writeDb for mutations. */
+export const db = writeDb;
+
+let readIndex = 0;
 
 /**
- * Returns a database instance using Round-Robin load balancing.
- * Since these are independent Supabase instances, use this carefully 
- * (e.g., for read replicas or sharded data).
+ * Round-robin read pool across configured bot database URLs.
+ * Falls back to primary when only one URL is configured.
  */
-let currentIndex = 0;
-export const getDb = () => {
-  if (dbs.length === 0) throw new Error("No database URLs configured.");
-  const db = dbs[currentIndex];
-  currentIndex = (currentIndex + 1) % dbs.length;
-  return db;
-};
+export function readDb(): AppDb {
+  if (dbs.length === 1) return dbs[0];
+  const instance = dbs[readIndex];
+  readIndex = (readIndex + 1) % dbs.length;
+  return instance;
+}
 
-// Default export uses the primary DB (first one) or the round-robin selector
-export const db = dbs[0];
+/** Run a read query with automatic fallback to primary on failure. */
+export async function withReadDb<T>(fn: (db: AppDb) => Promise<T>): Promise<T> {
+  if (dbs.length === 1) return fn(dbs[0]);
 
-// The Search Engine graph data lives in DATABASE_URL specifically
-const searchDbClient = postgres(process.env.DATABASE_URL || process.env.DB_URL_1 || "", { prepare: false });
+  const start = readIndex;
+  let lastError: unknown;
+
+  for (let i = 0; i < dbs.length; i++) {
+    const instance = dbs[(start + i) % dbs.length];
+    try {
+      return await fn(instance);
+    } catch (err) {
+      lastError = err;
+      console.warn("readDb fallback:", err instanceof Error ? err.message : err);
+    }
+  }
+
+  return fn(writeDb);
+}
+
+/** @deprecated Use readDb() instead. */
+export const getDb = readDb;
+
+const searchUrl = process.env.DATABASE_URL || process.env.DB_URL_1 || uniqueBotUrls[0];
+const searchDbClient = postgres(searchUrl, poolConfig);
 export const searchDb = drizzle(searchDbClient);
 
-// Example export to be used in server actions or API routes
-// export const allUsers = await db.select().from(users);
+export const dbPoolStats = () => ({
+  pools: uniqueBotUrls.length,
+  maxPerPool: poolConfig.max,
+});

@@ -1,8 +1,9 @@
 import Groq from "groq-sdk";
-import { db } from "@/db";
+import { readDb, writeDb } from "@/db";
 import { posts, roastHistory } from "@/db/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { ensureChannelScraped } from "./telegram/scraper";
+import { aiPool } from "./concurrency-pool";
 import {
   ROAST_SYSTEM_PROMPT,
   CHANNEL_ONBOARDING_ROAST_PROMPT,
@@ -67,7 +68,7 @@ export function sanitizeRoastLine(raw: string): string | null {
 
 async function getRecentRoasts(channel: string, limit = RECENT_ROAST_LIMIT): Promise<string[]> {
   try {
-    const rows = await db
+    const rows = await readDb()
       .select({ line: roastHistory.line })
       .from(roastHistory)
       .where(eq(roastHistory.channel, channel))
@@ -82,8 +83,8 @@ async function getRecentRoasts(channel: string, limit = RECENT_ROAST_LIMIT): Pro
 
 async function saveRoast(channel: string, line: string, kind: "daily" | "onboarding"): Promise<void> {
   try {
-    await db.insert(roastHistory).values({ channel, line, kind }).execute();
-    await db.execute(sql`
+    await writeDb.insert(roastHistory).values({ channel, line, kind }).execute();
+    await writeDb.execute(sql`
       DELETE FROM roast_history
       WHERE id IN (
         SELECT id FROM roast_history
@@ -99,7 +100,7 @@ async function saveRoast(channel: string, line: string, kind: "daily" | "onboard
 
 async function getTodayPostCount(channel: string): Promise<number> {
   const localDate = getEATDateStr(0);
-  const rows = await db
+  const rows = await readDb()
     .select({ id: posts.id })
     .from(posts)
     .where(and(eq(posts.channel, channel), eq(posts.local_date, localDate)))
@@ -123,7 +124,7 @@ function buildPostSample(recentPosts: PostRow[], limit = 15): string {
 
 async function fetchRecentPosts(channel: string, limit = 25): Promise<PostRow[]> {
   await ensureChannelScraped(channel);
-  return db
+  return readDb()
     .select({ text: posts.text, media_type: posts.media_type })
     .from(posts)
     .where(eq(posts.channel, channel))
@@ -147,16 +148,18 @@ function pickFallbackRoast(n: number, recent: string[]): string {
 
 async function callGroqRoast(systemPrompt: string, extraUserHint?: string): Promise<string | null> {
   try {
-    const completion = await getGroq().chat.completions.create({
-      messages: [
-        { role: "system", content: systemPrompt },
-        ...(extraUserHint ? [{ role: "user" as const, content: extraUserHint }] : []),
-      ],
-      model: MODEL,
-      temperature: 0.95,
-      max_tokens: 40,
+    return await aiPool.run(async () => {
+      const completion = await getGroq().chat.completions.create({
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...(extraUserHint ? [{ role: "user" as const, content: extraUserHint }] : []),
+        ],
+        model: MODEL,
+        temperature: 0.95,
+        max_tokens: 40,
+      });
+      return completion.choices[0]?.message?.content ?? null;
     });
-    return completion.choices[0]?.message?.content ?? null;
   } catch (err) {
     console.error("AI roast generation failed:", err);
     return null;

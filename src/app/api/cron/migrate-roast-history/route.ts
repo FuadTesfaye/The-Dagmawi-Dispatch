@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/db";
+import { writeDb } from "@/db";
 import { sql } from "drizzle-orm";
 
 export async function GET(request: Request) {
@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    await db.execute(sql`
+    await writeDb.execute(sql`
       CREATE TABLE IF NOT EXISTS roast_history (
         id SERIAL PRIMARY KEY,
         channel VARCHAR(100) NOT NULL,
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
       )
     `);
 
-    await db.execute(sql`
+    await writeDb.execute(sql`
       CREATE INDEX IF NOT EXISTS idx_roast_history_channel_created
       ON roast_history (channel, created_at DESC)
     `);

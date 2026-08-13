@@ -1,4 +1,4 @@
-import { db } from "@/db";
+import { readDb } from "@/db";
 import { subscribers, dailySummaries } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { bot } from "@/lib/bot";
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
     const localDateStr = eatDate.toISOString().split('T')[0];
 
     // Fetch the summary for yesterday
-    const summaries = await db.select().from(dailySummaries).where(eq(dailySummaries.local_date, localDateStr)).execute();
+    const summaries = await readDb().select().from(dailySummaries).where(eq(dailySummaries.local_date, localDateStr)).execute();
     if (summaries.length === 0) {
       return NextResponse.json({ message: "No summary available to push for yesterday." });
     }
@@ -30,7 +30,7 @@ export async function GET(request: Request) {
     const summaryText = summaries[0].summary_text;
 
     // Fetch active subscribers
-    const activeSubscribers = await db.select().from(subscribers).where(eq(subscribers.active, true)).execute();
+    const activeSubscribers = await readDb().select().from(subscribers).where(eq(subscribers.active, true)).execute();
 
     let sent = 0;
     let failed = 0;

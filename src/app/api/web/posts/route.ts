@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/db";
+import { readDb } from "@/db";
 import { posts } from "@/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 
@@ -15,7 +15,7 @@ export async function GET(request: Request) {
   const date = searchParams.get("date") || getEATDateStr(0);
 
   try {
-    const dayPosts = await db.select({
+    const dayPosts = await readDb().select({
       id: posts.id,
       date: posts.date,
       text: posts.text,

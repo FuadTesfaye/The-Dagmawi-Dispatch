@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/db";
+import { readDb } from "@/db";
 import { posts } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 
@@ -23,7 +23,7 @@ export async function GET(request: Request) {
   const date = getEATDateStr();
 
   try {
-    const dayPosts = await db.select().from(posts)
+    const dayPosts = await readDb().select().from(posts)
       .where(and(eq(posts.local_date, date), eq(posts.channel, channel)))
       .execute();
 

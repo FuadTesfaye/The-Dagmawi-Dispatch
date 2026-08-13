@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
+import { readDb } from "@/db";
 import { posts, dailySummaries } from "@/db/schema";
-import { eq, and, desc, asc } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { summarizeDay, SUMMARY_LANGUAGE } from "@/lib/summarize";
 import { generatePersonalizedRoast } from "@/lib/roasts";
+import { handlerPool } from "@/lib/concurrency-pool";
 
 function getEATDateStr(offsetDays = 0) {
   const now = new Date();
@@ -21,14 +22,15 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    return await handlerPool.run(async () => {
     const todayDate = getEATDateStr(0);
     const yesterdayDate = getEATDateStr(-1);
 
     const [todayPosts, yesterdayPosts, todaySummaryRow, yesterdaySummaryRow] = await Promise.all([
-      db.select().from(posts).where(and(eq(posts.channel, channel), eq(posts.local_date, todayDate))).execute(),
-      db.select().from(posts).where(and(eq(posts.channel, channel), eq(posts.local_date, yesterdayDate))).execute(),
-      db.select().from(dailySummaries).where(and(eq(dailySummaries.channel, channel), eq(dailySummaries.local_date, todayDate))).execute(),
-      db.select().from(dailySummaries).where(and(eq(dailySummaries.channel, channel), eq(dailySummaries.local_date, yesterdayDate))).execute(),
+      readDb().select().from(posts).where(and(eq(posts.channel, channel), eq(posts.local_date, todayDate))).execute(),
+      readDb().select().from(posts).where(and(eq(posts.channel, channel), eq(posts.local_date, yesterdayDate))).execute(),
+      readDb().select().from(dailySummaries).where(and(eq(dailySummaries.channel, channel), eq(dailySummaries.local_date, todayDate))).execute(),
+      readDb().select().from(dailySummaries).where(and(eq(dailySummaries.channel, channel), eq(dailySummaries.local_date, yesterdayDate))).execute(),
     ]);
 
     const [todaySummary, yesterdaySummary, roast] = await Promise.all([
@@ -46,6 +48,7 @@ export async function GET(request: NextRequest) {
       todaySummary,
       yesterdaySummary,
       roast,
+    });
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";

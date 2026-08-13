@@ -1,6 +1,6 @@
 import { TelegramClient, Api } from "telegram";
 import { StringSession } from "telegram/sessions";
-import { db } from "@/db";
+import { readDb, writeDb } from "@/db";
 import { posts, ingestionCursor, userChannels } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
@@ -21,7 +21,7 @@ export async function fetchNewMessages() {
 
   try {
     // Determine which channels to scrape
-    const channelsResult = await db.select({ channel: userChannels.channel }).from(userChannels).execute();
+    const channelsResult = await readDb().select({ channel: userChannels.channel }).from(userChannels).execute();
     const channels = new Set(channelsResult.map(c => c.channel));
     channels.add("dagmawi_babi"); // Always include default
 
@@ -33,7 +33,7 @@ export async function fetchNewMessages() {
 
       try {
         // Get cursor
-        const cursor = await db.select().from(ingestionCursor).where(eq(ingestionCursor.id, cleanChannelUsername)).execute();
+        const cursor = await readDb().select().from(ingestionCursor).where(eq(ingestionCursor.id, cleanChannelUsername)).execute();
         const lastMessageId = cursor.length > 0 ? cursor[0].last_message_id : 0;
 
         // Try to join the channel if not already joined
@@ -82,7 +82,7 @@ export async function fetchNewMessages() {
           const permalink = `https://t.me/${cleanChannelUsername}/${msg.id}`;
           
           // Insert or ignore if exists
-          await db.insert(posts).values({
+          await writeDb.insert(posts).values({
             channel: cleanChannelUsername,
             id: msg.id,
             date: date,
@@ -101,7 +101,7 @@ export async function fetchNewMessages() {
 
         // Update cursor
         if (highestId > lastMessageId) {
-          await db.insert(ingestionCursor).values({
+          await writeDb.insert(ingestionCursor).values({
             id: cleanChannelUsername,
             last_message_id: highestId,
             last_synced_at: new Date()
