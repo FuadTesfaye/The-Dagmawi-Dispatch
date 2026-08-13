@@ -247,7 +247,7 @@ async function generateAIRoast(channel: string, recentPosts: any[]): Promise<str
 
       if (searchResults && searchResults.length > 0 && (searchResults[0].username?.toLowerCase() === channel.toLowerCase())) {
         const metadata = searchResults[0];
-        extraContext += `\n\n**ADDITIONAL CHANNEL METADATA:**\n- Primary Category: ${metadata.category || "Unknown"}\n- Channel Description: ${metadata.summary || "None"}\n- Influence/Clout Score: ${metadata.score}\n- Subscriber Count: ${metadata.subscribers || "Unknown"}\n(Use this metadata and analytics to brutally mock their relevance, their chosen niche, their wordiness, or their clout).`;
+        extraContext += `\n\n**ADDITIONAL CHANNEL METADATA:**\n- Primary Category: ${metadata.category || "Unknown"}\n- Channel Description: ${metadata.summary || "None"}\n- Influence/Clout Score: ${metadata.final_score}\n- Subscriber Count: ${metadata.member_count || "Unknown"}\n(Use this metadata and analytics to brutally mock their relevance, their chosen niche, their wordiness, or their clout).`;
       }
     } catch (e) {
       // Backend might be down, ignore

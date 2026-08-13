@@ -19,9 +19,20 @@ class ApiError extends Error {
   }
 }
 
-async function get<T>(path: string): Promise<T> {
+async function get<T>(path: string, revalidateTime?: number): Promise<T> {
+  let revalidate = revalidateTime;
+  if (revalidate === undefined) {
+    if (path.startsWith('/stats') || path.startsWith('/categories') || path.startsWith('/graph/hubs')) {
+      revalidate = 3600; // 1 hour for slowly changing data
+    } else if (path.startsWith('/search') || path.startsWith('/channel/')) {
+      revalidate = 60; // 60 seconds for search and detail pages
+    } else {
+      revalidate = 300; // 5 minutes default
+    }
+  }
+
   const res = await fetch(`${BASE}${path}`, {
-    cache: "no-store",
+    next: { revalidate },
     headers: { accept: "application/json" },
   });
   if (!res.ok) {
