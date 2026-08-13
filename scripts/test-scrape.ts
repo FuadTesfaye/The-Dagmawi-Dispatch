@@ -1,35 +1,88 @@
 import "dotenv/config";
-import { TelegramClient } from "telegram";
-import { StringSession } from "telegram/sessions";
+import { db } from "../src/db";
+import { posts, dailySummaries } from "../src/db/schema";
+import { eq, asc } from "drizzle-orm";
+import Groq from "groq-sdk";
 
-const apiId = parseInt(process.env.TELEGRAM_API_ID!);
-const apiHash = process.env.TELEGRAM_API_HASH!;
-const sessionString = process.env.TELEGRAM_USERBOT_SESSION!;
-const channelUsername = "dagmawi_babi";
+const MODEL = "llama-3.3-70b-versatile";
 
 async function run() {
-  const stringSession = new StringSession(sessionString);
-  const client = new TelegramClient(stringSession, apiId, apiHash, {
-    connectionRetries: 5,
-  });
-
-  await client.connect();
-  console.log("Connected.");
+  // 1. Check today's EAT date and posts
+  const now = new Date();
+  const eat = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+  const todayStr = eat.toISOString().split('T')[0];
+  const yesterdayEat = new Date(eat);
+  yesterdayEat.setDate(yesterdayEat.getDate() - 1);
+  const yesterdayStr = yesterdayEat.toISOString().split('T')[0];
   
-  try {
-    const messages = await client.getMessages(channelUsername, {
-      limit: 10,
-    });
-    console.log(`Fetched ${messages.length} messages.`);
-    if (messages.length > 0) {
-      console.log("First message:", messages[0].message);
-    }
-  } catch (e: any) {
-    console.error("Error fetching messages:", e.message);
+  console.log(`Today (EAT): ${todayStr}`);
+  console.log(`Yesterday (EAT): ${yesterdayStr}`);
+
+  // 2. Check posts per date
+  const allPosts = await db.select({ local_date: posts.local_date, id: posts.id }).from(posts).execute();
+  const dateMap = new Map<string, number>();
+  for (const p of allPosts) {
+    const d = String(p.local_date);
+    dateMap.set(d, (dateMap.get(d) || 0) + 1);
+  }
+  console.log("\nPosts per date:");
+  for (const [d, count] of [...dateMap.entries()].sort()) {
+    console.log(`  ${d}: ${count} posts`);
   }
   
-  await client.disconnect();
+  // 3. Test Groq with new model
+  console.log("\n--- Testing Groq API with new model ---");
+  const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  const completion = await groq.chat.completions.create({
+    messages: [
+      { role: "system", content: "You are a helpful assistant. Respond in one sentence." },
+      { role: "user", content: "Say hello." }
+    ],
+    model: MODEL,
+    temperature: 0.3,
+  });
+  console.log("✅ Groq response:", completion.choices[0]?.message?.content);
+  
+  // 4. Test actual summarization for yesterday (since it has the most posts)
+  const testDate = yesterdayStr;
+  const dayPosts = await db.select().from(posts).where(eq(posts.local_date, testDate)).orderBy(asc(posts.date)).execute();
+  console.log(`\n--- Summarizing ${testDate} (${dayPosts.length} posts) ---`);
+  
+  if (dayPosts.length === 0) {
+    console.log("No posts for this date, skipping summarization test.");
+  } else {
+    const postsText = dayPosts.map(p => {
+      let content = `[${p.date.toISOString()}] (ID: ${p.id})\n`;
+      if (p.media_type !== 'none') content += `[Media: ${p.media_type}]\n`;
+      if (p.text) content += `${p.text}\n`;
+      return content;
+    }).join("\n---\n");
+
+    const systemPrompt = `You are the "Royal Herald" for a kingdom, summarizing the daily Telegram posts of "Dagmawi Babi".
+Group by topic rather than just listing posts in order. Preserve named entities, numbers, and links exactly.
+Speak like a self-important town crier. Weave in Amharic words naturally (Selam, Betam, Ayzosh, Chigger yellem) — first use gets a parenthetical translation.
+Be slightly dramatic but affectionate. Do not include any generic intro, just the royal summary.`;
+
+    const summaryCompletion = await groq.chat.completions.create({
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `Here are the posts for ${testDate}:\n\n${postsText}` }
+      ],
+      model: MODEL,
+      temperature: 0.3,
+    });
+
+    const summary = summaryCompletion.choices[0]?.message?.content;
+    console.log("\n✅ SUMMARY OUTPUT:");
+    console.log("─".repeat(60));
+    console.log(summary);
+    console.log("─".repeat(60));
+  }
+  
   process.exit(0);
 }
 
-run();
+run().catch(err => {
+  console.error("Fatal error:", err);
+  process.exit(1);
+});

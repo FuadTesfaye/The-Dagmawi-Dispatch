@@ -3,6 +3,8 @@ import { db } from "@/db";
 import { posts, dailySummaries } from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
 
+const MODEL = "llama-3.3-70b-versatile";
+
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
@@ -21,25 +23,26 @@ function formatPostsForPrompt(dayPosts: any[]) {
   }).join("\n---\n");
 }
 
-export async function summarizeDay(localDate: string, targetLanguage: string = "am", forceRegenerate = false) {
-  // Check if final summary exists
-  if (!forceRegenerate) {
-    const existing = await db.select().from(dailySummaries).where(eq(dailySummaries.local_date, localDate)).execute();
-    if (existing.length > 0 && existing[0].is_final) {
-      return existing[0].summary_text;
+export async function summarizeDay(localDate: string, targetLanguage: string = "am", forceRegenerate = false): Promise<string> {
+  try {
+    // Check if final summary exists
+    if (!forceRegenerate) {
+      const existing = await db.select().from(dailySummaries).where(eq(dailySummaries.local_date, localDate)).execute();
+      if (existing.length > 0 && existing[0].is_final) {
+        return existing[0].summary_text;
+      }
     }
-  }
 
-  // Get posts
-  const dayPosts = await db.select().from(posts).where(eq(posts.local_date, localDate)).orderBy(asc(posts.date)).execute();
-  
-  if (dayPosts.length === 0) {
-    return "No posts found for this date.";
-  }
+    // Get posts
+    const dayPosts = await db.select().from(posts).where(eq(posts.local_date, localDate)).orderBy(asc(posts.date)).execute();
+    
+    if (dayPosts.length === 0) {
+      return "No posts found for this date.";
+    }
 
-  const postsText = formatPostsForPrompt(dayPosts);
-  
-  const systemPrompt = `You are the "Royal Herald" for a kingdom, summarizing the daily Telegram posts of "Dagmawi Babi" (sometimes referred to as Dagmawi the Second).
+    const postsText = formatPostsForPrompt(dayPosts);
+    
+    const systemPrompt = `You are the "Royal Herald" for a kingdom, summarizing the daily Telegram posts of "Dagmawi Babi" (sometimes referred to as Dagmawi the Second).
 You will be given a list of his posts from one day, separated by '---'.
 Your job is to summarize the day's activity. Group by topic rather than just listing posts in order.
 Preserve named entities, numbers, and links exactly. Note media-only posts briefly ("shared a photo of...").
@@ -52,38 +55,42 @@ Preserve named entities, numbers, and links exactly. Note media-only posts brief
 - Respond in this language: ${targetLanguage === 'en' ? 'English' : 'Amharic (Ethiopian) text blended with English herald speech'}.
 Do not include any generic introductory text, just the royal summary.`;
 
-  const completion = await groq.chat.completions.create({
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: `Here are the posts for ${localDate}:\n\n${postsText}` }
-    ],
-    model: "llama3-70b-8192", // Using a capable model
-    temperature: 0.3,
-  });
+    const completion = await groq.chat.completions.create({
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `Here are the posts for ${localDate}:\n\n${postsText}` }
+      ],
+      model: MODEL,
+      temperature: 0.3,
+    });
 
-  const summary = completion.choices[0]?.message?.content || "Failed to generate summary.";
-  
-  // Is this date in the past?
-  const todayStr = new Date().toISOString().split('T')[0];
-  const isFinal = localDate < todayStr;
+    const summary = completion.choices[0]?.message?.content || "Failed to generate summary.";
+    
+    // Is this date in the past?
+    const todayStr = new Date().toISOString().split('T')[0];
+    const isFinal = localDate < todayStr;
 
-  await db.insert(dailySummaries).values({
-    local_date: localDate,
-    summary_text: summary,
-    post_count: dayPosts.length,
-    language: targetLanguage,
-    model_used: "llama3-70b-8192",
-    is_final: isFinal,
-    generated_at: new Date()
-  }).onConflictDoUpdate({
-    target: dailySummaries.local_date,
-    set: { 
-      summary_text: summary, 
+    await db.insert(dailySummaries).values({
+      local_date: localDate,
+      summary_text: summary,
       post_count: dayPosts.length,
+      language: targetLanguage,
+      model_used: MODEL,
       is_final: isFinal,
       generated_at: new Date()
-    }
-  });
+    }).onConflictDoUpdate({
+      target: dailySummaries.local_date,
+      set: { 
+        summary_text: summary, 
+        post_count: dayPosts.length,
+        is_final: isFinal,
+        generated_at: new Date()
+      }
+    });
 
-  return summary;
+    return summary;
+  } catch (err: any) {
+    console.error("summarizeDay error:", err);
+    return `⚠️ The royal scribes encountered an error: ${err.message || "Unknown error"}. Please try again in a moment.`;
+  }
 }
