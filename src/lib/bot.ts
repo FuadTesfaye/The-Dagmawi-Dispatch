@@ -464,3 +464,30 @@ bot.command("streak", async (ctx) => {
     { parse_mode: "Markdown" }
   );
 });
+
+// ─── FALLBACK HANDLER ───────────────────────────────────────────
+bot.on("message", async (ctx) => {
+  // If the user sent a valid command that wasn't matched above,
+  // or if they just typed random text, we gently mock them and show the menu.
+  
+  const text = ctx.message.text || "";
+  
+  let opening = "The herald squints at your message. He has no idea what you are trying to say.";
+  
+  if (text.startsWith("/")) {
+    opening = `The herald squints at your scrolls. "${text}" is not a known royal decree.`;
+  }
+  
+  await ctx.reply(
+    `🤨 *Confusion in the Court*\n\n` +
+    `${opening}\n\n` +
+    `Please speak in a language the royal scribes understand:\n\n` +
+    `📖 /today — Today's summary\n` +
+    `🐴 /yesterday — Yesterday's summary\n` +
+    `🎲 /guess — Bet on the post count\n` +
+    `📡 /channel — Switch the channel you track\n` +
+    `🎺 /babiometer — Check the chaos level\n\n` +
+    `_Hit the / menu button to see all commands._`,
+    { parse_mode: "Markdown" }
+  );
+});
