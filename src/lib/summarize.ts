@@ -76,7 +76,7 @@ Provide a REAL, FACTUAL summary of the day's activity so the user actually knows
 - Respond in this language: ${targetLanguage === 'en' ? 'English' : 'English blended with Amharic herald speech'}.
 - Do not include any generic introductory text, just launch straight into the royal summary.`;
 
-    const completion = await groq.chat.completions.create({
+    const completion = await getGroq().chat.completions.create({
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: `Here are the posts for ${localDate}:\n\n${postsText}` }
