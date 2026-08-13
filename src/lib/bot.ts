@@ -182,13 +182,12 @@ bot.command("today", async (ctx) => {
     
     if (summary.includes("No posts found")) {
       await ctx.reply(
-        `📜 *Today's Dispatch for @${channel} (${localDateStr}):*\n\n` +
+        `📜 Today's Dispatch for @${channel} (${localDateStr}):\n\n` +
         "The scrolls are quiet so far, townsfolk. Thumbs appear to be resting.\n\n" +
-        "_Check back later. Chigger yellem (no problem)._",
-        { parse_mode: "Markdown" }
+        "Check back later. Chigger yellem (no problem)."
       );
     } else {
-      await ctx.reply(`📜 *Today's Dispatch for @${channel} (${localDateStr}):*\n\n${summary}`, { parse_mode: "Markdown" });
+      await ctx.reply(`📜 Today's Dispatch for @${channel} (${localDateStr}):\n\n${summary}`);
     }
   } catch (err) {
     console.error("today error:", err);
@@ -208,12 +207,11 @@ bot.command("yesterday", async (ctx) => {
     
     if (summary.includes("No posts found")) {
       await ctx.reply(
-        `📜 *Yesterday's Dispatch for @${channel} (${localDateStr}):*\n\n` +
-        "Silence from the throne. A rare blessing. The kingdom breathed.",
-        { parse_mode: "Markdown" }
+        `📜 Yesterday's Dispatch for @${channel} (${localDateStr}):\n\n` +
+        "Silence from the throne. A rare blessing. The kingdom breathed."
       );
     } else {
-      await ctx.reply(`📜 *Yesterday's Dispatch for @${channel} (${localDateStr}):*\n\n${summary}`, { parse_mode: "Markdown" });
+      await ctx.reply(`📜 Yesterday's Dispatch for @${channel} (${localDateStr}):\n\n${summary}`);
     }
   } catch (err) {
     console.error("yesterday error:", err);
@@ -228,12 +226,12 @@ bot.command("date", async (ctx) => {
     const channel = await getUserChannel(String(ctx.from.id));
     const dateStr = ctx.match;
     if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-      return ctx.reply("📅 Usage: `/date 2026-08-12`", { parse_mode: "Markdown" });
+      return ctx.reply("📅 Usage: /date 2026-08-12");
     }
     
     await ctx.reply(`🐴 Riding back to ${dateStr} for @${channel}...`);
     const summary = await summarizeDay(channel, dateStr, "am", false);
-    await ctx.reply(`📜 *Dispatch for @${channel} on ${dateStr}:*\n\n${summary}`, { parse_mode: "Markdown" });
+    await ctx.reply(`📜 Dispatch for @${channel} on ${dateStr}:\n\n${summary}`);
   } catch (err) {
     console.error("date error:", err);
     await ctx.reply("⚠️ The herald tripped. Please try again.");
