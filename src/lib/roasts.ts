@@ -91,13 +91,32 @@ export const STANDALONE_ROASTS = [
 ];
 
 export function generateRoast(channel: string): string {
-  // 10% chance to return a standalone roast
-  if (Math.random() < 0.1) {
+  const isBabi = channel.toLowerCase() === "dagmawi_babi";
+
+  // 15% chance to return a standalone roast
+  if (Math.random() < 0.15) {
+    const babiSpecific = [
+      "Babi posted 37 times today. That's not a channel, that's a hostage situation for your notification bar.",
+      "Dagmawi the Second has decreed 28 messages before noon. Even his phone is filing for workers' comp.",
+      "I tried to summarize Babi's posts but my AI asked for hazard pay. Ayzosh (take courage), we'll get through this.",
+      "Babi posts so much, archaeologists in 3026 will assume he was an entire news agency, not one man with WiFi.",
+      "Babi's posting frequency just broke the Geneva Convention. Somebody notify the UN.",
+      "If Babi stopped posting for 24 hours, Telegram's stock price would drop 12%. He IS the economy.",
+      "Scientists have discovered a new unit of measurement: 1 Babi = 47 posts/day. It replaced the light-year for measuring distance between sanity and his channel.",
+      "Legend says if you scroll to the top of Babi's channel, you'll find a post that simply says 'testing 1 2 3.' That was yesterday.",
+      "Babi doesn't sleep. He just switches to drafts.",
+      "Breaking: Telegram is adding a new feature called 'Babi Mode' — it removes the character limit entirely."
+    ];
+
+    if (isBabi && Math.random() < 0.5) {
+      return babiSpecific[Math.floor(Math.random() * babiSpecific.length)];
+    }
+
     const roast = STANDALONE_ROASTS[Math.floor(Math.random() * STANDALONE_ROASTS.length)];
     return roast.replace(/@{channel}/g, `@${channel}`);
   }
 
-  // 90% chance to generate a procedural 3-part roast
+  // 85% chance to generate a procedural 3-part roast
   const start = ROAST_STARTERS[Math.floor(Math.random() * ROAST_STARTERS.length)];
   const middle = ROAST_MIDDLES[Math.floor(Math.random() * ROAST_MIDDLES.length)];
   const end = ROAST_ENDINGS[Math.floor(Math.random() * ROAST_ENDINGS.length)];
