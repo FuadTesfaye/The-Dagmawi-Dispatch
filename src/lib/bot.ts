@@ -1,5 +1,5 @@
 import { Bot } from "grammy";
-import { readDb, writeDb } from "@/db";
+import { writeDb, withReadDb } from "@/db";
 import { subscribers, posts, guesses, userChannels } from "@/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { summarizeDay, SUMMARY_LANGUAGE } from "@/lib/summarize";
@@ -59,7 +59,9 @@ function getDisplayName(ctx: any): string {
 
 // Helper: get user's selected channel
 async function getUserChannel(userId: string): Promise<string> {
-  const result = await readDb().select().from(userChannels).where(eq(userChannels.telegram_user_id, userId)).execute();
+  const result = await withReadDb((db) =>
+    db.select().from(userChannels).where(eq(userChannels.telegram_user_id, userId)).execute()
+  );
   if (result.length > 0) return result[0].channel;
   return "dagmawi_babi"; // Default
 }
@@ -296,9 +298,11 @@ bot.command("babiometer", async (ctx) => {
     const { ensureChannelScraped } = await import("@/lib/telegram/scraper");
     await ensureChannelScraped(channel);
     
-    const dayPosts = await readDb().select().from(posts)
-      .where(and(eq(posts.local_date, localDateStr), eq(posts.channel, channel)))
-      .execute();
+    const dayPosts = await withReadDb((db) =>
+      db.select().from(posts)
+        .where(and(eq(posts.local_date, localDateStr), eq(posts.channel, channel)))
+        .execute()
+    );
     const count = dayPosts.length;
     
     let blasts: string;
@@ -396,11 +400,15 @@ bot.command("guess", async (ctx) => {
       const { ensureChannelScraped } = await import("@/lib/telegram/scraper");
       await ensureChannelScraped(channel);
 
-      const todayGuesses = await readDb().select().from(guesses)
-        .where(and(eq(guesses.local_date, localDateStr), eq(guesses.channel, channel))).execute();
+      const todayGuesses = await withReadDb((db) =>
+        db.select().from(guesses)
+          .where(and(eq(guesses.local_date, localDateStr), eq(guesses.channel, channel))).execute()
+      );
       
-      const dayPosts = await readDb().select().from(posts)
-        .where(and(eq(posts.local_date, localDateStr), eq(posts.channel, channel))).execute();
+      const dayPosts = await withReadDb((db) =>
+        db.select().from(posts)
+          .where(and(eq(posts.local_date, localDateStr), eq(posts.channel, channel))).execute()
+      );
       const actualCount = dayPosts.length;
 
       if (todayGuesses.length === 0) {
@@ -456,8 +464,10 @@ bot.command("guess", async (ctx) => {
       set: { guess: guessNum, display_name: displayName },
     });
 
-    const dayPosts = await readDb().select().from(posts)
-      .where(and(eq(posts.local_date, localDateStr), eq(posts.channel, channel))).execute();
+    const dayPosts = await withReadDb((db) =>
+      db.select().from(posts)
+        .where(and(eq(posts.local_date, localDateStr), eq(posts.channel, channel))).execute()
+    );
 
     const reactions = [
       `Bold move. ${guessNum} posts. The court awaits.`,

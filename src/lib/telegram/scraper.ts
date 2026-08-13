@@ -1,5 +1,5 @@
 import * as cheerio from "cheerio";
-import { readDb, writeDb } from "@/db";
+import { writeDb, withReadDb } from "@/db";
 import { posts, ingestionCursor } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { scrapePool } from "@/lib/concurrency-pool";
@@ -25,7 +25,6 @@ async function scrapePublicChannelFastImpl(channel: string): Promise<number> {
     });
 
     if (!response.ok) {
-      console.warn(`Failed to fetch public preview for @${cleanChannel}: ${response.status}`);
       return 0;
     }
 
@@ -105,7 +104,9 @@ async function scrapePublicChannelFastImpl(channel: string): Promise<number> {
 
     // Update cursor if we got a new high ID
     if (highestId > 0) {
-      const cursor = await readDb().select().from(ingestionCursor).where(eq(ingestionCursor.id, cleanChannel)).execute();
+      const cursor = await withReadDb((db) =>
+        db.select().from(ingestionCursor).where(eq(ingestionCursor.id, cleanChannel)).execute()
+      );
       const lastMessageId = cursor.length > 0 ? cursor[0].last_message_id : 0;
       
       if (highestId > lastMessageId) {
@@ -122,8 +123,7 @@ async function scrapePublicChannelFastImpl(channel: string): Promise<number> {
 
     return inserted; 
 
-  } catch (err) {
-    console.error(`Error in scrapePublicChannelFast for ${cleanChannel}:`, err);
+  } catch {
     return 0;
   }
 }
@@ -137,20 +137,17 @@ export async function ensureChannelScraped(channel: string) {
   const cleanChannel = channel.replace(/^@/, "");
   
   // Check if we have any posts at all for this channel
-  const existingPosts = await readDb().select({ id: posts.id })
-    .from(posts)
-    .where(eq(posts.channel, cleanChannel))
-    .limit(1)
-    .execute();
+  const existingPosts = await withReadDb((db) =>
+    db.select({ id: posts.id })
+      .from(posts)
+      .where(eq(posts.channel, cleanChannel))
+      .limit(1)
+      .execute()
+  );
     
   if (existingPosts.length === 0) {
-    console.log(`No posts found for @${cleanChannel}. Triggering fast public scrape...`);
     await scrapePublicChannelFast(cleanChannel);
   } else {
-    // Optionally, if the latest post is too old, we could scrape again, 
-    // but the background worker (userbot.ts) should handle regular updates.
-    // For immediate gratification on fresh days, we can just aggressively scrape
-    // the fast web preview. It's low cost.
     await scrapePublicChannelFast(cleanChannel);
   }
 }

@@ -1,4 +1,4 @@
-import { readDb, writeDb } from "@/db";
+import { writeDb, withReadDb } from "@/db";
 import { posts, roastHistory } from "@/db/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { ensureChannelScraped } from "./telegram/scraper";
@@ -60,13 +60,15 @@ export function sanitizeRoastLine(raw: string): string | null {
 
 async function getRecentRoasts(channel: string, limit = RECENT_ROAST_LIMIT): Promise<string[]> {
   try {
-    const rows = await readDb()
-      .select({ line: roastHistory.line })
-      .from(roastHistory)
-      .where(eq(roastHistory.channel, channel))
-      .orderBy(desc(roastHistory.created_at))
-      .limit(limit)
-      .execute();
+    const rows = await withReadDb((db) =>
+      db
+        .select({ line: roastHistory.line })
+        .from(roastHistory)
+        .where(eq(roastHistory.channel, channel))
+        .orderBy(desc(roastHistory.created_at))
+        .limit(limit)
+        .execute()
+    );
     return rows.map((r) => r.line);
   } catch {
     return [];
@@ -92,11 +94,13 @@ async function saveRoast(channel: string, line: string, kind: "daily" | "onboard
 
 async function getTodayPostCount(channel: string): Promise<number> {
   const localDate = getEATDateStr(0);
-  const rows = await readDb()
-    .select({ id: posts.id })
-    .from(posts)
-    .where(and(eq(posts.channel, channel), eq(posts.local_date, localDate)))
-    .execute();
+  const rows = await withReadDb((db) =>
+    db
+      .select({ id: posts.id })
+      .from(posts)
+      .where(and(eq(posts.channel, channel), eq(posts.local_date, localDate)))
+      .execute()
+  );
   return rows.length;
 }
 
@@ -116,13 +120,15 @@ function buildPostSample(recentPosts: PostRow[], limit = 15): string {
 
 async function fetchRecentPosts(channel: string, limit = 25): Promise<PostRow[]> {
   await ensureChannelScraped(channel);
-  return readDb()
-    .select({ text: posts.text, media_type: posts.media_type })
-    .from(posts)
-    .where(eq(posts.channel, channel))
-    .orderBy(desc(posts.date))
-    .limit(limit)
-    .execute();
+  return withReadDb((db) =>
+    db
+      .select({ text: posts.text, media_type: posts.media_type })
+      .from(posts)
+      .where(eq(posts.channel, channel))
+      .orderBy(desc(posts.date))
+      .limit(limit)
+      .execute()
+  );
 }
 
 function interpolate(template: string, vars: Record<string, string>): string {
