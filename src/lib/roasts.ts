@@ -124,3 +124,21 @@ export function generateRoast(channel: string): string {
   const fullRoast = `${start} ${middle} \n\n${end}`;
   return fullRoast.replace(/@{channel}/g, `@${channel}`);
 }
+
+export const EXCUSES = [
+  "Tell them: 'A wild hyena ate my phone before I could read the Dispatch. Betam (very) tragic.'",
+  "Tell them: 'I was busy translating @{channel}'s latest 14-part audio message into interpretive dance.'",
+  "Tell them: 'The royal scrolls were delayed by rain in Addis. And also by my laziness. Mostly the laziness.'",
+  "Tell them: 'I read the summary but my memory got wiped by the sheer volume of their posts. Chigger yellem (no problem).'",
+  "Tell them: 'I was on a spiritual retreat. From notifications.'",
+  "Tell them: 'My phone died mid-scroll. It couldn't handle the weight of @{channel}'s wisdom.'",
+  "Tell them: 'I DID read it. All of it. I just... blacked out from information overload. Ayzosh (take courage).'",
+  "Tell them: 'I'm saving the posts for retirement. I'll have plenty of time then.'",
+  "Tell them: 'Mercury was in retrograde and my Telegram stopped working. Science.'",
+  "Tell them: 'I tried to open the channel but @{channel} had posted so much my phone needed a runway to scroll.'",
+];
+
+export function generateExcuse(channel: string): string {
+  const excuse = EXCUSES[Math.floor(Math.random() * EXCUSES.length)];
+  return excuse.replace(/@{channel}/g, channel);
+}

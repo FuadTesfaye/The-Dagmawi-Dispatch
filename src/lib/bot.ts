@@ -3,28 +3,12 @@ import { db } from "@/db";
 import { subscribers, posts, guesses, userChannels } from "@/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { summarizeDay } from "@/lib/summarize";
-import { generateRoast } from "@/lib/roasts";
+import { generateRoast, generateExcuse } from "@/lib/roasts";
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 if (!token) throw new Error("TELEGRAM_BOT_TOKEN is missing");
 
 export const bot = new Bot(token);
-
-
-
-// ─── EXCUSE POOL ────────────────────────────────────────────────
-const EXCUSES = [
-  "Tell them: 'A wild hyena ate my phone before I could read the Dispatch. Betam (very) tragic.'",
-  "Tell them: 'I was busy translating Dagmawi's latest 14-part audio message into interpretive dance.'",
-  "Tell them: 'The royal scrolls were delayed by rain in Addis. And also by my laziness. Mostly the laziness.'",
-  "Tell them: 'I read the summary but my memory got wiped by the sheer volume of his posts. Chigger yellem (no problem).'",
-  "Tell them: 'I was on a spiritual retreat. From notifications.'",
-  "Tell them: 'My phone died mid-scroll. It couldn't handle the weight of his wisdom.'",
-  "Tell them: 'I DID read it. All of it. I just... blacked out from information overload. Ayzosh (take courage).'",
-  "Tell them: 'I'm saving the posts for retirement. I'll have plenty of time then.'",
-  "Tell them: 'Mercury was in retrograde and my Telegram stopped working. Science.'",
-  "Tell them: 'I tried to open the channel but Babi had posted so much my phone needed a runway to scroll.'",
-];
 
 // Helper: get date string in EAT (UTC+3)
 function getEATDateStr(offsetDays = 0): string {
@@ -55,17 +39,24 @@ bot.catch((err) => {
 // ─── /start ─────────────────────────────────────────────────────
 bot.command("start", async (ctx) => {
   const name = ctx.from?.first_name || "stranger";
+  const userId = String(ctx.from?.id || "0");
+  const channel = await getUserChannel(userId);
+  const isBabi = channel.toLowerCase() === "dagmawi_babi";
+  
+  const targetName = isBabi ? "Babi's" : `@${channel}'s`;
+  const footerName = isBabi ? "Babi's" : `@${channel}'s`;
+
   await ctx.reply(
     `📜 *Selam (peace), ${name}!*\n` +
     `━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-    `Welcome to *The Dagmawi Dispatch* — the only bot brave enough to read ALL of Babi's posts so you don't have to.\n\n` +
-    `We know you love him. We know you follow him. We also know you opened Telegram, saw 47 unread messages from one man, and quietly closed the app.\n\n` +
+    `Welcome to *The Dagmawi Dispatch* — the only bot brave enough to read ALL of ${targetName} posts so you don't have to.\n\n` +
+    `We know you love them. We know you follow them. We also know you opened Telegram, saw 47 unread messages from one channel, and quietly closed the app.\n\n` +
     `*No judgment. That's why I exist.*\n\n` +
-    `I scrape his channel, feed it to an AI, and hand you a clean summary every day. Your friendships are saved. Your FOMO is cured. Chigger yellem (no problem).\n\n` +
+    `I scrape the channel, feed it to an AI, and hand you a clean summary every day. Your friendships are saved. Your FOMO is cured. Chigger yellem (no problem).\n\n` +
     `━━━━━━━━━━━━━━━━━━━━━━━━\n` +
     `📖  *THE SCROLLS*\n` +
     `━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-    `/today — What he said today (so far)\n` +
+    `/today — What they said today (so far)\n` +
     `/yesterday — Yesterday's royal recap\n` +
     `/date — Dig up any date's archive\n\n` +
     `🕊️  *SERVICES*\n` +
@@ -73,14 +64,14 @@ bot.command("start", async (ctx) => {
     `/channel — Select a different channel to track\n` +
     `/subscribe — Auto-deliver the daily digest\n` +
     `/unsubscribe — Leave the kingdom\n` +
-    `/babiometer — How loud is he today?\n\n` +
+    `/babiometer — How loud are they today?\n\n` +
     `🎭  *ENTERTAINMENT*\n` +
     `━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-    `/roast — Affectionately roast the man\n` +
+    `/roast — Affectionately roast them\n` +
     `/excuse — Didn't read? We got you\n` +
-    `/guess — Bet on his daily post count\n\n` +
+    `/guess — Bet on their daily post count\n\n` +
     `━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-    `_Powered by caffeine, Groq, and Babi's relentless output._`,
+    `_Powered by caffeine, Groq, and ${footerName} relentless output._`,
     { parse_mode: "Markdown" }
   );
 });
@@ -330,9 +321,11 @@ bot.command("roast", async (ctx) => {
 // ─── /excuse ────────────────────────────────────────────────────
 bot.command("excuse", async (ctx) => {
   try {
-    const excuse = EXCUSES[Math.floor(Math.random() * EXCUSES.length)];
+    if (!ctx.from) return;
+    const channel = await getUserChannel(String(ctx.from.id));
+    const excuse = generateExcuse(channel);
     await ctx.reply(
-      `🛡️ *Your Royal Excuse:*\n\n${excuse}\n\n_Use responsibly. The Herald takes no legal responsibility._`,
+      `🛡️ *Your Royal Excuse for missing @${channel}'s posts:*\n\n${excuse}\n\n_Use responsibly. The Herald takes no legal responsibility._`,
       { parse_mode: "Markdown" }
     );
   } catch (err) {
