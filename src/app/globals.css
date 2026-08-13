@@ -10,6 +10,21 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  
+  /* Search Engine Theme Colors */
+  --color-bg: #0a0c10;
+  --color-surface: #10141b;
+  --color-surface-2: #161b24;
+  --color-border: #222a36;
+  --color-border-bright: #2f3a4a;
+  --color-muted: #6b7686;
+  --color-fg: #d7dde6;
+  --color-fg-bright: #f2f5f9;
+  --color-accent: #3ddc97;
+  --color-accent-dim: #1f6b4d;
+  --color-warn: #f5a623;
+  --color-danger: #ff5c5c;
+  --color-info: #5ac8fa;
 }
 
 @media (prefers-color-scheme: dark) {
