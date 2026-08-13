@@ -393,7 +393,7 @@ bot.command("guess", async (ctx) => {
         .map(g => ({ ...g, diff: Math.abs(g.guess - actualCount) }))
         .sort((a, b) => a.diff - b.diff);
 
-      let board = sorted.map((g, i) => {
+      const board = sorted.map((g, i) => {
         const medal = i === 0 ? "👑" : i === 1 ? "🥈" : i === 2 ? "🥉" : "  ";
         return `${medal} ${g.display_name}: *${g.guess}* (off by ${g.diff})`;
       }).join("\n");

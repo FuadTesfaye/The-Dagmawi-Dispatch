@@ -33,8 +33,8 @@ export async function fetchNewMessages() {
 
       try {
         // Get cursor
-        let cursor = await db.select().from(ingestionCursor).where(eq(ingestionCursor.id, cleanChannelUsername)).execute();
-        let lastMessageId = cursor.length > 0 ? cursor[0].last_message_id : 0;
+        const cursor = await db.select().from(ingestionCursor).where(eq(ingestionCursor.id, cleanChannelUsername)).execute();
+        const lastMessageId = cursor.length > 0 ? cursor[0].last_message_id : 0;
 
         // Try to join the channel if not already joined
         try {
