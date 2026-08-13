@@ -1,5 +1,5 @@
 import Groq from "groq-sdk";
-import { readDb, writeDb, withReadDb } from "@/db";
+import { writeDb, withReadDb } from "@/db";
 import { posts, dailySummaries } from "@/db/schema";
 import { eq, and, asc } from "drizzle-orm";
 import { ensureChannelScraped } from "./telegram/scraper";
