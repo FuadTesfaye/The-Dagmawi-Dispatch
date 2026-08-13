@@ -1,0 +1,7 @@
+data/
+search-engine/
+node_modules/
+.git/
+*.tsbuildinfo
+scripts/
+onyx_community_channels.json

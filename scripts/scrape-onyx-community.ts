@@ -200,7 +200,16 @@ async function run() {
     allMessages.sort((a, b) => a.id - b.id);
 
     if (allMessages.length > 0) {
-      fs.writeFileSync(outputFile, JSON.stringify(allMessages, null, 2));
+      try {
+        // Use compact JSON stringification for memory efficiency on large channels
+        const content = allMessages.length > 5000 
+          ? JSON.stringify(allMessages) 
+          : JSON.stringify(allMessages, null, 2);
+        fs.writeFileSync(outputFile, content);
+      } catch (err: any) {
+        console.log(`⚠️ Unindented stringify fallback for @${username} due to size (${allMessages.length} msgs)...`);
+        fs.writeFileSync(outputFile, JSON.stringify(allMessages));
+      }
       console.log(`✅ [Done] @${username}: Saved ${allMessages.length} messages (${fetchedInSession} new) -> ${outputFile}`);
     } else {
       console.log(`⚠️ No messages retrieved for @${username}`);

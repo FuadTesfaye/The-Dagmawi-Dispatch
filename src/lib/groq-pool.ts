@@ -11,6 +11,7 @@ interface KeyState {
 
 let keyStates: KeyState[] | null = null;
 let roundRobinIndex = 0;
+const keyUsageCounts: number[] = [];
 
 function envInt(key: string, fallback: number): number {
   const n = Number(process.env[key]);
@@ -43,8 +44,14 @@ function getKeyStates(): KeyState[] {
       client: new Groq({ apiKey: key }),
       rateLimitedUntil: 0,
     }));
+    keyUsageCounts.length = keys.length;
+    keyUsageCounts.fill(0);
   }
   return keyStates;
+}
+
+function recordKeyUse(keyIndex: number): void {
+  keyUsageCounts[keyIndex] = (keyUsageCounts[keyIndex] ?? 0) + 1;
 }
 
 function isKeyHealthy(state: KeyState, now: number): boolean {
@@ -89,6 +96,19 @@ export function markKeyRateLimitedForTest(keyIndex: number, cooldownMs?: number)
   markRateLimited(keyIndex, cooldownMs);
 }
 
+/** How many times each key index was selected (for rotation tests). */
+export function groqKeyUsageStats(): number[] {
+  getKeyStates();
+  return [...keyUsageCounts];
+}
+
+/** Reset pool state between test runs. */
+export function resetGroqPoolForTest(): void {
+  keyStates = null;
+  roundRobinIndex = 0;
+  keyUsageCounts.length = 0;
+}
+
 export function groqPoolStats() {
   const states = getKeyStates();
   const now = Date.now();
@@ -120,6 +140,7 @@ export async function createGroqCompletion(
       break;
     }
     tried.add(keyIndex);
+    recordKeyUse(keyIndex);
 
     try {
       return await states[keyIndex].client.chat.completions.create(params);
