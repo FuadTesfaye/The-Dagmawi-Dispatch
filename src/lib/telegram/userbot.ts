@@ -8,7 +8,7 @@ import { Api } from "telegram";
 const apiId = parseInt(process.env.TELEGRAM_API_ID!);
 const apiHash = process.env.TELEGRAM_API_HASH!;
 const sessionString = process.env.TELEGRAM_USERBOT_SESSION!;
-const channelUsername = "dagmawibabi"; // The target channel
+const channelUsername = "Dagmawi_Babi"; // The target channel
 
 // Helper to delay
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
