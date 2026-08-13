@@ -13,6 +13,10 @@ const ERROR_PHRASES = [
   "we couldn't reach",
   "couldn't fetch",
   "temporarily unavailable",
+  "royal bookkeeper spilled",
+  "royal pigeon got lost",
+  "scribes dropped",
+  "measuring device exploded",
 ];
 
 function looksLikeError(text: string): boolean {
