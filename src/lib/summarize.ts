@@ -1,7 +1,7 @@
 import Groq from "groq-sdk";
 import { db } from "@/db";
 import { posts, dailySummaries } from "@/db/schema";
-import { eq, asc } from "drizzle-orm";
+import { eq, and, asc } from "drizzle-orm";
 
 const MODEL = "llama-3.3-70b-versatile";
 
@@ -23,18 +23,23 @@ function formatPostsForPrompt(dayPosts: any[]) {
   }).join("\n---\n");
 }
 
-export async function summarizeDay(localDate: string, targetLanguage: string = "am", forceRegenerate = false): Promise<string> {
+export async function summarizeDay(channel: string, localDate: string, targetLanguage: string = "am", forceRegenerate = false): Promise<string> {
   try {
+    const summaryId = `${channel}:${localDate}`;
+
     // Check if final summary exists
     if (!forceRegenerate) {
-      const existing = await db.select().from(dailySummaries).where(eq(dailySummaries.local_date, localDate)).execute();
+      const existing = await db.select().from(dailySummaries).where(eq(dailySummaries.id, summaryId)).execute();
       if (existing.length > 0 && existing[0].is_final) {
         return existing[0].summary_text;
       }
     }
 
     // Get posts
-    const dayPosts = await db.select().from(posts).where(eq(posts.local_date, localDate)).orderBy(asc(posts.date)).execute();
+    const dayPosts = await db.select().from(posts)
+      .where(and(eq(posts.local_date, localDate), eq(posts.channel, channel)))
+      .orderBy(asc(posts.date))
+      .execute();
     
     if (dayPosts.length === 0) {
       return "No posts found for this date.";
@@ -42,8 +47,12 @@ export async function summarizeDay(localDate: string, targetLanguage: string = "
 
     const postsText = formatPostsForPrompt(dayPosts);
     
-    const systemPrompt = `You are the "Royal Herald" for a kingdom, summarizing the daily Telegram posts of "Dagmawi Babi" (sometimes referred to as Dagmawi the Second).
-You will be given a list of his posts from one day, separated by '---'.
+    // Determine the subject based on the channel
+    const isBabi = channel.toLowerCase() === "dagmawi_babi";
+    const subjectName = isBabi ? "Dagmawi Babi (sometimes referred to as Dagmawi the Second)" : `@${channel}`;
+    
+    const systemPrompt = `You are the "Royal Herald" for a kingdom, summarizing the daily Telegram posts of ${subjectName}.
+You will be given a list of their posts from one day, separated by '---'.
 Your job is to summarize the day's activity. Group by topic rather than just listing posts in order.
 Preserve named entities, numbers, and links exactly. Note media-only posts briefly ("shared a photo of...").
 
@@ -51,7 +60,7 @@ Preserve named entities, numbers, and links exactly. Note media-only posts brief
 - Speak like a self-important town crier ("Hear ye", "The scrolls say", "By royal decree").
 - Weave in common Amharic words naturally (e.g., Selam, Betam, Ayzosh, Chigger yellem). Do NOT use full Amharic sentences. 
 - The first time you use an Amharic word in the summary, provide a quick translation in parentheses, e.g., "Selam (peace)".
-- Be slightly dramatic about how much he posts, but remain affectionate and respectful.
+- Be slightly dramatic about how much they post, but remain affectionate and respectful.
 - Respond in this language: ${targetLanguage === 'en' ? 'English' : 'Amharic (Ethiopian) text blended with English herald speech'}.
 Do not include any generic introductory text, just the royal summary.`;
 
@@ -71,6 +80,8 @@ Do not include any generic introductory text, just the royal summary.`;
     const isFinal = localDate < todayStr;
 
     await db.insert(dailySummaries).values({
+      id: summaryId,
+      channel: channel,
       local_date: localDate,
       summary_text: summary,
       post_count: dayPosts.length,
@@ -79,7 +90,7 @@ Do not include any generic introductory text, just the royal summary.`;
       is_final: isFinal,
       generated_at: new Date()
     }).onConflictDoUpdate({
-      target: dailySummaries.local_date,
+      target: dailySummaries.id,
       set: { 
         summary_text: summary, 
         post_count: dayPosts.length,

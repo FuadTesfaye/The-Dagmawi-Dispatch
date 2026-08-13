@@ -1,7 +1,8 @@
-import { pgTable, text, timestamp, boolean, integer, jsonb, date, varchar } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, boolean, integer, jsonb, date, varchar, primaryKey } from 'drizzle-orm/pg-core';
 
 export const posts = pgTable('posts', {
-  id: integer('id').primaryKey(), // Telegram message ID
+  channel: varchar('channel', { length: 100 }).notNull().default('dagmawi_babi'),
+  id: integer('id').notNull(), // Telegram message ID
   date: timestamp('date', { withTimezone: true }).notNull(),
   local_date: date('local_date').notNull(),
   text: text('text'),
@@ -10,10 +11,16 @@ export const posts = pgTable('posts', {
   permalink: text('permalink'),
   raw_json: jsonb('raw_json'),
   created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => {
+  return {
+    pk: primaryKey({ columns: [table.channel, table.id] }),
+  }
 });
 
 export const dailySummaries = pgTable('daily_summaries', {
-  local_date: date('local_date').primaryKey(),
+  id: text('id').primaryKey(), // `${channel}:${local_date}`
+  channel: varchar('channel', { length: 100 }).notNull().default('dagmawi_babi'),
+  local_date: date('local_date').notNull(),
   summary_text: text('summary_text').notNull(),
   post_count: integer('post_count').notNull(),
   language: varchar('language', { length: 10 }).notNull().default('am'),
@@ -31,16 +38,23 @@ export const subscribers = pgTable('subscribers', {
 });
 
 export const ingestionCursor = pgTable('ingestion_cursor', {
-  id: varchar('id', { length: 50 }).primaryKey(), // 'channel_id' or 'default'
+  id: varchar('id', { length: 50 }).primaryKey(), // channel_id
   last_message_id: integer('last_message_id').notNull(),
   last_synced_at: timestamp('last_synced_at', { withTimezone: true }).defaultNow(),
 });
 
 export const guesses = pgTable('guesses', {
-  id: text('id').primaryKey(), // `${local_date}:${telegram_user_id}`
+  id: text('id').primaryKey(), // `${channel}:${local_date}:${telegram_user_id}`
+  channel: varchar('channel', { length: 100 }).notNull().default('dagmawi_babi'),
   local_date: date('local_date').notNull(),
   telegram_user_id: varchar('telegram_user_id', { length: 100 }).notNull(),
   display_name: varchar('display_name', { length: 200 }).notNull(),
   guess: integer('guess').notNull(),
   created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export const userChannels = pgTable('user_channels', {
+  telegram_user_id: varchar('telegram_user_id', { length: 100 }).primaryKey(),
+  channel: varchar('channel', { length: 100 }).notNull().default('dagmawi_babi'),
+  updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
