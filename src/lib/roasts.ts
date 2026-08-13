@@ -5,9 +5,13 @@ import { eq, and, desc } from "drizzle-orm";
 
 const MODEL = "llama-3.3-70b-versatile";
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
+let _groq: Groq | null = null;
+function getGroq(): Groq {
+  if (!_groq) {
+    _groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  }
+  return _groq;
+}
 
 // ─── MASSIVE STATIC ROAST POOLS (fallback) ─────────────────────
 
@@ -232,7 +236,7 @@ async function generateAIRoast(channel: string, recentPosts: any[]): Promise<str
 
     const userPrompt = `Here are the most recent posts from ${channelLabel}'s channel. Read them and deliver a PERSONALIZED, SAVAGE roast that references their specific content:\n\n${postDigest}\n\nTotal posts analyzed: ${recentPosts.length}. Now ROAST them based on what you actually see.`;
 
-    const completion = await groq.chat.completions.create({
+    const completion = await getGroq().chat.completions.create({
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
