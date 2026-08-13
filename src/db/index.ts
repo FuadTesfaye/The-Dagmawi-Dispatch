@@ -29,8 +29,9 @@ export const getDb = () => {
 // Default export uses the primary DB (first one) or the round-robin selector
 export const db = dbs[0];
 
-// The primary DB is also where the Search Engine graph data lives
-export const searchDb = dbs[0];
+// The Search Engine graph data lives in DATABASE_URL specifically
+const searchDbClient = postgres(process.env.DATABASE_URL || process.env.DB_URL_1 || "", { prepare: false });
+export const searchDb = drizzle(searchDbClient);
 
 // Example export to be used in server actions or API routes
 // export const allUsers = await db.select().from(users);
