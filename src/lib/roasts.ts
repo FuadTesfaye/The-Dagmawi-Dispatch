@@ -11,7 +11,9 @@ import {
 } from "./roast-prompts";
 
 const MODEL = "llama-3.3-70b-versatile";
-const MAX_WORDS = 12;
+const MIN_WORDS = 18;
+const MAX_WORDS = 45;
+const MAX_SENTENCES = 3;
 const RECENT_ROAST_LIMIT = 10;
 
 function getEATDateStr(offsetDays = 0): string {
@@ -50,11 +52,11 @@ export function sanitizeRoastLine(raw: string): string | null {
   line = line.replace(/\*\*/g, "").replace(/\*/g, "");
   line = line.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, "").trim();
 
-  // Take first sentence only
-  const sentenceMatch = line.match(/^[^.!?]+[.!?]?/);
-  line = (sentenceMatch ? sentenceMatch[0] : line).trim();
+  const sentences = line.match(/[^.!?]+[.!?]+|[^.!?]+$/g) ?? [line];
+  line = sentences.slice(0, MAX_SENTENCES).join(" ").trim();
 
-  if (!line || wordCount(line) > MAX_WORDS) return null;
+  const words = wordCount(line);
+  if (!line || words < MIN_WORDS || words > MAX_WORDS) return null;
   return line;
 }
 
@@ -153,8 +155,8 @@ async function callGroqRoast(systemPrompt: string, extraUserHint?: string): Prom
           ...(extraUserHint ? [{ role: "user" as const, content: extraUserHint }] : []),
         ],
         model: MODEL,
-        temperature: 0.95,
-        max_tokens: 40,
+        temperature: 1,
+        max_tokens: 120,
       });
       return completion.choices[0]?.message?.content ?? null;
     });
@@ -169,8 +171,9 @@ async function generateWithPrompt(
   n: number,
   kind: "daily" | "onboarding",
   extraVars: Record<string, string> = {},
+  prefetchedRecent?: string[],
 ): Promise<string> {
-  const recent = await getRecentRoasts(channel);
+  const recent = prefetchedRecent ?? (await getRecentRoasts(channel));
   const recentBlock = recent.length > 0 ? recent.join("\n") : "None yet.";
 
   const prompt = interpolate(template, {
@@ -180,7 +183,10 @@ async function generateWithPrompt(
   });
 
   for (let attempt = 0; attempt < 2; attempt++) {
-    const hint = attempt === 1 ? "Your last attempt was too similar. Try a different device." : undefined;
+    const hint =
+      attempt === 1
+        ? "Your last attempt was too similar or too short. Write 2-3 sentences, 25-45 words, and pick a completely different angle."
+        : undefined;
     const raw = await callGroqRoast(prompt, hint);
     if (!raw) break;
 
@@ -198,14 +204,13 @@ async function generateWithPrompt(
 
 export async function generateDailyRoast(channel: string): Promise<string> {
   const cleanChannel = channel.replace(/^@/, "");
-  let n = 0;
-  try {
-    n = await getTodayPostCount(cleanChannel);
-  } catch {
-    // use n=0 fallback
-  }
 
-  return generateWithPrompt(cleanChannel, ROAST_SYSTEM_PROMPT, n, "daily");
+  const [n, recent] = await Promise.all([
+    getTodayPostCount(cleanChannel).catch(() => 0),
+    getRecentRoasts(cleanChannel),
+  ]);
+
+  return generateWithPrompt(cleanChannel, ROAST_SYSTEM_PROMPT, n, "daily", {}, recent);
 }
 
 export async function generateOnboardingRoast(

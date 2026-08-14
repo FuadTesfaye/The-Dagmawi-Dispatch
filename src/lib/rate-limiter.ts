@@ -33,7 +33,7 @@ export const LIMITS: Record<string, RateLimit> = {
   today:       { limit: 3,  windowMs: 60_000 },   // 3/min — calls Groq
   yesterday:   { limit: 3,  windowMs: 60_000 },
   date:        { limit: 3,  windowMs: 60_000 },
-  roast:       { limit: 2,  windowMs: 60_000 },   // 2/min — calls Groq
+  roast:       { limit: 5,  windowMs: 60_000 },   // 5/min — calls Groq
   babiometer:  { limit: 5,  windowMs: 60_000 },
   guess:       { limit: 10, windowMs: 60_000 },
   channel:     { limit: 5,  windowMs: 60_000 },
