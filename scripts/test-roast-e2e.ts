@@ -40,14 +40,19 @@ async function run() {
     // Wait longer for AI roast (needs to query DB + Groq)
     await sleep(10000);
 
-    // Fetch the bot's responses (the loading message + the actual roast)
+    // Fetch the bot's responses
     messages = await client.getMessages(botUsername, { limit: 4 });
     
-    // Find the roast reply (look for the 🔥 Royal Roast message)
-    for (const msg of messages) {
-      if (msg.message?.includes("Royal Roast")) {
-        console.log(`🔥 ROAST RESULT for @${channel}:\n${msg.message}\n`);
-        break;
+    // Find the roast reply
+    const roastMsg = messages.find(m => m.fromId?.className === "PeerUser" && m.message?.startsWith("🔥"));
+    if (roastMsg) {
+      console.log(`🔥 ROAST RESULT for @${channel}:\n${roastMsg.message}\n`);
+    } else {
+      const fallbackMsg = messages.find(m => m.fromId?.className === "PeerUser" && m.message !== "/roast");
+      if (fallbackMsg) {
+        console.log(`🤖 Bot reply for @${channel}:\n${fallbackMsg.message}\n`);
+      } else {
+        console.log(`⚠️ No reply received for @${channel}`);
       }
     }
 
