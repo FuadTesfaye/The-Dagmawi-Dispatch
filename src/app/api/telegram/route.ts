@@ -1,7 +1,7 @@
 import { webhookCallback } from "grammy";
 import { bot } from "@/lib/bot";
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
 const handle = webhookCallback(bot, "std/http");

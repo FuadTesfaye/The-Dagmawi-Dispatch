@@ -1,5 +1,6 @@
 import Groq from "groq-sdk";
 import type { ChatCompletionCreateParamsNonStreaming } from "groq-sdk/resources/chat/completions";
+import { aiPool } from "./concurrency-pool";
 
 const AUTH_COOLDOWN_MS = 5 * 60 * 1000;
 
@@ -58,16 +59,24 @@ function isKeyHealthy(state: KeyState, now: number): boolean {
   return state.rateLimitedUntil <= now;
 }
 
-function pickKeyIndex(states: KeyState[], now: number): number | null {
-  const healthy = states
-    .map((_, index) => index)
-    .filter((index) => isKeyHealthy(states[index], now));
+function countHealthyKeys(states: KeyState[], now: number): number {
+  return states.filter((s) => isKeyHealthy(s, now)).length;
+}
 
-  if (healthy.length === 0) return null;
+/** Round-robin through all keys, skipping cooled-down entries. */
+function pickKeyIndex(states: KeyState[]): number | null {
+  const now = Date.now();
+  const n = states.length;
 
-  const start = roundRobinIndex % healthy.length;
-  roundRobinIndex = (roundRobinIndex + 1) % healthy.length;
-  return healthy[start];
+  for (let offset = 0; offset < n; offset++) {
+    const index = (roundRobinIndex + offset) % n;
+    if (isKeyHealthy(states[index], now)) {
+      roundRobinIndex = (index + 1) % n;
+      return index;
+    }
+  }
+
+  return null;
 }
 
 export function isRateLimitError(err: unknown): boolean {
@@ -82,6 +91,32 @@ function isAuthError(err: unknown): boolean {
   if (!err || typeof err !== "object") return false;
   const e = err as { status?: number; message?: string };
   return e.status === 401 || e.status === 403;
+}
+
+function parseRetryAfterMs(err: unknown): number | undefined {
+  if (!err || typeof err !== "object") return undefined;
+  const headers = (err as { headers?: Record<string, string> }).headers;
+  if (!headers) return undefined;
+
+  const retryAfter =
+    headers["retry-after"] ??
+    headers["Retry-After"] ??
+    headers["x-ratelimit-reset-requests"];
+
+  if (!retryAfter) return undefined;
+
+  const seconds = Number(retryAfter);
+  if (Number.isFinite(seconds) && seconds > 0) {
+    return Math.ceil(seconds * 1000);
+  }
+
+  const resetAt = Date.parse(retryAfter);
+  if (Number.isFinite(resetAt)) {
+    const delta = resetAt - Date.now();
+    return delta > 0 ? delta : undefined;
+  }
+
+  return undefined;
 }
 
 export function markRateLimited(keyIndex: number, cooldownMs?: number): void {
@@ -112,34 +147,31 @@ export function resetGroqPoolForTest(): void {
 export function groqPoolStats() {
   const states = getKeyStates();
   const now = Date.now();
-  const healthy = states.filter((s) => isKeyHealthy(s, now)).length;
+  const healthy = countHealthyKeys(states, now);
   return {
     totalKeys: states.length,
     healthyKeys: healthy,
     cooledDownKeys: states.length - healthy,
     roundRobinIndex,
+    keyUsage: [...keyUsageCounts],
   };
 }
 
-export async function createGroqCompletion(
+async function createGroqCompletionOnce(
   params: ChatCompletionCreateParamsNonStreaming,
 ): Promise<Groq.Chat.Completions.ChatCompletion> {
   const states = getKeyStates();
-  const maxRetries = Math.min(envInt("GROQ_MAX_RETRIES", states.length), states.length);
-  const now = Date.now();
+  const defaultAttempts = states.length;
+  const maxAttempts = Math.min(
+    envInt("GROQ_MAX_RETRIES", defaultAttempts),
+    states.length,
+  );
   let lastError: unknown;
 
-  const tried = new Set<number>();
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const keyIndex = pickKeyIndex(states);
+    if (keyIndex === null) break;
 
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    const keyIndex = pickKeyIndex(states, now);
-    if (keyIndex === null) {
-      break;
-    }
-    if (tried.has(keyIndex) && tried.size >= states.filter((s) => isKeyHealthy(s, now)).length) {
-      break;
-    }
-    tried.add(keyIndex);
     recordKeyUse(keyIndex);
 
     try {
@@ -147,7 +179,7 @@ export async function createGroqCompletion(
     } catch (err) {
       lastError = err;
       if (isRateLimitError(err)) {
-        markRateLimited(keyIndex);
+        markRateLimited(keyIndex, parseRetryAfterMs(err));
         continue;
       }
       if (isAuthError(err)) {
@@ -160,4 +192,11 @@ export async function createGroqCompletion(
 
   if (lastError instanceof Error) throw lastError;
   throw new Error("All Groq API keys are rate-limited or unavailable.");
+}
+
+/** Groq chat completion with key rotation, cooldown failover, and AI concurrency cap. */
+export async function createGroqCompletion(
+  params: ChatCompletionCreateParamsNonStreaming,
+): Promise<Groq.Chat.Completions.ChatCompletion> {
+  return aiPool.run(() => createGroqCompletionOnce(params));
 }

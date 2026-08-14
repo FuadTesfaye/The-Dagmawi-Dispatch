@@ -50,7 +50,7 @@ const envInt = (key: string, fallback: number) => {
 
 /** Max concurrent webhook / API handlers (target: ~100 users). */
 export const handlerPool = new ConcurrencyPool(envInt("MAX_CONCURRENT_HANDLERS", 100));
-/** Max concurrent Groq calls across the instance. */
-export const aiPool = new ConcurrencyPool(envInt("MAX_CONCURRENT_AI", 50));
+/** Max concurrent Groq calls across the instance (one slot per key is ideal). */
+export const aiPool = new ConcurrencyPool(envInt("MAX_CONCURRENT_AI", 40));
 /** Max concurrent Telegram web scrapes. */
-export const scrapePool = new ConcurrencyPool(envInt("MAX_CONCURRENT_SCRAPES", 25));
+export const scrapePool = new ConcurrencyPool(envInt("MAX_CONCURRENT_SCRAPES", 30));

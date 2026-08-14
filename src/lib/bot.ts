@@ -17,6 +17,11 @@ async function replyError(ctx: { reply: (text: string) => Promise<unknown> }, er
   await ctx.reply(toHumanError(err, "command"));
 }
 
+async function withTyping<T>(ctx: { replyWithChatAction: (action: "typing") => Promise<unknown> }, fn: () => Promise<T>): Promise<T> {
+  await ctx.replyWithChatAction("typing");
+  return fn();
+}
+
 function formatSummaryReply(channel: string, date: string, summary: string): string {
   if (isErrorLikeContent(summary)) {
     return summary;
@@ -115,11 +120,11 @@ bot.command("start", async (ctx) => {
     `/subscribe — Auto-deliver the daily digest\n` +
     `/unsubscribe — Leave the kingdom\n` +
     `/babiometer — How loud are they today?\n` +
-    `/recommend — Hyper-personalized channel suggestions\n\n` +
+    `/recommend — Popular channels others are tracking\n\n` +
     `🎭  *ENTERTAINMENT*\n` +
     `━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-    `/roast — Affectionately roast them\n` +
-    `/excuse — Didn't read? We got you\n` +
+    `/roast — Savage, unhinged roast of their posting habits\n` +
+    `/excuse — Dark, unhinged excuses for dodging the spam\n` +
     `/guess — Bet on their daily post count\n\n` +
     `━━━━━━━━━━━━━━━━━━━━━━━━\n` +
     `_Powered by caffeine, Groq, and ${footerName} relentless output._`,
@@ -239,10 +244,11 @@ bot.command("today", async (ctx) => {
     if (!ctx.from) return;
     const localDateStr = getEATDateStr(0);
     const channel = await getUserChannel(String(ctx.from.id));
-    
-    await ctx.reply(`Fetching today's posts from @${channel}...`);
-    const summary = await summarizeDay(channel, localDateStr, SUMMARY_LANGUAGE, false);
-    
+
+    const summary = await withTyping(ctx, () =>
+      summarizeDay(channel, localDateStr, SUMMARY_LANGUAGE, false),
+    );
+
     if (summary.includes("No posts found")) {
       await ctx.reply(
         `@${channel} — ${localDateStr}\n\n` +
@@ -262,10 +268,11 @@ bot.command("yesterday", async (ctx) => {
     if (!ctx.from) return;
     const localDateStr = getEATDateStr(-1);
     const channel = await getUserChannel(String(ctx.from.id));
-    
-    await ctx.reply(`Fetching yesterday's posts from @${channel}...`);
-    const summary = await summarizeDay(channel, localDateStr, SUMMARY_LANGUAGE, false);
-    
+
+    const summary = await withTyping(ctx, () =>
+      summarizeDay(channel, localDateStr, SUMMARY_LANGUAGE, false),
+    );
+
     if (summary.includes("No posts found")) {
       await ctx.reply(
         `@${channel} — ${localDateStr}\n\n` +
@@ -288,9 +295,10 @@ bot.command("date", async (ctx) => {
     if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
       return ctx.reply("📅 Usage: /date 2026-08-12");
     }
-    
-    await ctx.reply(`Fetching posts for ${dateStr} from @${channel}...`);
-    const summary = await summarizeDay(channel, dateStr, SUMMARY_LANGUAGE, false);
+
+    const summary = await withTyping(ctx, () =>
+      summarizeDay(channel, dateStr, SUMMARY_LANGUAGE, false),
+    );
     await ctx.reply(formatSummaryReply(channel, dateStr, summary));
   } catch (err) {
     await replyError(ctx, err);
@@ -323,31 +331,45 @@ bot.command("babiometer", async (ctx) => {
     
     if (count === 0) {
       blasts = "🔇";
-      verdict = isBabi ? "Total silence. Either Babi is sleeping, meditating, or his WiFi is down. All three are equally unlikely." : "Total silence. A peaceful day in the kingdom.";
+      verdict = isBabi
+        ? "Eerie deafening silence. Either Babi's phone disintegrated, he is in witness protection, or he is charging up a 50-post storm for midnight."
+        : "Suspicious calm. Zero posts today. Either the admin lost their phone or they are plotting digital warfare.";
       emoji = "💤";
     } else if (count <= 3) {
       blasts = "🎺";
-      verdict = isBabi ? "A whisper from the throne. He's warming up." : "Low activity. Just a few decrees.";
+      verdict = isBabi
+        ? "A deceptive whisper from the throne. He is calibrating the chaos. Do not let your guard down."
+        : "Micro-dosing content. Just enough to let you know they are alive and lurking.";
       emoji = "😌";
     } else if (count <= 8) {
       blasts = "🎺🎺";
-      verdict = isBabi ? "Moderate activity. A normal person's entire week of content. For Babi, this is a slow morning." : "Moderate activity. The channel is alive.";
+      verdict = isBabi
+        ? "A casual morning warm-up for Babi. For any normal human, this is an entire week of frantic oversharing."
+        : "Moderate broadcast volume. The notifications are starting to gather at your doorstep.";
       emoji = "📝";
     } else if (count <= 15) {
       blasts = "🎺🎺🎺";
-      verdict = isBabi ? "The town criers are losing their voices. The scrolls are piling up. Notifications are crying for mercy." : "High activity. The scribe's hand is cramping.";
+      verdict = isBabi
+        ? "CODE ORANGE. The keyboard is smoking. Lock screens across Ethiopia are vibrating in unison. Sanity is rapidly deteriorating."
+        : "High activity. Your unread badge is glowing red and your screen time report is weeping.";
       emoji = "📢";
     } else if (count <= 25) {
       blasts = "🎺🎺🎺🎺";
-      verdict = isBabi ? "CODE ORANGE. He's in his zone. Your 'mark as read' button is filing a restraining order." : "Heavy deluge. Notifications incoming.";
+      verdict = isBabi
+        ? "CODE CRIMSON. He has entered the unmedicated zone. The 'mark as read' button has surrendered and fled the chat."
+        : "Heavy deluge. Notifications are landing like artillery shells on your lock screen.";
       emoji = "🔥";
     } else if (count <= 40) {
       blasts = "🎺🎺🎺🎺🎺";
-      verdict = isBabi ? "DEFCON 2. Babi has entered hyperdrive. Telegram engineers are being woken up. Pray for your battery." : "EXTREME VOLUME. Take cover.";
+      verdict = isBabi
+        ? "DEFCON 2. Lithium-ion homicide in progress. Phone battery is in digital hospice. Put your device in an ice bath."
+        : "EXTREME VOLUME. Telegram engineers are receiving distress signals from your phone.";
       emoji = "🚨";
     } else {
       blasts = "🎺🎺🎺🎺🎺🎺 🚨🚨🚨";
-      verdict = isBabi ? "DEFCON 1. HE'S COMPOSING A NOVEL. Abandon your phone. Touch grass. Save yourself. This is not a drill." : "Absolute chaos. A novel has been written.";
+      verdict = isBabi
+        ? "DEFCON 1: APOCALYPTIC BROADCAST EVENT. He has dropped an entire encyclopedia. Abandon your phone. Touch grass. Save yourself."
+        : "ABSOLUTE CHAOS. A full digital siege. Your notifications are taking catastrophic casualties.";
       emoji = "☠️";
     }
     
@@ -373,7 +395,7 @@ bot.command("roast", async (ctx) => {
     if (!ctx.from) return;
     const channel = await getUserChannel(String(ctx.from.id));
 
-    const roast = await generateDailyRoast(channel);
+    const roast = await withTyping(ctx, () => generateDailyRoast(channel));
     await ctx.reply(`🔥 ${roast}`);
   } catch (err) {
     await replyError(ctx, err);
@@ -518,40 +540,40 @@ bot.command("recommend", async (ctx) => {
   try {
     if (!ctx.from) return;
     const channel = await getUserChannel(String(ctx.from.id));
-    
-    await ctx.reply(`🔍 Consulting the Royal Archives to find channels similar to @${channel}...`);
-    
-    const { searchDb } = await import("@/db");
-    const { sql } = await import("drizzle-orm");
-    
-    // Query the graph to find out who this channel mentions the most!
-    const query = sql`
-      SELECT target_username, sum(weight) as total_weight
-      FROM channel_edges 
-      WHERE source_id IN (SELECT id FROM channels WHERE lower(username) = lower(${channel}))
-      GROUP BY target_username
-      ORDER BY total_weight DESC
-      LIMIT 3
-    `;
-    
-    const result = await searchDb.execute(query);
-    
-    if (result.length === 0) {
-      await ctx.reply(`🤷‍♂️ The scribes couldn't find any connections for @${channel} yet. Try again later!`);
+
+    await ctx.replyWithChatAction("typing");
+
+    const recs = await withReadDb((db) =>
+      db.execute<{ channel: string; trackers: number }>(sql`
+        SELECT channel, count(*)::int AS trackers
+        FROM user_channels
+        WHERE lower(channel) <> lower(${channel})
+        GROUP BY channel
+        ORDER BY trackers DESC, channel ASC
+        LIMIT 3
+      `),
+    );
+
+    if (recs.length === 0) {
+      await ctx.reply(
+        `🤷‍♂️ No other tracked channels in the kingdom yet. Try \`/channel @some_username\` and check back later!`,
+        { parse_mode: "Markdown" },
+      );
       return;
     }
-    
-    const recs = result.map((r: any, i: number) => {
+
+    const lines = recs.map((r, i) => {
       const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉";
-      return `${medal} *@${r.target_username}* (Mentioned ${r.total_weight} times)`;
+      const label = r.trackers === 1 ? "1 subject tracking" : `${r.trackers} subjects tracking`;
+      return `${medal} *@${r.channel}* (${label})`;
     }).join("\n\n");
-    
+
     await ctx.reply(
-      `🎯 *Hyper-Personalized Recommendations*\n\n` +
-      `Because you follow *@${channel}*, you might also enjoy these channels in the same community:\n\n` +
-      `${recs}\n\n` +
-      `_Type \`/channel @username\` to start tracking one of these!_`,
-      { parse_mode: "Markdown" }
+      `🎯 *Channel Recommendations*\n\n` +
+      `Other channels tracked in the kingdom besides *@${channel}*:\n\n` +
+      `${lines}\n\n` +
+      `_Type \`/channel @username\` to start tracking one!_`,
+      { parse_mode: "Markdown" },
     );
   } catch (err) {
     await replyError(ctx, err);
@@ -580,7 +602,7 @@ bot.on("message", async (ctx) => {
     `🎲 /guess — Bet on the post count\n` +
     `📡 /channel — Switch the channel you track\n` +
     `🎺 /babiometer — Check the chaos level\n` +
-    `🎯 /recommend — Hyper-personalized suggestions\n\n` +
+    `🎯 /recommend — See what others track\n\n` +
     `_Hit the / menu button to see all commands._`,
     { parse_mode: "Markdown" }
   );

@@ -104,9 +104,9 @@ async function run() {
 
   results.push(await runCommand(client, "/start", 1, 10000));
   await sleep(1500);
-  results.push(await runCommand(client, "/today", 2, 45000));
+  results.push(await runCommand(client, "/today", 1, 45000));
   await sleep(3000);
-  results.push(await runCommand(client, "/yesterday", 2, 45000));
+  results.push(await runCommand(client, "/yesterday", 1, 45000));
   await sleep(3000);
   results.push(await runCommand(client, "/babiometer", 1, 15000));
   results.push(await runCommand(client, "/guess 50", 1, 10000));

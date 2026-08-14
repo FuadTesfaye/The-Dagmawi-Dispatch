@@ -2,7 +2,6 @@ import { writeDb, withReadDb } from "@/db";
 import { posts, dailySummaries } from "@/db/schema";
 import { eq, and, asc } from "drizzle-orm";
 import { ensureChannelScraped } from "./telegram/scraper";
-import { aiPool } from "./concurrency-pool";
 import { createGroqCompletion } from "./groq-pool";
 import { toHumanError } from "./human-errors";
 
@@ -12,11 +11,10 @@ export const SUMMARY_LANGUAGE = "en-clean";
 
 const inflightSummaries = new Map<string, Promise<string>>();
 
-// Format the posts into a text blob
-function formatPostsForPrompt(dayPosts: any[]) {
-  return dayPosts.map(p => {
+function formatPostsForPrompt(dayPosts: { date: Date; id: number; media_type: string; text: string | null }[]) {
+  return dayPosts.map((p) => {
     let content = `[${p.date.toISOString()}] (ID: ${p.id})\n`;
-    if (p.media_type !== 'none') {
+    if (p.media_type !== "none") {
       content += `[Media: ${p.media_type}]\n`;
     }
     if (p.text) {
@@ -26,35 +24,46 @@ function formatPostsForPrompt(dayPosts: any[]) {
   }).join("\n---\n");
 }
 
+async function readCachedSummary(summaryId: string, targetLanguage: string): Promise<string | null> {
+  const existing = await withReadDb((db) =>
+    db.select().from(dailySummaries).where(eq(dailySummaries.id, summaryId)).execute(),
+  );
+  if (existing.length > 0 && existing[0].language === targetLanguage) {
+    return existing[0].summary_text;
+  }
+  return null;
+}
+
+async function loadDayPosts(channel: string, localDate: string) {
+  return withReadDb((db) =>
+    db
+      .select()
+      .from(posts)
+      .where(and(eq(posts.local_date, localDate), eq(posts.channel, channel)))
+      .orderBy(asc(posts.date))
+      .execute(),
+  );
+}
+
 async function summarizeDayImpl(channel: string, localDate: string, targetLanguage: string): Promise<string> {
   const summaryId = `${channel}:${localDate}`;
 
-  let dayPosts = await withReadDb((db) =>
-    db.select().from(posts)
-      .where(and(eq(posts.local_date, localDate), eq(posts.channel, channel)))
-      .orderBy(asc(posts.date))
-      .execute()
-  );
+  const [, dayPostsInitial] = await Promise.all([
+    ensureChannelScraped(channel),
+    loadDayPosts(channel, localDate),
+  ]);
 
+  let dayPosts = dayPostsInitial;
   if (dayPosts.length === 0) {
-    await ensureChannelScraped(channel);
-    dayPosts = await withReadDb((db) =>
-      db.select().from(posts)
-        .where(and(eq(posts.local_date, localDate), eq(posts.channel, channel)))
-        .orderBy(asc(posts.date))
-        .execute()
-    );
+    await ensureChannelScraped(channel, { force: true });
+    dayPosts = await loadDayPosts(channel, localDate);
     if (dayPosts.length === 0) {
       return "No posts found for this date.";
     }
   }
 
-  const existing = await withReadDb((db) =>
-    db.select().from(dailySummaries).where(eq(dailySummaries.id, summaryId)).execute()
-  );
-  if (existing.length > 0 && existing[0].language === targetLanguage) {
-    return existing[0].summary_text;
-  }
+  const cached = await readCachedSummary(summaryId, targetLanguage);
+  if (cached) return cached;
 
   const postsText = formatPostsForPrompt(dayPosts);
 
@@ -76,47 +85,54 @@ Rules:
 - No opening line ("Here is today's summary", etc.) — start with the content.
 - Keep it short: 3–5 bullet points, or 2 compact paragraphs. About 80–100 words max.`;
 
-  const summary = await aiPool.run(async () => {
-    const completion = await createGroqCompletion({
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: `Here are the posts for ${localDate}:\n\n${postsText}` },
-      ],
-      model: MODEL,
-      temperature: 0.2,
-      max_tokens: 250,
-    });
-    return completion.choices[0]?.message?.content || "Failed to generate summary.";
+  const completion = await createGroqCompletion({
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: `Here are the posts for ${localDate}:\n\n${postsText}` },
+    ],
+    model: MODEL,
+    temperature: 0.2,
+    max_tokens: 250,
   });
+  const summary = completion.choices[0]?.message?.content || "Failed to generate summary.";
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = new Date().toISOString().split("T")[0];
   const isFinal = localDate < todayStr;
 
-  await writeDb.insert(dailySummaries).values({
-    id: summaryId,
-    channel: channel,
-    local_date: localDate,
-    summary_text: summary,
-    post_count: dayPosts.length,
-    language: targetLanguage,
-    model_used: MODEL,
-    is_final: isFinal,
-    generated_at: new Date()
-  }).onConflictDoUpdate({
-    target: dailySummaries.id,
-    set: {
+  await writeDb
+    .insert(dailySummaries)
+    .values({
+      id: summaryId,
+      channel,
+      local_date: localDate,
       summary_text: summary,
       post_count: dayPosts.length,
       language: targetLanguage,
+      model_used: MODEL,
       is_final: isFinal,
-      generated_at: new Date()
-    }
-  });
+      generated_at: new Date(),
+    })
+    .onConflictDoUpdate({
+      target: dailySummaries.id,
+      set: {
+        summary_text: summary,
+        post_count: dayPosts.length,
+        language: targetLanguage,
+        is_final: isFinal,
+        generated_at: new Date(),
+      },
+    });
 
   return summary;
 }
 
-export async function summarizeDay(channel: string, localDate: string, targetLanguage: string = SUMMARY_LANGUAGE, forceRegenerate = false): Promise<string> {
+export async function summarizeDay(
+  channel: string,
+  localDate: string,
+  targetLanguage: string = SUMMARY_LANGUAGE,
+  forceRegenerate = false,
+): Promise<string> {
+  const summaryId = `${channel}:${localDate}`;
   const inflightKey = `${channel}:${localDate}:${targetLanguage}`;
 
   if (!forceRegenerate) {
@@ -124,12 +140,8 @@ export async function summarizeDay(channel: string, localDate: string, targetLan
     if (inflight) return inflight;
 
     try {
-      const cached = await withReadDb((db) =>
-        db.select().from(dailySummaries).where(eq(dailySummaries.id, inflightKey)).execute()
-      );
-      if (cached.length > 0 && cached[0].language === targetLanguage) {
-        return cached[0].summary_text;
-      }
+      const cached = await readCachedSummary(summaryId, targetLanguage);
+      if (cached) return cached;
     } catch {
       // fall through to generation
     }
