@@ -53,4 +53,4 @@ export const handlerPool = new ConcurrencyPool(envInt("MAX_CONCURRENT_HANDLERS",
 /** Max concurrent Groq calls across the instance. */
 export const aiPool = new ConcurrencyPool(envInt("MAX_CONCURRENT_AI", 50));
 /** Max concurrent Telegram web scrapes. */
-export const scrapePool = new ConcurrencyPool(envInt("MAX_CONCURRENT_SCRAPES", 15));
+export const scrapePool = new ConcurrencyPool(envInt("MAX_CONCURRENT_SCRAPES", 25));

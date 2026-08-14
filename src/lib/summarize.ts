@@ -29,16 +29,7 @@ function formatPostsForPrompt(dayPosts: any[]) {
 async function summarizeDayImpl(channel: string, localDate: string, targetLanguage: string): Promise<string> {
   const summaryId = `${channel}:${localDate}`;
 
-  await ensureChannelScraped(channel);
-
-  const existing = await withReadDb((db) =>
-    db.select().from(dailySummaries).where(eq(dailySummaries.id, summaryId)).execute()
-  );
-  if (existing.length > 0 && existing[0].language === targetLanguage) {
-    return existing[0].summary_text;
-  }
-
-  const dayPosts = await withReadDb((db) =>
+  let dayPosts = await withReadDb((db) =>
     db.select().from(posts)
       .where(and(eq(posts.local_date, localDate), eq(posts.channel, channel)))
       .orderBy(asc(posts.date))
@@ -46,7 +37,23 @@ async function summarizeDayImpl(channel: string, localDate: string, targetLangua
   );
 
   if (dayPosts.length === 0) {
-    return "No posts found for this date.";
+    await ensureChannelScraped(channel);
+    dayPosts = await withReadDb((db) =>
+      db.select().from(posts)
+        .where(and(eq(posts.local_date, localDate), eq(posts.channel, channel)))
+        .orderBy(asc(posts.date))
+        .execute()
+    );
+    if (dayPosts.length === 0) {
+      return "No posts found for this date.";
+    }
+  }
+
+  const existing = await withReadDb((db) =>
+    db.select().from(dailySummaries).where(eq(dailySummaries.id, summaryId)).execute()
+  );
+  if (existing.length > 0 && existing[0].language === targetLanguage) {
+    return existing[0].summary_text;
   }
 
   const postsText = formatPostsForPrompt(dayPosts);

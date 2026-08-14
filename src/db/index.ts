@@ -3,7 +3,7 @@ import postgres from "postgres";
 
 const poolConfig = {
   prepare: false as const,
-  max: Number(process.env.DB_POOL_MAX ?? 10),
+  max: Number(process.env.DB_POOL_MAX ?? 20),
   idle_timeout: 20,
   connect_timeout: 10,
   max_lifetime: 60 * 30,

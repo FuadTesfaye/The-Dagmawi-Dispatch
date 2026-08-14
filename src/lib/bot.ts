@@ -8,6 +8,10 @@ import { ensureChannelScraped } from "@/lib/telegram/scraper";
 import { checkRateLimit, retryAfterSeconds } from "@/lib/rate-limiter";
 import { handlerPool } from "@/lib/concurrency-pool";
 import { toHumanError, isErrorLikeContent } from "@/lib/human-errors";
+import { TtlCache } from "@/lib/ttl-cache";
+
+const userChannelCache = new TtlCache<string>();
+const USER_CHANNEL_TTL_MS = 60_000;
 
 async function replyError(ctx: { reply: (text: string) => Promise<unknown> }, err: unknown) {
   await ctx.reply(toHumanError(err, "command"));
@@ -59,11 +63,15 @@ function getDisplayName(ctx: any): string {
 
 // Helper: get user's selected channel
 async function getUserChannel(userId: string): Promise<string> {
+  const cached = userChannelCache.get(userId);
+  if (cached) return cached;
+
   const result = await withReadDb((db) =>
     db.select().from(userChannels).where(eq(userChannels.telegram_user_id, userId)).execute()
   );
-  if (result.length > 0) return result[0].channel;
-  return "dagmawi_babi"; // Default
+  const channel = result.length > 0 ? result[0].channel : "dagmawi_babi";
+  userChannelCache.set(userId, channel, USER_CHANNEL_TTL_MS);
+  return channel;
 }
 
 // Global error handler — ensures the webhook ALWAYS returns 200
@@ -150,7 +158,9 @@ bot.command("channel", async (ctx) => {
       set: { channel: cleanUsername, updated_at: new Date() },
     });
 
-    await ensureChannelScraped(cleanUsername);
+    userChannelCache.set(userId, cleanUsername, USER_CHANNEL_TTL_MS);
+
+    await ensureChannelScraped(cleanUsername, { force: true });
 
     let onboardingRoast = "";
     try {
@@ -293,17 +303,17 @@ bot.command("babiometer", async (ctx) => {
     if (!ctx.from) return;
     const localDateStr = getEATDateStr(0);
     const channel = await getUserChannel(String(ctx.from.id));
-    
-    // Ensure we have fresh posts
-    const { ensureChannelScraped } = await import("@/lib/telegram/scraper");
+
     await ensureChannelScraped(channel);
-    
-    const dayPosts = await withReadDb((db) =>
-      db.select().from(posts)
+
+    const countRow = await withReadDb((db) =>
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(posts)
         .where(and(eq(posts.local_date, localDateStr), eq(posts.channel, channel)))
         .execute()
     );
-    const count = dayPosts.length;
+    const count = countRow[0]?.count ?? 0;
     
     let blasts: string;
     let verdict: string;
@@ -397,7 +407,6 @@ bot.command("guess", async (ctx) => {
 
     // No argument — show today's guesses and results
     if (!input) {
-      const { ensureChannelScraped } = await import("@/lib/telegram/scraper");
       await ensureChannelScraped(channel);
 
       const todayGuesses = await withReadDb((db) =>
@@ -405,11 +414,14 @@ bot.command("guess", async (ctx) => {
           .where(and(eq(guesses.local_date, localDateStr), eq(guesses.channel, channel))).execute()
       );
       
-      const dayPosts = await withReadDb((db) =>
-        db.select().from(posts)
-          .where(and(eq(posts.local_date, localDateStr), eq(posts.channel, channel))).execute()
+      const countRow = await withReadDb((db) =>
+        db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(posts)
+          .where(and(eq(posts.local_date, localDateStr), eq(posts.channel, channel)))
+          .execute()
       );
-      const actualCount = dayPosts.length;
+      const actualCount = countRow[0]?.count ?? 0;
 
       if (todayGuesses.length === 0) {
         await ctx.reply(

@@ -16,6 +16,8 @@ const MAX_WORDS = 45;
 const MAX_SENTENCES = 3;
 const RECENT_ROAST_LIMIT = 10;
 
+const inflightRoasts = new Map<string, Promise<string>>();
+
 function getEATDateStr(offsetDays = 0): string {
   const now = new Date();
   const eat = new Date(now.getTime() + 3 * 60 * 60 * 1000);
@@ -98,12 +100,12 @@ async function getTodayPostCount(channel: string): Promise<number> {
   const localDate = getEATDateStr(0);
   const rows = await withReadDb((db) =>
     db
-      .select({ id: posts.id })
+      .select({ count: sql<number>`count(*)::int` })
       .from(posts)
       .where(and(eq(posts.channel, channel), eq(posts.local_date, localDate)))
       .execute()
   );
-  return rows.length;
+  return rows[0]?.count ?? 0;
 }
 
 type PostRow = { text: string | null; media_type: string };
@@ -204,13 +206,25 @@ async function generateWithPrompt(
 
 export async function generateDailyRoast(channel: string): Promise<string> {
   const cleanChannel = channel.replace(/^@/, "");
+  const inflightKey = `daily:${cleanChannel}`;
 
-  const [n, recent] = await Promise.all([
-    getTodayPostCount(cleanChannel).catch(() => 0),
-    getRecentRoasts(cleanChannel),
-  ]);
+  const existing = inflightRoasts.get(inflightKey);
+  if (existing) return existing;
 
-  return generateWithPrompt(cleanChannel, ROAST_SYSTEM_PROMPT, n, "daily", {}, recent);
+  const work = (async () => {
+    const [n, recent] = await Promise.all([
+      getTodayPostCount(cleanChannel).catch(() => 0),
+      getRecentRoasts(cleanChannel),
+    ]);
+    return generateWithPrompt(cleanChannel, ROAST_SYSTEM_PROMPT, n, "daily", {}, recent);
+  })();
+
+  inflightRoasts.set(inflightKey, work);
+  try {
+    return await work;
+  } finally {
+    inflightRoasts.delete(inflightKey);
+  }
 }
 
 export async function generateOnboardingRoast(
