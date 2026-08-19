@@ -7,8 +7,8 @@ import { BottomNav } from '@/components/bottom-nav';
 import { PwaInstallPrompt } from '@/components/pwa-install-prompt';
 
 export const metadata: Metadata = {
-  title: 'The Dagmawi Dispatch — Royal Telegram Platform',
-  description: 'Telegram channels aggregated, summarized by AI, and served with royal heraldry and real-time community commentary.',
+  title: 'The Dagmawi Dispatch — Telegram Publication & Scribe Feed',
+  description: 'Clean, real-time Telegram publication feed with multi-channel indexing and AI-powered editorial synthesis.',
   manifest: '/manifest.webmanifest',
   appleWebApp: {
     capable: true,
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#040508',
+  themeColor: '#090a0f',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -35,20 +35,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className="min-h-screen ambient-mesh-bg text-zinc-100 antialiased selection:bg-amber-500/30 selection:text-amber-200">
+      <body className="min-h-screen bg-[#090a0f] text-zinc-100 antialiased selection:bg-zinc-800 selection:text-white">
         <Providers>
-          {/* Animated Ambient Light Orbs */}
-          <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-            <div className="absolute top-[-10%] left-[10%] w-[600px] h-[600px] bg-amber-500/10 rounded-full blur-[150px] animate-orb-float" />
-            <div className="absolute top-[45%] right-[5%] w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[160px] animate-orb-float" style={{ animationDelay: '4s' }} />
-            <div className="absolute bottom-[-10%] left-[30%] w-[550px] h-[550px] bg-amber-400/5 rounded-full blur-[140px] animate-orb-float" style={{ animationDelay: '8s' }} />
-          </div>
-
-          <div className="relative z-10 flex flex-col min-h-screen">
+          <div className="relative flex flex-col min-h-screen">
             <Navbar />
-            <div className="flex-1 max-w-7xl w-full mx-auto flex">
+            <div className="flex-1 max-w-6xl w-full mx-auto flex">
               <Sidebar />
-              <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 pb-24 lg:pb-12">
+              <main className="flex-1 min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 pb-24 lg:pb-12">
                 {children}
               </main>
             </div>
