@@ -75,7 +75,7 @@ export function PwaInstallPrompt() {
           </div>
           <div className="flex flex-col gap-0.5">
             <span className="font-bold text-xs text-[#f4f0e6] uppercase">
-              Install Dispatch App
+              Install The Lurkening
             </span>
             <span className="text-[10px] text-[#a39e93] leading-tight">
               {isIOS

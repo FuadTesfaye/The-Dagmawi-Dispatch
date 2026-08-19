@@ -2,12 +2,12 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "The Dagmawi Dispatch — Royal Broadsheet & Telegram Explorer",
+  title: "The Lurkening — Royal Broadsheet & Telegram Explorer",
   description: "An avant-garde archival publication and teleprinter search engine for Telegram dispatches.",
   manifest: "/manifest.json",
-  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "Dispatch" },
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "The Lurkening" },
   openGraph: {
-    title: "The Dagmawi Dispatch",
+    title: "The Lurkening",
     description: "Royal Broadsheet & Telegram Explorer",
     type: "website",
   },
@@ -32,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Broadsheet Bulletin Line */}
         <div className="w-full bg-[#161822] border-b border-[#262936] py-1 px-4 text-center font-teletype text-[10px] tracking-widest text-[#a39e93] uppercase flex items-center justify-between">
           <span className="hidden sm:inline">✦ VOL. 2026 · NO. 88</span>
-          <span>THE ROYAL ARCHIVE & TELEGRAM INDEX</span>
+          <span>THE LURKENING · ROYAL ARCHIVE & TELEGRAM INDEX</span>
           <span className="hidden sm:inline">REAL-TIME INGESTION ✦</span>
         </div>
 

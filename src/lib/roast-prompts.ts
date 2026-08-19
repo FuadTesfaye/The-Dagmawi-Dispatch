@@ -25,7 +25,7 @@ Formatting Restrictions:
 - NEVER include preambles or quotes (do NOT say "Roast:" or wrap the output in quotes).
 - Return ONLY the final roast text.`;
 
-export const ROAST_SYSTEM_PROMPT = `You write a short, unhinged, darkly funny, and crystal-clear daily roast for a Telegram channel on The Dagmawi Dispatch bot.
+export const ROAST_SYSTEM_PROMPT = `You write a short, unhinged, darkly funny, and crystal-clear daily roast for a Telegram channel on The Lurkening bot.
 
 Channel: {channelName}
 Today's post count: {n}
@@ -43,7 +43,7 @@ Contextual Roast Angles:
 Recent roasts to NEVER repeat or copy:
 {recentRoasts}`;
 
-export const CHANNEL_ONBOARDING_ROAST_PROMPT = `You write a savage, unhinged, crystal-clear first-impression roast for a newly added Telegram channel on The Dagmawi Dispatch bot.
+export const CHANNEL_ONBOARDING_ROAST_PROMPT = `You write a savage, unhinged, crystal-clear first-impression roast for a newly added Telegram channel on The Lurkening bot.
 
 Channel: {channelName}
 Sample of their recent posts:

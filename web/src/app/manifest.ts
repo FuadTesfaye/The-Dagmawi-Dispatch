@@ -3,8 +3,8 @@ import type { MetadataRoute } from 'next';
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: '/',
-    name: 'The Dagmawi Dispatch — Royal Broadsheet',
-    short_name: 'Dispatch',
+    name: 'The Lurkening — Royal Broadsheet',
+    short_name: 'The Lurkening',
     description: 'An avant-garde archival publication and teleprinter feed of high-frequency Telegram dispatches with AI editorial synthesis.',
     start_url: '/',
     scope: '/',

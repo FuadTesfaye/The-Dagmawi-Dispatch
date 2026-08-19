@@ -33,7 +33,7 @@ export default function LoginPage() {
     if (!telegramContainerRef.current) return;
     telegramContainerRef.current.innerHTML = '';
 
-    const botName = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'BabisummarizeBot';
+    const botName = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'lurklord_bot';
 
     const script = document.createElement('script');
     script.src = 'https://telegram.org/js/telegram-widget.js?22';
@@ -63,7 +63,7 @@ export default function LoginPage() {
             Court Scribe Entry
           </h1>
           <p className="text-xs text-[#a39e93] mt-1.5 leading-relaxed font-sans">
-            Authenticate to stamp reactions, enter court testimony, and request AI synthesis.
+            Authenticate to stamp reactions, enter court testimony, and request AI synthesis across any channel.
           </p>
         </div>
 

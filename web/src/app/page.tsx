@@ -114,17 +114,17 @@ export default function HomePage() {
       {/* Frontpage Broadsheet Masthead Banner */}
       <div className="p-6 sm:p-8 bg-[#12141c] border-2 border-[#262936] shadow-[4px_4px_0px_0px_#000000] flex flex-col gap-3">
         <div className="flex items-center justify-between font-teletype text-[10px] uppercase text-[#a39e93] border-b border-[#262936] pb-2">
-          <span>§ ROYAL COURT DISPATCH SERVICE</span>
+          <span>§ TELEGRAM COMMUNITY LURKER SERVICE</span>
           <span>EST. MMXXVI</span>
-          <span>EDITION: CORE OIDC</span>
+          <span>EDITION: MULTI-CHANNEL</span>
         </div>
 
         <div className="flex flex-col gap-1 py-1">
           <h1 className="font-broadsheet font-black text-3xl sm:text-5xl text-[#f4f0e6] tracking-tight uppercase">
-            The Dagmawi Dispatch
+            The Lurkening
           </h1>
           <p className="font-teletype text-xs sm:text-sm text-[#d6d0c2] leading-relaxed max-w-2xl">
-            Real-time multi-channel Telegram broadcast ledger with Groq Llama-3.3 AI synthesis and community inquest.
+            Lurk on any Telegram channel without noise fatigue. Real-time multi-channel broadcast ledger with Groq Llama-3.3 AI synthesis and community inquest.
           </p>
         </div>
 
@@ -137,19 +137,19 @@ export default function HomePage() {
             <span>EXAMINE CHANNELS</span>
           </Link>
           <a
-            href="https://t.me/BabisummarizeBot"
+            href="https://t.me/lurklord_bot"
             target="_blank"
             rel="noopener noreferrer"
             className="stamp-btn !bg-[#12141c] !text-[#a39e93] hover:!text-[#f4f0e6] flex items-center gap-1"
           >
-            <span>TELEGRAM BOT</span>
+            <span>@lurklord_bot</span>
             <ArrowUpRight className="w-3 h-3 text-[#d97706]" />
           </a>
         </div>
       </div>
 
       {/* Teletype Activity Chronometer */}
-      <BabiometerWidget channel={selectedChannel === 'all' ? 'dagmawi_babi' : selectedChannel} />
+      <BabiometerWidget channel={selectedChannel === 'all' ? (channels[0]?.id || 'dagmawi_babi') : selectedChannel} />
 
       {/* Teletype Filter & Search Controls */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 font-teletype">

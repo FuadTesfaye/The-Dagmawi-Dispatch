@@ -104,7 +104,7 @@ bot.command("start", async (ctx) => {
   await ctx.reply(
     `📜 *Selam (peace), ${name}!*\n` +
     `━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-    `Welcome to *The Dagmawi Dispatch* — the only bot brave enough to read ALL of ${targetName} posts so you don't have to.\n\n` +
+    `Welcome to *The Lurkening* — the only bot brave enough to read ALL of ${targetName} posts so you don't have to.\n\n` +
     `We know you love them. We know you follow them. We also know you opened Telegram, saw 47 unread messages from one channel, and quietly closed the app.\n\n` +
     `*No judgment. That's why I exist.*\n\n` +
     `I scrape the channel, feed it to an AI, and hand you a clean summary every day. Your friendships are saved. Your FOMO is cured. Chigger yellem (no problem).\n\n` +
@@ -116,10 +116,10 @@ bot.command("start", async (ctx) => {
     `/date — Dig up any date's archive\n\n` +
     `🕊️  *SERVICES*\n` +
     `━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-    `/channel — Select a different channel to track\n` +
+    `/channel — Select any Telegram channel to track\n` +
     `/subscribe — Auto-deliver the daily digest\n` +
-    `/unsubscribe — Leave the kingdom\n` +
-    `/babiometer — How loud are they today?\n` +
+    `/unsubscribe — Stop daily delivery\n` +
+    `/lurkometer — How loud are they today? (alias: /babiometer)\n` +
     `/recommend — Popular channels others are tracking\n\n` +
     `🎭  *ENTERTAINMENT*\n` +
     `━━━━━━━━━━━━━━━━━━━━━━━━\n` +
@@ -305,8 +305,8 @@ bot.command("date", async (ctx) => {
   }
 });
 
-// ─── /babiometer ────────────────────────────────────────────────
-bot.command("babiometer", async (ctx) => {
+// ─── /lurkometer & /babiometer ──────────────────────────────────
+const handleLurkometer = async (ctx: Context) => {
   try {
     if (!ctx.from) return;
     const localDateStr = getEATDateStr(0);
@@ -350,9 +350,9 @@ bot.command("babiometer", async (ctx) => {
     } else if (count <= 15) {
       blasts = "🎺🎺🎺";
       verdict = isBabi
-        ? "CODE ORANGE. The keyboard is smoking. Lock screens across Ethiopia are vibrating in unison. Sanity is rapidly deteriorating."
-        : "High activity. Your unread badge is glowing red and your screen time report is weeping.";
-      emoji = "📢";
+        ? "Babi has entered the chat. Keyboards are rattling, thumbs are blistering, productivity is plummeting."
+        : "Elevated flurry. They are on a posting spree. Prepare your lock screen.";
+      emoji = "⚡";
     } else if (count <= 25) {
       blasts = "🎺🎺🎺🎺";
       verdict = isBabi
@@ -387,7 +387,10 @@ bot.command("babiometer", async (ctx) => {
   } catch (err) {
     await replyError(ctx, err);
   }
-});
+};
+
+bot.command("lurkometer", handleLurkometer);
+bot.command("babiometer", handleLurkometer);
 
 // ─── /roast ─────────────────────────────────────────────────────
 bot.command("roast", async (ctx) => {
@@ -601,7 +604,7 @@ bot.on("message", async (ctx) => {
     `🐴 /yesterday — Yesterday's summary\n` +
     `🎲 /guess — Bet on the post count\n` +
     `📡 /channel — Switch the channel you track\n` +
-    `🎺 /babiometer — Check the chaos level\n` +
+    `🎺 /lurkometer — Check the activity level\n` +
     `🎯 /recommend — See what others track\n\n` +
     `_Hit the / menu button to see all commands._`,
     { parse_mode: "Markdown" }

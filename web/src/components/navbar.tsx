@@ -22,7 +22,7 @@ export function Navbar() {
             </div>
             <div className="flex flex-col min-w-0">
               <span className="font-broadsheet font-black text-sm sm:text-lg tracking-tight text-[#f4f0e6] uppercase truncate">
-                Dagmawi Dispatch
+                The Lurkening
               </span>
               <span className="font-teletype text-[8px] sm:text-[9px] tracking-widest text-[#a39e93] uppercase hidden xs:inline">
                 Gazette & Teleprinter
