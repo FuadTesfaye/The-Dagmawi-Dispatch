@@ -14,10 +14,10 @@ interface AIReviewModalProps {
 type AIKind = 'summary' | 'roast' | 'fact_check' | 'eli5';
 
 const MODES = [
-  { id: 'summary' as AIKind, label: 'News Brief', icon: CheckCircle, desc: 'Factual key takeaways' },
-  { id: 'roast' as AIKind, label: 'Royal Roast', icon: Flame, desc: 'Witty court jester roast' },
-  { id: 'fact_check' as AIKind, label: 'Context Check', icon: Sparkles, desc: 'Background & verification' },
-  { id: 'eli5' as AIKind, label: 'Explain Like 5', icon: Lightbulb, desc: 'Plain English breakdown' },
+  { id: 'summary' as AIKind, label: 'Summary', icon: CheckCircle },
+  { id: 'roast' as AIKind, label: 'Roast', icon: Flame },
+  { id: 'fact_check' as AIKind, label: 'Fact Check', icon: Sparkles },
+  { id: 'eli5' as AIKind, label: 'ELI5', icon: Lightbulb },
 ];
 
 export function AIReviewModal({ isOpen, onClose, post }: AIReviewModalProps) {
@@ -59,7 +59,6 @@ export function AIReviewModal({ isOpen, onClose, post }: AIReviewModalProps) {
       if (res.ok) {
         const data = await res.json();
         setReviews((prev) => ({ ...prev, [kind]: data.review.content }));
-        showToast('AI commentary prepared by the Royal Scribes', 'success');
       } else {
         const err = await res.json();
         showToast(err.error || 'Failed to generate review', 'error');
@@ -76,49 +75,49 @@ export function AIReviewModal({ isOpen, onClose, post }: AIReviewModalProps) {
     if (!text) return;
     navigator.clipboard.writeText(text);
     setCopied(true);
-    showToast('AI analysis copied to clipboard!', 'success');
+    showToast('Copied to clipboard', 'success');
     setTimeout(() => setCopied(false), 2000);
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/85 backdrop-blur-xl animate-in fade-in">
-      <div className="relative w-full max-w-xl glass-card bg-zinc-950/98 rounded-3xl border border-amber-500/35 p-6 sm:p-7 shadow-2xl flex flex-col gap-5 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
+      <div className="relative w-full max-w-lg bg-[#11141d] rounded-xl border border-white/[0.08] p-5 sm:p-6 shadow-2xl flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/40 shadow-inner">
-              <Bot className="w-5 h-5" />
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300">
+              <Bot className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-black text-base text-zinc-100">Royal AI Commentary</h3>
-              <p className="text-xs text-zinc-400 font-medium">Dispatch #{post.id} from @{post.channel}</p>
+              <h3 className="font-semibold text-sm text-zinc-100">AI Editorial Synthesis</h3>
+              <p className="text-[11px] text-zinc-500">Dispatch #{post.id} · @{post.channel}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-full text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 transition-colors border border-transparent hover:border-zinc-800"
+            className="p-1.5 rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-900 transition-colors"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Mode Selector Tabs */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="grid grid-cols-4 gap-1.5 p-1 rounded-lg bg-zinc-900 border border-zinc-800/80">
           {MODES.map(({ id, label, icon: Icon }) => {
             const isSelected = selectedKind === id;
             return (
               <button
                 key={id}
                 onClick={() => handleGenerate(id)}
-                className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl text-xs font-bold border transition-all duration-200 ${
+                className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-xs font-medium transition-colors ${
                   isSelected
-                    ? 'bg-gradient-to-br from-amber-400 to-amber-500 text-zinc-950 border-amber-400 shadow-md shadow-amber-500/25 scale-[1.02] font-black'
-                    : 'bg-zinc-900/80 text-zinc-400 border-zinc-800 hover:border-zinc-700 hover:text-zinc-200'
+                    ? 'bg-zinc-800 text-white font-semibold shadow-sm'
+                    : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
-                <Icon className={`w-4 h-4 ${isSelected ? 'text-zinc-950' : 'text-amber-400'}`} />
+                <Icon className="w-3.5 h-3.5" />
                 <span>{label}</span>
               </button>
             );
@@ -126,50 +125,49 @@ export function AIReviewModal({ isOpen, onClose, post }: AIReviewModalProps) {
         </div>
 
         {/* AI Output Area */}
-        <div className="p-5 rounded-2xl bg-zinc-900/90 border border-zinc-800 min-h-[160px] flex flex-col justify-center relative">
+        <div className="p-4 rounded-lg bg-zinc-900/70 border border-white/[0.04] min-h-[140px] flex flex-col justify-center">
           {loading ? (
-            <div className="flex flex-col items-center justify-center gap-3 text-amber-400 py-8">
-              <Loader2 className="w-7 h-7 animate-spin" />
-              <span className="text-xs font-bold text-zinc-400">Consulting Groq Llama 3.3 Pool...</span>
+            <div className="flex flex-col items-center justify-center gap-2 text-zinc-400 py-6">
+              <Loader2 className="w-5 h-5 animate-spin text-zinc-300" />
+              <span className="text-xs font-medium">Generating synthesis...</span>
             </div>
           ) : reviews[selectedKind] ? (
             <div className="flex flex-col gap-3">
-              <div className="text-sm text-zinc-100 leading-relaxed whitespace-pre-wrap font-sans font-medium">
+              <div className="text-xs sm:text-sm text-zinc-200 leading-relaxed whitespace-pre-wrap font-normal">
                 {reviews[selectedKind]}
               </div>
 
-              <div className="flex justify-end pt-2 border-t border-zinc-800/80">
+              <div className="flex justify-end pt-2 hairline-t">
                 <button
                   onClick={handleCopy}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-400 hover:text-amber-300 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-400 hover:text-white transition-colors"
                 >
                   {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copied ? 'Copied!' : 'Copy Review'}</span>
+                  <span>{copied ? 'Copied' : 'Copy'}</span>
                 </button>
               </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center gap-3 py-6 text-center">
-              <Sparkles className="w-8 h-8 text-amber-500/50" />
-              <p className="text-xs text-zinc-400 max-w-xs">
-                Click above to synthesize this post into a {selectedKind} breakdown.
+            <div className="flex flex-col items-center justify-center gap-2 py-4 text-center">
+              <p className="text-xs text-zinc-400">
+                Click to synthesize this dispatch using Groq LLM.
               </p>
               <button
                 onClick={() => handleGenerate(selectedKind)}
-                className="px-5 py-2.5 rounded-full text-xs font-black bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-zinc-950 shadow-md shadow-amber-500/20 transition-transform active:scale-95"
+                className="px-4 py-1.5 rounded-md text-xs font-semibold bg-zinc-100 hover:bg-white text-zinc-950 transition-colors"
               >
-                Generate {MODES.find((m) => m.id === selectedKind)?.label}
+                Generate Synthesis
               </button>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between text-[11px] font-semibold text-zinc-500 pt-2 border-t border-zinc-900">
-          <span>Powered by Multi-Key Groq Pool</span>
+        <div className="flex items-center justify-between text-[11px] text-zinc-500 pt-1">
+          <span>Groq Llama 3.3 Versatile</span>
           <button
             onClick={() => handleGenerate(selectedKind)}
-            className="text-amber-400 hover:text-amber-300 font-bold"
+            className="text-zinc-400 hover:text-zinc-200 font-medium"
           >
             Regenerate ↻
           </button>

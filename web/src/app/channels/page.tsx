@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { TrackedChannel } from '@/lib/types';
 import { ChannelCard } from '@/components/channel-card';
-import { Radio, Search, Loader2 } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
 
 export default function ChannelsPage() {
   const [channels, setChannels] = useState<(TrackedChannel & { postCount?: number })[]>([]);
@@ -26,50 +26,46 @@ export default function ChannelsPage() {
   }, [search]);
 
   return (
-    <div className="flex flex-col gap-6 max-w-5xl mx-auto">
+    <div className="flex flex-col gap-6 max-w-4xl mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-amber-400 text-xs font-black uppercase tracking-wider mb-1">
-            <Radio className="w-4 h-4" />
-            <span>Kingdom Network</span>
-          </div>
-          <h1 className="text-2xl sm:text-4xl font-black text-gradient-amber">
-            Channel Directory
+          <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-1 block">
+            Channel Index
+          </span>
+          <h1 className="text-xl sm:text-2xl font-bold text-white">
+            Monitored Publications
           </h1>
-          <p className="text-xs text-zinc-400 mt-1 font-medium">
-            Browse and subscribe to verified Telegram dispatches across the realm.
+          <p className="text-xs text-zinc-400 mt-0.5">
+            Discover and subscribe to tracked Telegram broadcasts across the network.
           </p>
         </div>
 
-        {/* Search Input */}
-        <div className="relative w-full sm:w-72">
+        {/* Search */}
+        <div className="relative w-full sm:w-64">
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search channels..."
-            className="w-full py-2.5 pl-9 pr-4 rounded-2xl bg-zinc-900/90 border border-zinc-800 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-amber-500/50 font-medium"
+            placeholder="Filter channels..."
+            className="w-full py-1.5 pl-8 pr-3 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-zinc-700"
           />
-          <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-3.5" />
+          <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-2.5" />
         </div>
       </div>
 
-      {/* Channel Grid */}
+      {/* Grid */}
       {loading ? (
-        <div className="flex items-center justify-center py-20 text-amber-400">
-          <Loader2 className="w-8 h-8 animate-spin" />
+        <div className="flex items-center justify-center py-20 text-zinc-500">
+          <Loader2 className="w-6 h-6 animate-spin text-zinc-400" />
         </div>
       ) : channels.length === 0 ? (
-        <div className="glass-card rounded-3xl p-12 text-center flex flex-col items-center justify-center gap-3">
-          <span className="text-4xl">📡</span>
-          <h3 className="font-extrabold text-base text-zinc-100">No channels found</h3>
-          <p className="text-xs text-zinc-400">
-            No channels matched your search filter.
-          </p>
+        <div className="editorial-card p-12 text-center flex flex-col items-center justify-center gap-2">
+          <h3 className="font-semibold text-sm text-zinc-200">No channels found</h3>
+          <p className="text-xs text-zinc-500">No channels matched your search.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
           {channels.map((ch) => (
             <ChannelCard key={ch.id} channel={ch} />
           ))}

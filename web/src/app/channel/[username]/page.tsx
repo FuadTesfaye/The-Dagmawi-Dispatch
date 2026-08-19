@@ -45,7 +45,7 @@ export default function ChannelProfilePage({
           setChannelInfo({
             id: username,
             name: `@${username}`,
-            description: 'Telegram channel dispatch',
+            description: 'Telegram channel broadcast stream',
             avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${username}`,
             subscriberCount: 0,
             isVerified: false,
@@ -84,25 +84,25 @@ export default function ChannelProfilePage({
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-20 text-amber-400">
-        <Loader2 className="w-8 h-8 animate-spin" />
+      <div className="flex justify-center items-center py-20 text-zinc-500">
+        <Loader2 className="w-6 h-6 animate-spin text-zinc-400" />
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-6 max-w-4xl mx-auto">
+    <div className="flex flex-col gap-6 max-w-3xl mx-auto">
       {/* Back Button */}
       <Link
         href="/channels"
-        className="inline-flex items-center gap-2 text-xs font-bold text-zinc-400 hover:text-zinc-100 transition-colors self-start"
+        className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition-colors self-start font-medium"
       >
-        <ArrowLeft className="w-4 h-4" />
-        <span>Back to Channel Directory</span>
+        <ArrowLeft className="w-3.5 h-3.5" />
+        <span>Back to Channels</span>
       </Link>
 
-      {/* Channel Hero Card */}
-      <div className="glass-card rounded-3xl p-6 sm:p-8 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative overflow-hidden shadow-2xl">
+      {/* Hero Card */}
+      <div className="editorial-card p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
         <div className="flex items-center gap-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -111,50 +111,47 @@ export default function ChannelProfilePage({
               `https://api.dicebear.com/7.x/bottts/svg?seed=${username}`
             }
             alt={channelInfo?.name || username}
-            className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-zinc-800 border-2 border-amber-500/40 object-cover"
+            className="w-14 h-14 rounded-xl bg-zinc-800 border border-zinc-800 object-cover"
           />
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-3xl font-black text-zinc-100">
+          <div className="flex flex-col">
+            <div className="flex items-center gap-1.5">
+              <h1 className="text-lg sm:text-xl font-bold text-white">
                 {channelInfo?.name || `@${username}`}
               </h1>
               {channelInfo?.isVerified && (
-                <span className="text-amber-400 text-sm font-extrabold" title="Verified Channel">
+                <span className="text-zinc-400 text-xs font-bold" title="Verified">
                   ✓
                 </span>
               )}
             </div>
-            <span className="text-xs text-zinc-400 font-bold">@{username}</span>
-            <div className="flex items-center gap-3 text-xs text-zinc-400 mt-1 font-semibold">
-              <span className="flex items-center gap-1">
-                <Users className="w-3.5 h-3.5 text-amber-400" />
-                {formatNumber(subCount)} subscribers
-              </span>
+            <span className="text-xs text-zinc-500 font-medium">@{username}</span>
+            <div className="flex items-center gap-2 text-xs text-zinc-400 mt-1">
+              <span>{formatNumber(subCount)} subscribers</span>
               <span>·</span>
-              <span>{posts.length} archived posts</span>
+              <span>{posts.length} dispatches</span>
             </div>
           </div>
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-3 w-full sm:w-auto">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <button
             onClick={handleToggleSubscribe}
-            className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-xs font-black transition-all ${
+            className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
               isSubscribed
-                ? 'bg-zinc-800 text-zinc-300 border border-zinc-700 hover:bg-rose-950/40 hover:text-rose-300'
-                : 'bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-zinc-950 shadow-lg shadow-amber-500/25 active:scale-95'
+                ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+                : 'bg-zinc-100 hover:bg-white text-zinc-950'
             }`}
           >
             {isSubscribed ? (
               <>
-                <Check className="w-4 h-4" />
+                <Check className="w-3.5 h-3.5" />
                 <span>Following</span>
               </>
             ) : (
               <>
-                <Plus className="w-4 h-4" />
-                <span>Follow Channel</span>
+                <Plus className="w-3.5 h-3.5" />
+                <span>Follow</span>
               </>
             )}
           </button>
@@ -164,25 +161,25 @@ export default function ChannelProfilePage({
             target="_blank"
             rel="noopener noreferrer"
             title="Open in Telegram"
-            className="p-3 rounded-full bg-zinc-900 border border-zinc-800 hover:border-amber-500/40 text-zinc-300 hover:text-white transition-colors"
+            className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white transition-colors"
           >
-            <ExternalLink className="w-4 h-4" />
+            <ExternalLink className="w-3.5 h-3.5" />
           </a>
         </div>
       </div>
 
-      {/* Babiometer Widget */}
+      {/* Activity Meter */}
       <BabiometerWidget channel={username} />
 
       {/* Posts Section */}
-      <div className="flex flex-col gap-4">
-        <h2 className="text-base font-extrabold text-zinc-100">
+      <div className="flex flex-col gap-3">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-500">
           Dispatches from @{username}
         </h2>
 
         {posts.length === 0 ? (
-          <div className="glass-card rounded-3xl p-12 text-center text-zinc-400 text-xs font-medium">
-            No posts recorded for this channel yet.
+          <div className="editorial-card p-10 text-center text-zinc-500 text-xs">
+            No dispatches recorded for this channel yet.
           </div>
         ) : (
           posts.map((post) => <PostCard key={`${post.channel}-${post.id}`} post={post} />)
