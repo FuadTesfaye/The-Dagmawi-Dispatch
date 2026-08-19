@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Activity, BarChart2 } from 'lucide-react';
+import { Radio, Gauge } from 'lucide-react';
 
 interface BabiometerProps {
   channel?: string;
@@ -26,56 +26,48 @@ export function BabiometerWidget({ channel = 'dagmawi_babi' }: BabiometerProps) 
   }, [channel]);
 
   const getVolumeLevel = (count: number) => {
-    if (count === 0) return { verdict: 'Quiet baseline. No new dispatches logged today.', level: 'Baseline', percent: 8 };
-    if (count <= 3) return { verdict: 'Low frequency broadcast mode.', level: 'Moderate', percent: 28 };
-    if (count <= 8) return { verdict: 'Standard editorial rhythm.', level: 'Active', percent: 55 };
-    if (count <= 15) return { verdict: 'High output velocity.', level: 'High Velocity', percent: 75 };
-    if (count <= 25) return { verdict: 'Heavy broadcast deluge.', level: 'Surge', percent: 90 };
-    return { verdict: 'Peak broadcast event volume.', level: 'Peak Output', percent: 100 };
+    if (count === 0) return { blocks: '░░░░░░░░░░', verdict: 'SILENCE FROM THE ROYAL SCRIBE. GATHERING STORM FOR MIDNIGHT.', level: 'DORMANT', percent: 0 };
+    if (count <= 3) return { blocks: '██░░░░░░░░', verdict: 'MILD TELETYPE BROADCAST CALIBRATION.', level: 'MODERATE', percent: 20 };
+    if (count <= 8) return { blocks: '█████░░░░░', verdict: 'STANDARD BROADCAST VELOCITY IN EFFECT.', level: 'ACTIVE', percent: 50 };
+    if (count <= 15) return { blocks: '███████░░░', verdict: 'ELEVATED DISPATCH FLURRY ACROSS THE WIRES.', level: 'HIGH', percent: 75 };
+    if (count <= 25) return { blocks: '█████████░', verdict: 'HIGH-FREQUENCY DIGITAL DELUGE ENGAGED.', level: 'DELUGE', percent: 90 };
+    return { blocks: '██████████', verdict: 'DEFCON 1: CRITICAL APOCALYPTIC BROADCAST SURGE.', level: 'PEAK', percent: 100 };
   };
 
   const volume = getVolumeLevel(postCount);
 
   return (
-    <div className="editorial-card p-5 flex flex-col gap-3.5">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-md bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300">
-            <Activity className="w-3.5 h-3.5" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-xs text-zinc-200">
-              Activity Index
-            </h3>
-            <p className="text-[11px] text-zinc-500">Volume index for @{channel}</p>
-          </div>
+    <div className="broadsheet-card p-4 sm:p-5 flex flex-col gap-3 font-teletype">
+      {/* Header Stamp */}
+      <div className="flex items-center justify-between border-b border-[#262936] pb-2.5">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 bg-[#d97706]" />
+          <span className="text-xs font-bold text-[#f4f0e6] uppercase tracking-wider">
+            Teletype Chronometer // @{channel}
+          </span>
         </div>
-
-        <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-300 font-medium">
-          {volume.level}
+        <span className="stamp-badge-gold stamp-badge">
+          LEVEL: {volume.level}
         </span>
       </div>
 
-      {/* Progress & Stat */}
-      <div className="flex flex-col gap-2 p-3.5 rounded-lg bg-zinc-900/60 border border-white/[0.04]">
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-zinc-400 font-medium">Daily Dispatch Count</span>
-          <span className="text-sm font-bold text-white">
-            {loading ? '—' : `${postCount} Posts`}
+      {/* Mechanical Teletype Counter */}
+      <div className="p-3 bg-[#0c0d10] border border-[#262936] flex flex-col gap-2">
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-[#a39e93] uppercase font-semibold">24-Hour Dispatch Ticker</span>
+          <span className="font-bold text-[#f4f0e6] text-sm">
+            {loading ? 'CALCULATING...' : `[ ${postCount} TRANSMISSIONS ]`}
           </span>
         </div>
 
-        {/* Minimal Progress Bar */}
-        <div className="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden">
-          <div
-            className="h-full rounded-full bg-zinc-300 transition-all duration-700 ease-out"
-            style={{ width: `${volume.percent}%` }}
-          />
+        {/* ASCII / Block Gauge */}
+        <div className="text-sm font-bold tracking-widest text-[#f4f0e6] py-1 border-y border-[#262936] flex items-center justify-between">
+          <span className="text-[#d97706]">{volume.blocks}</span>
+          <span className="text-xs text-[#a39e93]">{volume.percent}% CAPACITY</span>
         </div>
 
-        <p className="text-[11px] text-zinc-500 font-normal mt-0.5">
-          {volume.verdict}
+        <p className="text-[10px] text-[#a39e93] italic font-sans leading-relaxed">
+          &ldquo;{volume.verdict}&rdquo;
         </p>
       </div>
     </div>

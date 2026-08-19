@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Newspaper, Radio, UserCheck, ShieldAlert } from 'lucide-react';
+import { BookOpen, Radio, UserCheck, ShieldAlert } from 'lucide-react';
 import { useAuth } from './providers';
 
 export function BottomNav() {
@@ -11,17 +11,17 @@ export function BottomNav() {
   const { user } = useAuth();
 
   const links = [
-    { href: '/', label: 'Feed', icon: Newspaper },
-    { href: '/channels', label: 'Channels', icon: Radio },
-    { href: '/profile', label: 'Profile', icon: UserCheck },
+    { href: '/', label: 'FEED', icon: BookOpen },
+    { href: '/channels', label: 'CHANNELS', icon: Radio },
+    { href: '/profile', label: 'SCRIBE', icon: UserCheck },
   ];
 
   if (user?.role === 'admin' || user?.role === 'moderator') {
-    links.push({ href: '/admin/moderation', label: 'Admin', icon: ShieldAlert });
+    links.push({ href: '/admin/moderation', label: 'COURT', icon: ShieldAlert });
   }
 
   return (
-    <nav className="lg:hidden fixed bottom-3 left-4 right-4 z-40 bg-zinc-950/90 backdrop-blur-xl border border-white/[0.08] rounded-2xl p-1.5 flex items-center justify-around shadow-2xl">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#12141c] border-t-2 border-[#262936] p-2 flex items-center justify-around font-teletype">
       {links.map((link) => {
         const Icon = link.icon;
         const isActive = pathname === link.href;
@@ -29,13 +29,13 @@ export function BottomNav() {
           <Link
             key={link.href}
             href={link.href}
-            className={`flex flex-col items-center gap-1 py-1.5 px-4 rounded-xl text-[11px] font-medium transition-colors ${
+            className={`flex flex-col items-center gap-1 py-1 px-3 text-[10px] font-bold border transition-colors ${
               isActive
-                ? 'bg-zinc-800 text-white font-semibold'
-                : 'text-zinc-400 hover:text-zinc-200'
+                ? 'bg-[#f4f0e6] text-[#0c0d10] border-[#f4f0e6]'
+                : 'text-[#a39e93] border-transparent hover:text-[#f4f0e6]'
             }`}
           >
-            <Icon className="w-4 h-4" />
+            <Icon className="w-3.5 h-3.5" />
             <span>{link.label}</span>
           </Link>
         );

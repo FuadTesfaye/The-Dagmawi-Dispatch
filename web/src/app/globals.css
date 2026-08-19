@@ -1,90 +1,128 @@
 @import "tailwindcss";
 
 :root {
-  --bg-main: #090a0f;
-  --card-surface: #11141d;
-  --card-border: rgba(255, 255, 255, 0.07);
-  --card-border-hover: rgba(255, 255, 255, 0.16);
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --accent-warm: #f59e0b;
+  --ink-bg: #0c0d10;
+  --ink-surface: #14161d;
+  --paper-cream: #f4f0e6;
+  --paper-muted: #a39e93;
+  --ink-border: #262936;
+  --ink-border-heavy: #3d4257;
+  --royal-ochre: #d97706;
+  --royal-crimson: #be123c;
 }
 
 @theme {
-  --color-canvas-950: #06070a;
-  --color-canvas-900: #090a0f;
-  --color-canvas-850: #0d0f17;
-  --color-canvas-800: #11141d;
-  --color-canvas-700: #171b26;
-  --color-canvas-600: #232938;
+  --color-ink-950: #08080a;
+  --color-ink-900: #0c0d10;
+  --color-ink-850: #101217;
+  --color-ink-800: #14161d;
+  --color-ink-700: #1c202a;
+  --color-ink-600: #262b3a;
+  --color-paper-50: #faf8f5;
+  --color-paper-100: #f4f0e6;
+  --color-paper-200: #e5dfd0;
+  --color-paper-400: #a39e93;
+  --color-paper-600: #6b665c;
 }
 
 body {
-  background-color: var(--bg-main);
-  color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  background-color: var(--ink-bg);
+  color: var(--paper-cream);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   overflow-x: hidden;
   letter-spacing: -0.01em;
-  padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* Modern Editorial Matte Cards */
-.editorial-card {
-  background-color: #0f121a;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 1rem;
-  transition: border-color 0.2s ease, transform 0.2s ease;
+/* Serif Masthead Utility */
+.font-broadsheet {
+  font-family: "Playfair Display", "Times New Roman", "Georgia", "Newsreader", serif;
 }
 
-.editorial-card:hover {
-  border-color: rgba(255, 255, 255, 0.16);
+/* Monospace Teletype Utility */
+.font-teletype {
+  font-family: "SF Mono", "Courier New", Courier, monospace;
 }
 
-/* Minimal Header Bar */
-.matte-header {
-  background-color: rgba(9, 10, 15, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+/* Broadsheet Borders & Dividers */
+.broadsheet-card {
+  background-color: #12141c;
+  border: 1px solid var(--ink-border);
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 0.8);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
-/* Clean Custom Scrollbar */
+.broadsheet-card:hover {
+  border-color: var(--ink-border-heavy);
+  transform: translate(-1px, -1px);
+  box-shadow: 6px 6px 0px 0px rgba(0, 0, 0, 0.9);
+}
+
+.double-rule-b {
+  border-bottom: 3px double var(--ink-border);
+}
+
+.double-rule-t {
+  border-top: 3px double var(--ink-border);
+}
+
+.stamp-badge {
+  font-family: "SF Mono", "Courier New", monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border: 1px solid var(--ink-border);
+  background-color: #171a24;
+  color: #d6d0c2;
+}
+
+.stamp-badge-gold {
+  border-color: #785a28;
+  background-color: #241c10;
+  color: #f6d89b;
+}
+
+/* Tactile Stamp Button */
+.stamp-btn {
+  font-family: "SF Mono", "Courier New", monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 700;
+  border: 1px solid var(--ink-border-heavy);
+  background-color: #171922;
+  color: #ece7db;
+  padding: 6px 12px;
+  box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 0.7);
+  transition: all 0.1s ease;
+}
+
+.stamp-btn:hover {
+  background-color: #f4f0e6;
+  color: #0c0d10;
+  border-color: #f4f0e6;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px 0px rgba(0, 0, 0, 0.9);
+}
+
+.stamp-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 0px 0px 0px 0px rgba(0, 0, 0, 0.9);
+}
+
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #090a0f;
+  background: #0c0d10;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #232938;
-  border-radius: 9999px;
+  background: #2b3042;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #333b4f;
-}
-
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-/* Micro Utilities */
-.hairline-b {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-}
-
-.hairline-t {
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
-}
-
-.hairline-border {
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: #424963;
 }
