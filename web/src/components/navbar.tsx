@@ -2,9 +2,8 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useAuth } from './providers';
-import { useRealtime } from './providers';
-import { Scroll, Sparkles, LogIn, LogOut, Shield, Wifi, WifiOff, Menu, X, User } from 'lucide-react';
+import { useAuth, useRealtime } from './providers';
+import { Scroll, LogIn, LogOut, Shield, Wifi, Menu, X, Sparkles, UserCheck, Crown } from 'lucide-react';
 
 export function Navbar() {
   const { user, loading, logout, loginDemo } = useAuth();
@@ -13,19 +12,19 @@ export function Navbar() {
   const [showDemoMenu, setShowDemoMenu] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 w-full glass-panel border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 w-full glass-card border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-2xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         {/* Brand & Royal Crest */}
         <div className="flex items-center gap-3">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-zinc-950 font-black shadow-lg shadow-amber-500/20 group-hover:scale-105 transition-transform duration-200">
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 flex items-center justify-center text-zinc-950 font-black shadow-lg shadow-amber-500/25 group-hover:scale-105 group-hover:rotate-3 transition-all duration-300">
               <Scroll className="w-5 h-5 text-zinc-950" />
             </div>
             <div className="flex flex-col">
-              <span className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-zinc-100 via-amber-200 to-amber-400 bg-clip-text text-transparent">
+              <span className="font-black text-lg tracking-tight text-gradient-amber">
                 Dagmawi Dispatch
               </span>
-              <span className="text-[10px] tracking-wider uppercase font-semibold text-amber-500/80">
+              <span className="text-[10px] tracking-widest uppercase font-bold text-amber-400/90">
                 The Royal Web Platform
               </span>
             </div>
@@ -33,16 +32,19 @@ export function Navbar() {
         </div>
 
         {/* Real-time Status Badge */}
-        <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900/80 border border-zinc-800 text-xs text-zinc-400">
+        <div className="hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-900/90 border border-zinc-800/80 text-xs shadow-inner">
           {isConnected ? (
             <>
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-zinc-300 font-medium">Live Herald SSE</span>
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              </span>
+              <span className="text-zinc-200 font-semibold">Herald SSE Live</span>
             </>
           ) : (
             <>
-              <span className="w-2 h-2 rounded-full bg-amber-500" />
-              <span className="text-zinc-400">Connecting...</span>
+              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+              <span className="text-zinc-400">Connecting SSE...</span>
             </>
           )}
         </div>
@@ -50,13 +52,13 @@ export function Navbar() {
         {/* User Authentication & Action Area */}
         <div className="flex items-center gap-3">
           {loading ? (
-            <div className="w-8 h-8 rounded-full bg-zinc-800 animate-pulse" />
+            <div className="w-9 h-9 rounded-full bg-zinc-800 animate-pulse" />
           ) : user ? (
             <div className="flex items-center gap-3">
               {user.role === 'admin' && (
                 <Link
                   href="/admin/moderation"
-                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 transition-colors"
+                  className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-extrabold text-amber-300 bg-amber-500/15 border border-amber-500/40 hover:bg-amber-500/25 transition-all shadow-sm shadow-amber-500/10"
                 >
                   <Shield className="w-3.5 h-3.5" />
                   <span>Court Admin</span>
@@ -65,15 +67,15 @@ export function Navbar() {
 
               <Link
                 href="/profile"
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-900 border border-zinc-800 hover:border-amber-500/40 transition-colors"
+                className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-zinc-900/90 border border-zinc-800 hover:border-amber-500/50 transition-all shadow-sm"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={user.photoUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${user.displayName}`}
                   alt={user.displayName}
-                  className="w-6 h-6 rounded-full bg-zinc-800"
+                  className="w-6 h-6 rounded-full bg-zinc-800 ring-1 ring-amber-500/40"
                 />
-                <span className="text-xs font-semibold text-zinc-200 hidden sm:inline max-w-[100px] truncate">
+                <span className="text-xs font-bold text-zinc-100 hidden sm:inline max-w-[110px] truncate">
                   {user.displayName}
                 </span>
               </Link>
@@ -81,7 +83,7 @@ export function Navbar() {
               <button
                 onClick={logout}
                 title="Sign Out"
-                className="p-2 rounded-full text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 border border-transparent hover:border-zinc-800 transition-colors"
+                className="p-2 rounded-full text-zinc-400 hover:text-rose-400 hover:bg-zinc-900 border border-transparent hover:border-zinc-800 transition-colors"
               >
                 <LogOut className="w-4 h-4" />
               </button>
@@ -91,7 +93,7 @@ export function Navbar() {
               <div className="flex items-center gap-2">
                 <Link
                   href="/login"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs sm:text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-zinc-950 shadow-md shadow-amber-500/20 active:scale-95 transition-all"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs sm:text-sm font-extrabold bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-zinc-950 shadow-md shadow-amber-500/20 active:scale-95 transition-all"
                 >
                   <LogIn className="w-4 h-4" />
                   <span>Sign In</span>
@@ -99,7 +101,7 @@ export function Navbar() {
 
                 <button
                   onClick={() => setShowDemoMenu(!showDemoMenu)}
-                  className="px-3 py-2 rounded-full text-xs font-medium bg-zinc-900 border border-zinc-800 hover:border-amber-500/30 text-amber-300 transition-colors"
+                  className="px-3.5 py-2 rounded-full text-xs font-bold bg-zinc-900/90 border border-zinc-800 hover:border-amber-500/40 text-amber-300 transition-colors"
                 >
                   Demo Mode
                 </button>
@@ -107,16 +109,17 @@ export function Navbar() {
 
               {/* Demo Sign In Dropdown */}
               {showDemoMenu && (
-                <div className="absolute right-0 mt-2 w-56 p-2 rounded-2xl glass-panel bg-zinc-950/95 border border-amber-500/20 shadow-2xl z-50 animate-in fade-in zoom-in-95">
-                  <div className="text-[11px] font-semibold uppercase tracking-wider text-amber-400 px-3 py-1">
-                    Instant Demo Login
+                <div className="absolute right-0 mt-2 w-60 p-2.5 rounded-2xl glass-card bg-zinc-950/98 border border-amber-500/30 shadow-2xl z-50 animate-in fade-in zoom-in-95">
+                  <div className="text-[11px] font-extrabold uppercase tracking-widest text-amber-400 px-3 py-1 flex items-center gap-1.5">
+                    <Crown className="w-3.5 h-3.5" />
+                    <span>Instant Demo Sign In</span>
                   </div>
                   <button
                     onClick={() => {
                       loginDemo('admin');
                       setShowDemoMenu(false);
                     }}
-                    className="w-full text-left px-3 py-2 rounded-xl text-xs text-zinc-200 hover:bg-amber-500/10 hover:text-amber-300 transition-colors flex items-center justify-between"
+                    className="w-full text-left px-3 py-2 rounded-xl text-xs text-zinc-200 hover:bg-amber-500/15 hover:text-amber-300 transition-colors flex items-center justify-between font-semibold"
                   >
                     <span>👑 Royal Herald (Admin)</span>
                   </button>
@@ -125,7 +128,7 @@ export function Navbar() {
                       loginDemo('reader');
                       setShowDemoMenu(false);
                     }}
-                    className="w-full text-left px-3 py-2 rounded-xl text-xs text-zinc-200 hover:bg-amber-500/10 hover:text-amber-300 transition-colors flex items-center justify-between"
+                    className="w-full text-left px-3 py-2 rounded-xl text-xs text-zinc-200 hover:bg-amber-500/15 hover:text-amber-300 transition-colors flex items-center justify-between font-semibold"
                   >
                     <span>📜 Scribe Apprentice</span>
                   </button>
@@ -134,7 +137,7 @@ export function Navbar() {
                       loginDemo('vip');
                       setShowDemoMenu(false);
                     }}
-                    className="w-full text-left px-3 py-2 rounded-xl text-xs text-zinc-200 hover:bg-amber-500/10 hover:text-amber-300 transition-colors flex items-center justify-between"
+                    className="w-full text-left px-3 py-2 rounded-xl text-xs text-zinc-200 hover:bg-amber-500/15 hover:text-amber-300 transition-colors flex items-center justify-between font-semibold"
                   >
                     <span>🔥 Babi Superfan</span>
                   </button>
@@ -155,11 +158,11 @@ export function Navbar() {
 
       {/* Mobile Drawer */}
       {isMenuOpen && (
-        <div className="md:hidden border-t border-zinc-800/80 bg-zinc-950/95 px-4 py-4 flex flex-col gap-3">
+        <div className="md:hidden border-t border-zinc-800/80 bg-zinc-950/98 px-4 py-4 flex flex-col gap-3">
           <Link
             href="/"
             onClick={() => setIsMenuOpen(false)}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-zinc-200 hover:bg-zinc-900"
+            className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-zinc-200 hover:bg-zinc-900"
           >
             <span>📜</span>
             <span>Kingdom Feed</span>
@@ -167,7 +170,7 @@ export function Navbar() {
           <Link
             href="/channels"
             onClick={() => setIsMenuOpen(false)}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-zinc-200 hover:bg-zinc-900"
+            className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-zinc-200 hover:bg-zinc-900"
           >
             <span>📡</span>
             <span>Channel Directory</span>
@@ -175,7 +178,7 @@ export function Navbar() {
           <Link
             href="/profile"
             onClick={() => setIsMenuOpen(false)}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-zinc-200 hover:bg-zinc-900"
+            className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-zinc-200 hover:bg-zinc-900"
           >
             <span>👑</span>
             <span>Your Profile</span>
@@ -184,7 +187,7 @@ export function Navbar() {
             <Link
               href="/admin/moderation"
               onClick={() => setIsMenuOpen(false)}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-amber-400 hover:bg-amber-500/10"
+              className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-bold text-amber-400 hover:bg-amber-500/10"
             >
               <Shield className="w-4 h-4" />
               <span>Court Moderation</span>

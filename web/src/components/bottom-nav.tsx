@@ -17,11 +17,11 @@ export function BottomNav() {
   ];
 
   if (user?.role === 'admin' || user?.role === 'moderator') {
-    links.push({ href: '/admin/moderation', label: 'Admin', icon: Shield });
+    links.push({ href: '/admin/moderation', label: 'Court', icon: Shield });
   }
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-zinc-950/90 backdrop-blur-xl border-t border-zinc-800/80 px-2 py-1.5 flex items-center justify-around">
+    <nav className="lg:hidden fixed bottom-3 left-4 right-4 z-40 glass-card bg-zinc-950/90 backdrop-blur-2xl border border-zinc-800/80 rounded-3xl p-2 flex items-center justify-around shadow-2xl">
       {links.map((link) => {
         const Icon = link.icon;
         const isActive = pathname === link.href;
@@ -29,11 +29,13 @@ export function BottomNav() {
           <Link
             key={link.href}
             href={link.href}
-            className={`flex flex-col items-center gap-1 py-1 px-3 rounded-2xl text-xs font-semibold transition-all ${
-              isActive ? 'text-amber-400 font-bold scale-105' : 'text-zinc-400 hover:text-zinc-200'
+            className={`flex flex-col items-center gap-1 py-1.5 px-4 rounded-2xl text-[11px] font-extrabold transition-all duration-200 ${
+              isActive
+                ? 'bg-amber-500 text-zinc-950 shadow-md shadow-amber-500/25 scale-105 font-black'
+                : 'text-zinc-400 hover:text-zinc-100'
             }`}
           >
-            <Icon className={`w-5 h-5 ${isActive ? 'text-amber-400' : 'text-zinc-400'}`} />
+            <Icon className={`w-4 h-4 ${isActive ? 'text-zinc-950' : 'text-zinc-400'}`} />
             <span>{link.label}</span>
           </Link>
         );
