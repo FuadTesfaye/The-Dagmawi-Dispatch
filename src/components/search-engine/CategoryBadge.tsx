@@ -1,23 +1,9 @@
 import { categoryLabel } from "@/lib/search-engine/format";
 
-const TONE: Record<string, string> = {
-  crypto: "border-info/30 text-info",
-  jobs: "border-accent/30 text-accent",
-  phones: "border-warn/30 text-warn",
-  spam: "border-danger/30 text-danger",
-  dev_community: "border-accent/30 text-accent",
-  programming: "border-info/30 text-info",
-  startup: "border-warn/30 text-warn",
-  tech_news: "border-info/30 text-info",
-};
-
 export function CategoryBadge({ category }: { category: string | null }) {
-  const tone = (category && TONE[category]) || "border-border-bright text-muted";
   return (
-    <span
-      className={`inline-flex items-center rounded border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider ${tone}`}
-    >
-      {categoryLabel(category)}
+    <span className="stamp-badge inline-flex items-center text-[10px] uppercase font-bold text-[#d6d0c2] bg-[#171a24] border border-[#262936]">
+      [{categoryLabel(category).toUpperCase()}]
     </span>
   );
 }

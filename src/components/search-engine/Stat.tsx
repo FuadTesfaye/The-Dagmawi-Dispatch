@@ -8,11 +8,11 @@ export function Stat({
   accent?: boolean;
 }) {
   return (
-    <div className="panel px-4 py-3">
-      <div className="mono-label">{label}</div>
+    <div className="broadsheet-card px-4 py-3 font-teletype">
+      <div className="text-[10px] text-[#a39e93] uppercase font-bold tracking-wider">{label}</div>
       <div
-        className={`mt-1 font-mono text-lg font-semibold ${
-          accent ? "text-accent" : "text-fg-bright"
+        className={`mt-1 text-base sm:text-lg font-bold ${
+          accent ? "text-[#d97706]" : "text-[#f4f0e6]"
         }`}
       >
         {value}

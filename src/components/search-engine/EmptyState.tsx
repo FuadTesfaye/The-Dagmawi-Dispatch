@@ -6,11 +6,11 @@ export function EmptyState({
   hint?: string;
 }) {
   return (
-    <div className="panel flex flex-col items-center justify-center gap-2 py-16 text-center">
-      <div className="font-mono text-sm text-muted">
-        <span className="text-accent">{"//"}</span> {title}
+    <div className="broadsheet-card flex flex-col items-center justify-center gap-2 py-16 text-center font-teletype">
+      <div className="text-xs uppercase font-bold text-[#f4f0e6]">
+        <span className="text-[#d97706]">{"//"}</span> [ {title.toUpperCase()} ]
       </div>
-      {hint && <p className="max-w-sm text-xs text-muted/70">{hint}</p>}
+      {hint && <p className="max-w-sm text-xs text-[#a39e93] font-sans">{hint}</p>}
     </div>
   );
 }
