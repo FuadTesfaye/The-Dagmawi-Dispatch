@@ -1,15 +1,19 @@
-const CACHE_NAME = 'dispatch-pwa-v1';
+const CACHE_NAME = 'dispatch-broadsheet-pwa-v2';
 const STATIC_ASSETS = [
   '/',
   '/channels',
   '/manifest.webmanifest',
   '/favicon.ico',
+  '/icon-192.png',
+  '/icon-512.png',
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
+      return cache.addAll(STATIC_ASSETS).catch((err) => {
+        console.warn('[SW] Cache addAll error:', err);
+      });
     })
   );
   self.skipWaiting();
@@ -36,12 +40,14 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
-  // Network-first with cache fallback for HTML pages and APIs
+  // NEVER cache Server-Sent Events real-time stream
+  if (url.pathname.startsWith('/api/realtime/')) return;
+
+  // Network-first with cache fallback for HTML documents and static assets
   if (url.origin === self.location.origin) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          // If valid response, clone and update cache
           if (response && response.status === 200) {
             const responseToCache = response.clone();
             caches.open(CACHE_NAME).then((cache) => {
@@ -53,7 +59,6 @@ self.addEventListener('fetch', (event) => {
         .catch(() => {
           return caches.match(event.request).then((cachedResponse) => {
             if (cachedResponse) return cachedResponse;
-            // Fallback for document navigation
             if (event.request.destination === 'document') {
               return caches.match('/');
             }
