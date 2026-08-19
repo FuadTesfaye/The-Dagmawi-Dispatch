@@ -1,4 +1,4 @@
-import { Bot } from "grammy";
+import { Bot, Context } from "grammy";
 import { writeDb, withReadDb } from "@/db";
 import { subscribers, posts, guesses, userChannels } from "@/db/schema";
 import { eq, and, sql } from "drizzle-orm";
