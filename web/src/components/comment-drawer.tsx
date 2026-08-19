@@ -72,7 +72,7 @@ export function CommentDrawer({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
-      showToast('Please sign in to post a comment', 'info');
+      showToast('Authentication required to enter court record', 'info');
       return;
     }
     if (!newContent.trim()) return;
@@ -101,10 +101,10 @@ export function CommentDrawer({
         setTimeout(() => commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
       } else {
         const err = await res.json();
-        showToast(err.error || 'Failed to post comment', 'error');
+        showToast(err.error || 'Failed to enter comment', 'error');
       }
     } catch {
-      showToast('Error posting comment', 'error');
+      showToast('Error entering comment', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -113,20 +113,20 @@ export function CommentDrawer({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/70 backdrop-blur-sm">
-      <div className="relative w-full max-w-md h-full bg-[#0d0f17] border-l border-white/[0.08] p-5 flex flex-col justify-between shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/80 backdrop-blur-sm font-teletype">
+      <div className="relative w-full max-w-md h-full bg-[#12141c] border-l-2 border-[#3d4257] p-5 flex flex-col justify-between shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between pb-3 hairline-b">
+        <div className="flex items-center justify-between pb-3 border-b-2 border-[#262936]">
           <div className="flex items-center gap-2">
-            <MessageSquare className="w-4 h-4 text-zinc-400" />
-            <h3 className="font-semibold text-xs text-zinc-200">
-              Discussion ({comments.length})
+            <span className="w-2 h-2 bg-[#d97706]" />
+            <h3 className="font-bold text-xs text-[#f4f0e6] uppercase">
+              Court Inquest Record ({comments.length})
             </h3>
-            <span className="text-[11px] text-zinc-500">#{postId}</span>
+            <span className="text-[10px] text-[#a39e93]">#{postId}</span>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-md text-zinc-500 hover:text-zinc-200 transition-colors"
+            className="p-1 border border-[#262936] text-[#a39e93] hover:text-[#f4f0e6] transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -135,18 +135,18 @@ export function CommentDrawer({
         {/* Comment Thread List */}
         <div className="flex-1 overflow-y-auto py-3 flex flex-col gap-2.5">
           {loading ? (
-            <div className="flex items-center justify-center py-16 text-zinc-500">
-              <Loader2 className="w-5 h-5 animate-spin" />
+            <div className="flex items-center justify-center py-16 text-[#a39e93]">
+              <Loader2 className="w-5 h-5 animate-spin text-[#d97706]" />
             </div>
           ) : comments.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center text-zinc-500 gap-1">
-              <p className="text-xs">No comments recorded yet.</p>
+            <div className="flex flex-col items-center justify-center py-20 text-center text-[#a39e93] gap-1">
+              <p className="text-xs uppercase">[ NO COURT TESTIMONY FILED YET ]</p>
             </div>
           ) : (
             comments.map((c) => (
               <div
                 key={c.id}
-                className="p-3 rounded-lg bg-zinc-900/60 border border-white/[0.04] flex flex-col gap-1.5"
+                className="p-3 bg-[#0c0d10] border border-[#262936] flex flex-col gap-1.5"
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5">
@@ -157,30 +157,30 @@ export function CommentDrawer({
                         `https://api.dicebear.com/7.x/bottts/svg?seed=${c.user?.displayName || c.userId}`
                       }
                       alt={c.user?.displayName || 'User'}
-                      className="w-4 h-4 rounded-full bg-zinc-800"
+                      className="w-4 h-4 rounded-none bg-zinc-800"
                     />
-                    <span className="text-xs font-medium text-zinc-300">
-                      {c.user?.displayName || 'Subscriber'}
+                    <span className="text-xs font-bold text-[#f4f0e6]">
+                      {c.user?.displayName || 'CITIZEN SCRIBE'}
                     </span>
                     {c.user?.role === 'admin' && (
-                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-400 font-semibold">
-                        Admin
+                      <span className="stamp-badge-gold stamp-badge !text-[9px] !py-0 !px-1">
+                        ADMIN
                       </span>
                     )}
                   </div>
-                  <span className="text-[10px] text-zinc-500">{formatTimeAgo(c.createdAt)}</span>
+                  <span className="text-[10px] text-[#a39e93]">{formatTimeAgo(c.createdAt).toUpperCase()}</span>
                 </div>
 
-                <p className="text-xs text-zinc-300 whitespace-pre-wrap leading-relaxed">
+                <p className="text-xs text-[#f4f0e6] font-sans whitespace-pre-wrap leading-relaxed">
                   {c.content}
                 </p>
 
                 <button
                   onClick={() => setReplyTo(c)}
-                  className="text-[10px] text-zinc-500 hover:text-zinc-300 self-start flex items-center gap-0.5 mt-0.5"
+                  className="text-[10px] text-[#d97706] hover:underline self-start flex items-center gap-0.5 mt-0.5 uppercase font-bold"
                 >
                   <CornerDownRight className="w-2.5 h-2.5" />
-                  <span>Reply</span>
+                  <span>REPLY</span>
                 </button>
               </div>
             ))
@@ -189,14 +189,14 @@ export function CommentDrawer({
         </div>
 
         {/* Comment Composer */}
-        <form onSubmit={handleSubmit} className="pt-3 hairline-t flex flex-col gap-2">
+        <form onSubmit={handleSubmit} className="pt-3 border-t border-[#262936] flex flex-col gap-2">
           {replyTo && (
-            <div className="flex items-center justify-between px-2.5 py-1 rounded bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-400">
-              <span>Replying to {replyTo.user?.displayName || 'user'}</span>
+            <div className="flex items-center justify-between px-2.5 py-1 bg-[#171a24] border border-[#262936] text-[10px] text-[#d6d0c2]">
+              <span>REPLYING TO {replyTo.user?.displayName?.toUpperCase() || 'SCRIBE'}</span>
               <button
                 type="button"
                 onClick={() => setReplyTo(null)}
-                className="text-zinc-500 hover:text-zinc-300"
+                className="text-[#d97706]"
               >
                 ✕
               </button>
@@ -208,19 +208,19 @@ export function CommentDrawer({
               type="text"
               value={newContent}
               onChange={(e) => setNewContent(e.target.value)}
-              placeholder={user ? 'Add to discussion...' : 'Sign in to comment...'}
+              placeholder={user ? 'ENTER TESTIMONY...' : 'SIGN IN TO TESTIFY...'}
               disabled={!user || submitting}
-              className="w-full py-2 pl-3 pr-10 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-zinc-700 disabled:opacity-50"
+              className="w-full py-2 pl-3 pr-10 bg-[#0c0d10] border border-[#262936] text-xs text-[#f4f0e6] placeholder-[#6b665c] font-teletype uppercase focus:outline-none focus:border-[#f4f0e6] disabled:opacity-50"
             />
             <button
               type="submit"
               disabled={!user || !newContent.trim() || submitting}
-              className="absolute right-1.5 p-1.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 disabled:opacity-30 transition-colors"
+              className="stamp-btn absolute right-1 !py-1 !px-2.5"
             >
               {submitting ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <Loader2 className="w-3 h-3 animate-spin" />
               ) : (
-                <Send className="w-3.5 h-3.5" />
+                <Send className="w-3 h-3" />
               )}
             </button>
           </div>

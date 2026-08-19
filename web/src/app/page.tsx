@@ -5,7 +5,7 @@ import { Post, TrackedChannel } from '@/lib/types';
 import { PostCard } from '@/components/post-card';
 import { BabiometerWidget } from '@/components/babiometer-widget';
 import { useRealtime, useToast } from '@/components/providers';
-import { Search, Radio, Loader2, ArrowUpRight } from 'lucide-react';
+import { Search, Radio, Loader2, ArrowUpRight, Newspaper } from 'lucide-react';
 import Link from 'next/link';
 
 export default function HomePage() {
@@ -63,7 +63,7 @@ export default function HomePage() {
           setPage(pageNum);
         }
       } catch (err) {
-        showToast('Error loading dispatches', 'error');
+        showToast('Error retrieving kingdom dispatches', 'error');
       } finally {
         setLoading(false);
         setLoadingMore(false);
@@ -110,49 +110,69 @@ export default function HomePage() {
   }, [subscribe]);
 
   return (
-    <div className="flex flex-col gap-6 max-w-3xl mx-auto">
-      {/* Editorial Header */}
-      <div className="flex flex-col gap-2 pb-2">
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-400">
-            Publication Feed
-          </span>
-          <span className="w-1 h-1 rounded-full bg-zinc-600" />
-          <span className="text-[11px] text-zinc-500 font-medium">Real-Time Ingestion</span>
+    <div className="flex flex-col gap-6 max-w-4xl mx-auto">
+      {/* Frontpage Broadsheet Masthead Banner */}
+      <div className="p-6 sm:p-8 bg-[#12141c] border-2 border-[#262936] shadow-[4px_4px_0px_0px_#000000] flex flex-col gap-3">
+        <div className="flex items-center justify-between font-teletype text-[10px] uppercase text-[#a39e93] border-b border-[#262936] pb-2">
+          <span>§ ROYAL COURT DISPATCH SERVICE</span>
+          <span>EST. MMXXVI</span>
+          <span>EDITION: CORE OIDC</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-          The Dagmawi Dispatch
-        </h1>
-        <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed max-w-xl">
-          Aggregated Telegram broadcasts, indexed and summarized with multi-model AI synthesis.
-        </p>
+
+        <div className="flex flex-col gap-1 py-1">
+          <h1 className="font-broadsheet font-black text-3xl sm:text-5xl text-[#f4f0e6] tracking-tight uppercase">
+            The Dagmawi Dispatch
+          </h1>
+          <p className="font-teletype text-xs sm:text-sm text-[#d6d0c2] leading-relaxed max-w-2xl">
+            Real-time multi-channel Telegram broadcast ledger with Groq Llama-3.3 AI synthesis and community inquest.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[#262936]">
+          <Link
+            href="/channels"
+            className="stamp-btn flex items-center gap-1.5"
+          >
+            <Radio className="w-3.5 h-3.5" />
+            <span>EXAMINE CHANNELS</span>
+          </Link>
+          <a
+            href="https://t.me/BabisummarizeBot"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="stamp-btn !bg-[#12141c] !text-[#a39e93] hover:!text-[#f4f0e6] flex items-center gap-1"
+          >
+            <span>TELEGRAM BOT</span>
+            <ArrowUpRight className="w-3 h-3 text-[#d97706]" />
+          </a>
+        </div>
       </div>
 
-      {/* Activity Index Widget */}
+      {/* Teletype Activity Chronometer */}
       <BabiometerWidget channel={selectedChannel === 'all' ? 'dagmawi_babi' : selectedChannel} />
 
-      {/* Search & Channel Filter Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
-        {/* Channel Pills */}
+      {/* Teletype Filter & Search Controls */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 font-teletype">
+        {/* Channel Selection Stamps */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
           <button
             onClick={() => setSelectedChannel('all')}
-            className={`px-3 py-1.5 rounded-lg text-xs transition-colors shrink-0 ${
+            className={`px-3 py-1.5 text-xs font-bold uppercase border transition-colors shrink-0 ${
               selectedChannel === 'all'
-                ? 'bg-zinc-100 text-zinc-950 font-semibold'
-                : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
+                ? 'bg-[#f4f0e6] text-[#0c0d10] border-[#f4f0e6] shadow-[2px_2px_0px_0px_#000000]'
+                : 'bg-[#12141c] text-[#a39e93] border-[#262936] hover:border-[#f4f0e6] hover:text-[#f4f0e6]'
             }`}
           >
-            All Channels
+            [ ALL CHANNELS ]
           </button>
           {channels.map((ch) => (
             <button
               key={ch.id}
               onClick={() => setSelectedChannel(ch.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs transition-colors shrink-0 ${
+              className={`px-3 py-1.5 text-xs font-bold uppercase border transition-colors shrink-0 ${
                 selectedChannel === ch.id
-                  ? 'bg-zinc-100 text-zinc-950 font-semibold'
-                  : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
+                  ? 'bg-[#f4f0e6] text-[#0c0d10] border-[#f4f0e6] shadow-[2px_2px_0px_0px_#000000]'
+                  : 'bg-[#12141c] text-[#a39e93] border-[#262936] hover:border-[#f4f0e6] hover:text-[#f4f0e6]'
               }`}
             >
               @{ch.id}
@@ -161,32 +181,32 @@ export default function HomePage() {
         </div>
 
         {/* Search Input */}
-        <div className="relative shrink-0 sm:w-60">
+        <div className="relative shrink-0 sm:w-64">
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search dispatches..."
-            className="w-full py-1.5 pl-8 pr-3 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-zinc-700"
+            placeholder="FILTER DISPATCHES..."
+            className="w-full py-1.5 pl-8 pr-3 bg-[#12141c] border border-[#262936] text-xs text-[#f4f0e6] placeholder-[#6b665c] font-teletype uppercase focus:outline-none focus:border-[#f4f0e6]"
           />
-          <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-2.5" />
+          <Search className="w-3.5 h-3.5 text-[#a39e93] absolute left-2.5 top-2.5" />
         </div>
       </div>
 
-      {/* Posts Feed */}
+      {/* Broadsheet Posts Feed */}
       <div className="flex flex-col gap-4">
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-2 text-zinc-500">
-            <Loader2 className="w-6 h-6 animate-spin text-zinc-400" />
-            <span className="text-xs font-medium">Loading publication feed...</span>
+          <div className="flex flex-col items-center justify-center py-20 gap-2 text-[#a39e93] font-teletype">
+            <Loader2 className="w-6 h-6 animate-spin text-[#d97706]" />
+            <span className="text-xs tracking-wider uppercase">[ DECODING TELETYPE WIRES... ]</span>
           </div>
         ) : posts.length === 0 ? (
-          <div className="editorial-card p-12 text-center flex flex-col items-center justify-center gap-2">
-            <h3 className="font-semibold text-sm text-zinc-200">No dispatches found</h3>
-            <p className="text-xs text-zinc-500 max-w-sm">
+          <div className="broadsheet-card p-12 text-center flex flex-col items-center justify-center gap-2 font-teletype">
+            <h3 className="font-bold text-sm text-[#f4f0e6] uppercase">[ NO DISPATCHES FOUND ]</h3>
+            <p className="text-xs text-[#a39e93] max-w-sm">
               {searchQuery
-                ? `No posts matched "${searchQuery}".`
-                : 'No dispatches recorded for this channel yet.'}
+                ? `NO RECORDS MATCHED "${searchQuery.toUpperCase()}".`
+                : 'NO TRANSMISSIONS LOGGED FOR THIS CHANNEL.'}
             </p>
           </div>
         ) : (
@@ -195,21 +215,21 @@ export default function HomePage() {
               <PostCard key={`${post.channel}-${post.id}`} post={post} />
             ))}
 
-            {/* Pagination / Load More */}
+            {/* Pagination Button */}
             {hasMore && (
-              <div className="flex justify-center pt-2">
+              <div className="flex justify-center pt-3">
                 <button
                   onClick={() => fetchPosts(page + 1)}
                   disabled={loadingMore}
-                  className="px-5 py-2 rounded-lg text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 transition-colors flex items-center gap-2"
+                  className="stamp-btn !py-2.5 !px-6 flex items-center gap-2"
                 >
                   {loadingMore ? (
                     <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin text-zinc-400" />
-                      <span>Loading...</span>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>RETRIEVING NEXT PARCHMENT...</span>
                     </>
                   ) : (
-                    <span>Load More Dispatches</span>
+                    <span>LOAD MORE BROADSHEET DISPATCHES ↓</span>
                   )}
                 </button>
               </div>

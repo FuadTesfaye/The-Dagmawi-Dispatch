@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/components/providers';
 import { TrackedChannel } from '@/lib/types';
 import { ChannelCard } from '@/components/channel-card';
-import { User, Shield, Radio, LogOut, LogIn, Loader2, Crown } from 'lucide-react';
+import { User, LogOut, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ProfilePage() {
@@ -30,35 +30,35 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-20 text-amber-400">
-        <Loader2 className="w-8 h-8 animate-spin" />
+      <div className="flex justify-center items-center py-20 text-[#a39e93] font-teletype">
+        <Loader2 className="w-6 h-6 animate-spin text-[#d97706]" />
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="max-w-md mx-auto py-12 text-center glass-card rounded-3xl p-8 flex flex-col items-center gap-4 border border-amber-500/30 shadow-2xl">
-        <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/40">
-          <User className="w-6 h-6" />
+      <div className="max-w-md mx-auto py-12 text-center broadsheet-card p-8 flex flex-col items-center gap-4 font-teletype">
+        <div className="w-10 h-10 border-2 border-[#262936] bg-[#12141c] flex items-center justify-center text-[#d97706]">
+          <User className="w-5 h-5" />
         </div>
-        <h2 className="text-xl font-black text-zinc-100">Sign In Required</h2>
-        <p className="text-xs text-zinc-400 leading-relaxed font-medium">
-          Sign in with Telegram or select a demo persona to inspect your kingdom profile and followed dispatches.
+        <h2 className="text-base font-bold text-[#f4f0e6] uppercase">[ SCRIBE IDENTIFICATION REQUIRED ]</h2>
+        <p className="text-xs text-[#a39e93] leading-relaxed">
+          Authenticate via Telegram or choose a persona to access your publication ledger.
         </p>
 
         <div className="flex flex-col gap-2 w-full pt-2">
           <Link
             href="/login"
-            className="w-full py-3 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 text-zinc-950 font-black text-xs shadow-md shadow-amber-500/25 text-center"
+            className="stamp-btn text-center"
           >
-            Sign In with Telegram
+            AUTHENTICATE WITH TELEGRAM
           </Link>
           <button
             onClick={() => loginDemo('admin')}
-            className="w-full py-3 rounded-full bg-zinc-900 border border-zinc-800 text-amber-300 font-extrabold text-xs hover:bg-zinc-800"
+            className="stamp-btn !bg-[#12141c] !text-[#a39e93] hover:!text-[#f4f0e6]"
           >
-            Instant Demo Admin
+            INSTANT PERSONA: ROYAL SCRIBE
           </button>
         </div>
       </div>
@@ -66,9 +66,9 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 max-w-4xl mx-auto">
-      {/* Profile Hero Card */}
-      <div className="glass-card rounded-3xl p-6 sm:p-8 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative overflow-hidden shadow-2xl">
+    <div className="flex flex-col gap-6 max-w-4xl mx-auto font-teletype">
+      {/* Scribe Credential Card */}
+      <div className="broadsheet-card p-6 sm:p-7 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -77,69 +77,64 @@ export default function ProfilePage() {
               `https://api.dicebear.com/7.x/bottts/svg?seed=${user.displayName}`
             }
             alt={user.displayName}
-            className="w-16 h-16 rounded-3xl bg-zinc-800 border-2 border-amber-500/40 object-cover"
+            className="w-16 h-16 border-2 border-[#3d4257] bg-[#12141c] object-cover"
           />
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col">
             <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-3xl font-black text-zinc-100">
+              <h1 className="font-broadsheet font-black text-xl sm:text-2xl text-[#f4f0e6] uppercase">
                 {user.displayName}
               </h1>
               {user.role === 'admin' && (
-                <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-xs font-black border border-amber-500/40">
-                  <Crown className="w-3 h-3" />
-                  Court Admin
+                <span className="stamp-badge-gold stamp-badge text-[10px]">
+                  COURT SCRIBE
                 </span>
               )}
             </div>
-            <span className="text-xs text-zinc-400 font-bold">
-              {user.username ? `@${user.username}` : `Telegram ID: ${user.telegramUserId}`}
+            <span className="text-xs text-[#a39e93]">
+              {user.username ? `@${user.username}` : `TELEGRAM ID: ${user.telegramUserId}`}
             </span>
           </div>
         </div>
 
         <button
           onClick={logout}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-zinc-900 border border-zinc-800 hover:border-rose-500/40 text-xs font-extrabold text-zinc-300 hover:text-rose-400 transition-colors"
+          className="stamp-btn !bg-[#12141c] !text-[#a39e93] hover:!text-rose-400 hover:!border-rose-500 flex items-center gap-1.5"
         >
-          <LogOut className="w-4 h-4" />
-          <span>Sign Out</span>
+          <LogOut className="w-3.5 h-3.5" />
+          <span>SIGN OUT</span>
         </button>
       </div>
 
-      {/* Subscribed Channels Section */}
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Radio className="w-4 h-4 text-amber-400" />
-            <h2 className="text-base font-extrabold text-zinc-100">
-              Subscribed Channels ({subscribedChannels.length})
-            </h2>
-          </div>
+      {/* Subscriptions Ledger */}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between border-b border-[#262936] pb-1">
+          <h2 className="text-xs font-bold uppercase text-[#f4f0e6]">
+            § MONITORED SUBSCRIPTIONS ({subscribedChannels.length})
+          </h2>
           <Link
             href="/channels"
-            className="text-xs font-bold text-amber-400 hover:text-amber-300"
+            className="text-xs text-[#d97706] hover:underline"
           >
-            Find More Channels +
+            + REGISTER NEW CHANNEL
           </Link>
         </div>
 
         {loadingSubs ? (
-          <div className="flex justify-center py-12 text-amber-400">
-            <Loader2 className="w-6 h-6 animate-spin" />
+          <div className="flex justify-center py-12 text-[#a39e93]">
+            <Loader2 className="w-6 h-6 animate-spin text-[#d97706]" />
           </div>
         ) : subscribedChannels.length === 0 ? (
-          <div className="glass-card rounded-3xl p-8 text-center text-zinc-400 text-xs font-medium flex flex-col items-center gap-3">
-            <span>📡</span>
-            <p>You have not subscribed to any channels yet.</p>
+          <div className="broadsheet-card p-8 text-center text-[#a39e93] text-xs flex flex-col items-center gap-3">
+            <p>[ NO CHANNELS CURRENTLY IN YOUR LEDGER ]</p>
             <Link
               href="/channels"
-              className="px-5 py-2.5 rounded-full bg-amber-500 text-zinc-950 font-black text-xs shadow-md shadow-amber-500/20"
+              className="stamp-btn"
             >
-              Browse Directory
+              BROWSE REGISTRY
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
             {subscribedChannels.map((ch) => (
               <ChannelCard key={ch.id} channel={ch} />
             ))}

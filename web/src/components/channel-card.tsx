@@ -21,7 +21,7 @@ export function ChannelCard({ channel }: ChannelCardProps) {
 
   const handleToggleSubscribe = async () => {
     if (!user) {
-      showToast('Please sign in to subscribe to channels', 'info');
+      showToast('Authentication required to subscribe to ledger', 'info');
       return;
     }
 
@@ -40,7 +40,7 @@ export function ChannelCard({ channel }: ChannelCardProps) {
         setSubCount(data.subscriberCount);
       }
     } catch {
-      showToast('Failed to update subscription', 'error');
+      showToast('Failed to update subscription ledger', 'error');
       setIsSubscribed(channel.isSubscribed || false);
     } finally {
       setLoading(false);
@@ -48,7 +48,7 @@ export function ChannelCard({ channel }: ChannelCardProps) {
   };
 
   return (
-    <div className="editorial-card p-4 sm:p-5 flex flex-col justify-between gap-3.5">
+    <div className="broadsheet-card p-4 sm:p-5 flex flex-col justify-between gap-3 font-teletype">
       <div className="flex items-start justify-between gap-3">
         <Link href={`/channel/${channel.id}`} className="flex items-center gap-3 group/link">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -58,20 +58,20 @@ export function ChannelCard({ channel }: ChannelCardProps) {
               `https://api.dicebear.com/7.x/bottts/svg?seed=${channel.id}`
             }
             alt={channel.name}
-            className="w-10 h-10 rounded-lg bg-zinc-800 border border-zinc-800 object-cover"
+            className="w-10 h-10 border-2 border-[#262936] bg-[#12141c] object-cover"
           />
           <div className="flex flex-col">
             <div className="flex items-center gap-1.5">
-              <h3 className="font-semibold text-sm text-zinc-100 group-hover/link:text-zinc-300 transition-colors">
+              <h3 className="font-bold text-xs text-[#f4f0e6] uppercase group-hover/link:text-[#d97706] transition-colors">
                 {channel.name}
               </h3>
               {channel.isVerified && (
-                <span className="text-zinc-400 text-xs font-bold" title="Verified">
-                  ✓
+                <span className="text-[#d97706] text-[10px] font-bold">
+                  [V]
                 </span>
               )}
             </div>
-            <span className="text-xs text-zinc-500">@{channel.id}</span>
+            <span className="text-[10px] text-[#a39e93]">@{channel.id}</span>
           </div>
         </Link>
 
@@ -79,40 +79,38 @@ export function ChannelCard({ channel }: ChannelCardProps) {
         <button
           onClick={handleToggleSubscribe}
           disabled={loading}
-          className={`inline-flex items-center gap-1 px-3 py-1 rounded-md text-xs font-semibold transition-colors ${
-            isSubscribed
-              ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
-              : 'bg-zinc-100 hover:bg-white text-zinc-950'
+          className={`stamp-btn !py-1 !px-2.5 !text-[10px] flex items-center gap-1 ${
+            isSubscribed ? '!bg-[#d97706] !text-black !border-[#d97706]' : ''
           }`}
         >
           {isSubscribed ? (
             <>
               <Check className="w-3 h-3" />
-              <span>Following</span>
+              <span>FOLLOWING</span>
             </>
           ) : (
             <>
               <Plus className="w-3 h-3" />
-              <span>Follow</span>
+              <span>FOLLOW</span>
             </>
           )}
         </button>
       </div>
 
       {/* Description */}
-      <p className="text-xs text-zinc-400 leading-relaxed line-clamp-2">
-        {channel.description || 'Telegram channel publication stream.'}
+      <p className="text-xs text-[#d6d0c2] font-sans leading-relaxed line-clamp-2">
+        {channel.description || 'Telegram channel broadcast transmission.'}
       </p>
 
-      {/* Footer */}
-      <div className="flex items-center justify-between text-[11px] text-zinc-500 pt-2.5 hairline-t">
+      {/* Footer Ledger */}
+      <div className="flex items-center justify-between text-[10px] text-[#a39e93] pt-2 border-t border-[#262936]">
         <div className="flex items-center gap-1">
-          <Users className="w-3 h-3 text-zinc-500" />
-          <span>{formatNumber(subCount)} subscribers</span>
+          <Users className="w-3 h-3 text-[#d97706]" />
+          <span>{formatNumber(subCount)} SUBSCRIBERS</span>
         </div>
 
         {channel.postCount !== undefined && (
-          <span>{formatNumber(channel.postCount)} dispatches</span>
+          <span>{formatNumber(channel.postCount)} DISPATCHES</span>
         )}
       </div>
     </div>
