@@ -1,60 +1,110 @@
 @import "tailwindcss";
 
 :root {
-  --background: #050609;
-  --foreground: #f4f4f5;
-  --card: #0c0e14;
+  --bg-dark: #040508;
+  --card-bg: rgba(13, 16, 24, 0.75);
   --card-border: rgba(255, 255, 255, 0.08);
   --royal-amber: #f59e0b;
   --royal-gold: #fbbf24;
+  --royal-cyan: #06b6d4;
   --royal-emerald: #10b981;
 }
 
 @theme {
-  --color-obsidian-950: #030406;
-  --color-obsidian-900: #08090d;
-  --color-obsidian-800: #10121a;
-  --color-obsidian-700: #191c28;
+  --color-obsidian-950: #020305;
+  --color-obsidian-900: #06070a;
+  --color-obsidian-800: #0f121b;
+  --color-obsidian-700: #181d2b;
   --color-royal-amber: #f59e0b;
   --color-royal-gold: #fbbf24;
+  --color-royal-cyan: #06b6d4;
   --color-royal-emerald: #10b981;
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+  background-color: var(--bg-dark);
+  color: #f4f4f5;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
   overflow-x: hidden;
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* Glassmorphism 2.0 Cards */
-.glass-card {
-  background: rgba(12, 14, 20, 0.75);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+/* Ambient Radial Mesh Background Canvas */
+.ambient-mesh-bg {
+  background: 
+    radial-gradient(circle at 15% 15%, rgba(245, 158, 11, 0.12) 0%, transparent 45%),
+    radial-gradient(circle at 85% 35%, rgba(6, 182, 212, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 50% 85%, rgba(251, 191, 36, 0.06) 0%, transparent 50%),
+    #040508;
 }
 
-.glass-card-hover {
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+/* Glassmorphism 3.0 Ultra-Luxury Cards */
+.glass-card {
+  background: linear-gradient(135deg, rgba(16, 20, 30, 0.75) 0%, rgba(9, 11, 17, 0.85) 100%);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 20px 40px -15px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .glass-card-hover:hover {
-  background: rgba(18, 21, 30, 0.85);
-  border-color: rgba(245, 158, 11, 0.35);
-  box-shadow: 0 14px 40px -10px rgba(245, 158, 11, 0.12);
-  transform: translateY(-2px);
+  background: linear-gradient(135deg, rgba(22, 27, 40, 0.85) 0%, rgba(12, 15, 24, 0.92) 100%);
+  border-color: rgba(245, 158, 11, 0.4);
+  box-shadow: 
+    0 25px 50px -12px rgba(245, 158, 11, 0.15),
+    0 0 25px rgba(245, 158, 11, 0.1),
+    inset 0 1px 0 0 rgba(254, 240, 138, 0.25);
+  transform: translateY(-3px);
 }
 
-/* Royal Ambient Glows */
-.royal-glow {
-  box-shadow: 0 0 35px -5px rgba(245, 158, 11, 0.2);
+/* Glowing Neon Borders & Badges */
+.neon-amber-border {
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.15);
 }
 
-.royal-glow-emerald {
-  box-shadow: 0 0 35px -5px rgba(16, 185, 129, 0.2);
+.neon-amber-pill {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #fef08a;
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.1);
+}
+
+.neon-emerald-pill {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #a7f3d0;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.1);
+}
+
+/* Glowing Text Utilities */
+.text-gradient-amber {
+  background: linear-gradient(135deg, #ffffff 0%, #fef08a 40%, #f59e0b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 10px rgba(245, 158, 11, 0.3));
+}
+
+.text-gradient-cyan {
+  background: linear-gradient(135deg, #ffffff 0%, #a5f3fc 50%, #06b6d4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 10px rgba(6, 182, 212, 0.3));
+}
+
+/* Shimmer Loading Effect */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2.5s infinite;
 }
 
 /* Custom Sleek Scrollbar */
@@ -64,16 +114,16 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(8, 9, 13, 0.6);
+  background: rgba(4, 5, 8, 0.8);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(245, 158, 11, 0.25);
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.4), rgba(251, 191, 36, 0.2));
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(245, 158, 11, 0.5);
+  background: rgba(245, 158, 11, 0.7);
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -84,31 +134,18 @@ body {
   scrollbar-width: none;
 }
 
-/* Text Gradient Utilities */
-.text-gradient-amber {
-  background: linear-gradient(135deg, #ffffff 0%, #fde68a 50%, #f59e0b 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.text-gradient-gold {
-  background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-/* Micro Animations */
-@keyframes ambientPulse {
+/* Keyframe Pulsing Animations */
+@keyframes orbFloat {
   0%, 100% {
-    opacity: 0.15;
-    transform: scale(1);
+    transform: translate(0, 0) scale(1);
+    opacity: 0.2;
   }
   50% {
-    opacity: 0.3;
-    transform: scale(1.08);
+    transform: translate(30px, -20px) scale(1.1);
+    opacity: 0.35;
   }
 }
 
-.animate-ambient-glow {
-  animation: ambientPulse 10s ease-in-out infinite;
+.animate-orb-float {
+  animation: orbFloat 12s ease-in-out infinite;
 }

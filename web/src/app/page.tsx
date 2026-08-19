@@ -5,7 +5,7 @@ import { Post, TrackedChannel } from '@/lib/types';
 import { PostCard } from '@/components/post-card';
 import { BabiometerWidget } from '@/components/babiometer-widget';
 import { useRealtime, useToast } from '@/components/providers';
-import { Sparkles, Search, Radio, Filter, RefreshCw, Flame, Loader2, ArrowUpRight, Scroll } from 'lucide-react';
+import { Sparkles, Search, Radio, Filter, RefreshCw, Flame, Loader2, ArrowUpRight, Scroll, Crown } from 'lucide-react';
 import Link from 'next/link';
 
 export default function HomePage() {
@@ -112,19 +112,19 @@ export default function HomePage() {
   return (
     <div className="flex flex-col gap-6 max-w-4xl mx-auto">
       {/* Hero Welcome Banner */}
-      <div className="p-6 sm:p-8 rounded-3xl glass-card bg-gradient-to-br from-amber-500/20 via-zinc-950/80 to-zinc-950 border border-amber-500/35 flex flex-col gap-4 relative overflow-hidden shadow-2xl">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="p-6 sm:p-9 rounded-3xl glass-card border border-amber-500/40 bg-gradient-to-br from-amber-500/20 via-zinc-950/80 to-zinc-950 flex flex-col gap-4 relative overflow-hidden shadow-2xl royal-glow">
+        <div className="absolute -top-12 -right-12 w-64 h-64 bg-amber-500/20 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-black self-start border border-amber-500/40 shadow-sm">
-          <Scroll className="w-3.5 h-3.5" />
-          <span>By Royal Decree</span>
+        <div className="flex items-center gap-2 px-4 py-1.5 rounded-full neon-amber-pill text-xs font-black self-start">
+          <Crown className="w-4 h-4 text-amber-400" />
+          <span>The Royal Decree</span>
         </div>
 
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-gradient-amber">
             The Dagmawi Dispatch
           </h1>
-          <p className="text-xs sm:text-base text-zinc-300 max-w-xl leading-relaxed font-sans font-medium">
+          <p className="text-sm sm:text-base text-zinc-300 max-w-xl leading-relaxed font-sans font-medium">
             Telegram channel dispatches aggregated, summarized by Groq AI, and served with live discussions and royal roasts.
           </p>
         </div>
@@ -141,10 +141,10 @@ export default function HomePage() {
             href="https://t.me/BabisummarizeBot"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-extrabold bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 transition-colors"
+            className="inline-flex items-center gap-1.5 px-4.5 py-2.5 rounded-full text-xs font-extrabold bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 transition-colors shadow-sm"
           >
             <span>Open Telegram Bot</span>
-            <ArrowUpRight className="w-4 h-4 text-zinc-400" />
+            <ArrowUpRight className="w-4 h-4 text-amber-400" />
           </a>
         </div>
       </div>
@@ -158,9 +158,9 @@ export default function HomePage() {
         <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 no-scrollbar">
           <button
             onClick={() => setSelectedChannel('all')}
-            className={`px-4 py-2.5 rounded-2xl text-xs font-extrabold shrink-0 transition-all ${
+            className={`px-4.5 py-2.5 rounded-2xl text-xs font-extrabold shrink-0 transition-all ${
               selectedChannel === 'all'
-                ? 'bg-amber-500 text-zinc-950 shadow-md shadow-amber-500/25 font-black scale-105'
+                ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-zinc-950 shadow-md shadow-amber-500/25 font-black scale-105'
                 : 'bg-zinc-900/90 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
             }`}
           >
@@ -170,9 +170,9 @@ export default function HomePage() {
             <button
               key={ch.id}
               onClick={() => setSelectedChannel(ch.id)}
-              className={`px-4 py-2.5 rounded-2xl text-xs font-extrabold shrink-0 transition-all ${
+              className={`px-4.5 py-2.5 rounded-2xl text-xs font-extrabold shrink-0 transition-all ${
                 selectedChannel === ch.id
-                  ? 'bg-amber-500 text-zinc-950 shadow-md shadow-amber-500/25 font-black scale-105'
+                  ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-zinc-950 shadow-md shadow-amber-500/25 font-black scale-105'
                   : 'bg-zinc-900/90 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
               }`}
             >
@@ -187,8 +187,8 @@ export default function HomePage() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search scrolls..."
-            className="w-full py-2.5 pl-9 pr-3 rounded-2xl bg-zinc-900/90 border border-zinc-800 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-amber-500/50 font-medium"
+            placeholder="Search kingdom scrolls..."
+            className="w-full py-2.5 pl-9 pr-3 rounded-2xl bg-zinc-900/90 border border-zinc-800 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-amber-500/60 font-medium shadow-inner"
           />
           <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-3.5" />
         </div>
@@ -198,11 +198,11 @@ export default function HomePage() {
       <div className="flex flex-col gap-5">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3 text-amber-400">
-            <Loader2 className="w-8 h-8 animate-spin" />
-            <span className="text-xs font-bold text-zinc-400">Unrolling the royal parchment...</span>
+            <Loader2 className="w-8 h-8 animate-spin text-amber-400" />
+            <span className="text-xs font-extrabold text-zinc-400 tracking-wider uppercase">Unrolling the royal parchment...</span>
           </div>
         ) : posts.length === 0 ? (
-          <div className="glass-card rounded-3xl p-12 text-center flex flex-col items-center justify-center gap-3">
+          <div className="glass-card rounded-3xl p-12 text-center flex flex-col items-center justify-center gap-3 border border-amber-500/20">
             <span className="text-4xl">📜</span>
             <h3 className="font-extrabold text-base text-zinc-100">No scrolls found</h3>
             <p className="text-xs text-zinc-400 max-w-sm">
@@ -223,7 +223,7 @@ export default function HomePage() {
                 <button
                   onClick={() => fetchPosts(page + 1)}
                   disabled={loadingMore}
-                  className="px-6 py-3 rounded-full text-xs font-black bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 transition-all flex items-center gap-2 shadow-md"
+                  className="px-6 py-3 rounded-full text-xs font-black bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 text-zinc-200 transition-all flex items-center gap-2 shadow-lg hover:border-amber-500/40"
                 >
                   {loadingMore ? (
                     <>

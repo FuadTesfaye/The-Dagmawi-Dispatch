@@ -23,7 +23,7 @@ const AVAILABLE_REACTIONS = [
 
 /** Rich text renderer to highlight links, @mentions, and #hashtags */
 function RenderFormattedText({ text }: { text: string }) {
-  if (!text) return <span className="italic text-zinc-500">No text caption in this dispatch</span>;
+  if (!text) return <span className="italic text-zinc-500 font-medium">No text caption in this dispatch</span>;
 
   // Split text by URLs, Telegram mentions (@channel), and hashtags (#tag)
   const parts = text.split(/(https?:\/\/[^\s]+|@[a-zA-Z0-9_]+|#[a-zA-Z0-9_]+)/g);
@@ -38,10 +38,10 @@ function RenderFormattedText({ text }: { text: string }) {
               href={part}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-amber-400 hover:text-amber-300 font-semibold underline underline-offset-2 break-all inline-flex items-center gap-0.5"
+              className="text-amber-400 hover:text-amber-300 font-bold underline underline-offset-4 break-all inline-flex items-center gap-1"
             >
               <span>{part}</span>
-              <CornerUpRight className="w-3 h-3 inline shrink-0" />
+              <CornerUpRight className="w-3.5 h-3.5 inline shrink-0" />
             </a>
           );
         }
@@ -51,7 +51,7 @@ function RenderFormattedText({ text }: { text: string }) {
             <Link
               key={index}
               href={`/channel/${username}`}
-              className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-300 font-bold hover:bg-amber-500/20 transition-colors"
+              className="inline-flex items-center px-2 py-0.5 rounded-lg neon-amber-pill font-bold hover:bg-amber-500/20 transition-all text-xs"
             >
               {part}
             </Link>
@@ -61,7 +61,7 @@ function RenderFormattedText({ text }: { text: string }) {
           return (
             <span
               key={index}
-              className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-zinc-800 text-zinc-300 font-semibold"
+              className="inline-flex items-center px-2 py-0.5 rounded-lg bg-zinc-800/90 text-zinc-300 font-semibold text-xs border border-zinc-700/60"
             >
               {part}
             </span>
@@ -126,9 +126,9 @@ export function PostCard({ post }: PostCardProps) {
   };
 
   return (
-    <article className="glass-card glass-card-hover rounded-3xl p-5 sm:p-6 flex flex-col gap-4 relative overflow-hidden group">
+    <article className="glass-card glass-card-hover rounded-3xl p-6 flex flex-col gap-4 relative overflow-hidden group">
       {/* Top Banner Accent */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500/40 via-amber-400/80 to-amber-600/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500/50 via-amber-400 to-cyan-500/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
       {/* Post Header */}
       <div className="flex items-center justify-between gap-3">
@@ -143,7 +143,7 @@ export function PostCard({ post }: PostCardProps) {
               `https://api.dicebear.com/7.x/bottts/svg?seed=${post.channel}`
             }
             alt={post.channel}
-            className="w-11 h-11 rounded-2xl bg-zinc-800 border border-zinc-700/60 object-cover group-hover/author:scale-105 transition-transform"
+            className="w-11 h-11 rounded-2xl bg-zinc-800 border border-zinc-700/80 object-cover group-hover/author:scale-105 transition-transform"
           />
           <div className="flex flex-col">
             <div className="flex items-center gap-1.5">
@@ -151,7 +151,7 @@ export function PostCard({ post }: PostCardProps) {
                 {post.channelInfo?.name || `@${post.channel}`}
               </span>
               {post.channelInfo?.isVerified && (
-                <span className="text-amber-400 text-xs font-bold" title="Verified Channel">
+                <span className="text-amber-400 text-xs font-black" title="Verified Channel">
                   ✓
                 </span>
               )}
@@ -177,13 +177,13 @@ export function PostCard({ post }: PostCardProps) {
       </div>
 
       {/* Post Text Content */}
-      <div className="text-zinc-200 text-sm sm:text-base leading-relaxed whitespace-pre-wrap font-sans">
+      <div className="text-zinc-100 text-sm sm:text-base leading-relaxed whitespace-pre-wrap font-sans font-medium">
         <RenderFormattedText text={post.text || ''} />
       </div>
 
       {/* Media Type Badge if present */}
       {post.mediaType && post.mediaType !== 'none' && (
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-zinc-900/90 border border-zinc-800 text-xs text-zinc-300 font-semibold self-start shadow-inner">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-zinc-900/90 border border-zinc-800 text-xs text-zinc-200 font-bold self-start shadow-inner">
           {post.mediaType === 'photo' && <ImageIcon className="w-4 h-4 text-amber-400" />}
           {post.mediaType === 'video' && <Video className="w-4 h-4 text-amber-400" />}
           {post.mediaType === 'document' && <FileText className="w-4 h-4 text-amber-400" />}
@@ -205,8 +205,8 @@ export function PostCard({ post }: PostCardProps) {
                 title={label}
                 className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all duration-200 ${
                   isSelected
-                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/60 scale-105 shadow-sm shadow-amber-500/20'
-                    : 'bg-zinc-900/80 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/80 border border-zinc-800'
+                    ? 'bg-amber-500/25 text-amber-300 border border-amber-500/70 scale-105 shadow-md shadow-amber-500/20 font-black'
+                    : 'bg-zinc-900/80 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/80 border border-zinc-800'
                 }`}
               >
                 <span>{emoji}</span>
@@ -221,16 +221,16 @@ export function PostCard({ post }: PostCardProps) {
           {/* AI Review Trigger */}
           <button
             onClick={() => setIsAIModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-extrabold text-amber-300 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 transition-all hover:scale-105 shadow-sm"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-black text-amber-300 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 transition-all hover:scale-105 shadow-md shadow-amber-500/10"
           >
-            <Sparkles className="w-3.5 h-3.5" />
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
             <span>AI Review</span>
           </button>
 
           {/* Comment Drawer Trigger */}
           <button
             onClick={() => setIsCommentDrawerOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold text-zinc-300 hover:text-white hover:bg-zinc-900 border border-zinc-800 transition-colors"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold text-zinc-200 hover:text-white hover:bg-zinc-900 border border-zinc-800 transition-colors shadow-sm"
           >
             <MessageSquare className="w-3.5 h-3.5 text-amber-400" />
             <span>{commentCount > 0 ? formatNumber(commentCount) : 'Reply'}</span>

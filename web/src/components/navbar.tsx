@@ -12,7 +12,7 @@ export function Navbar() {
   const [showDemoMenu, setShowDemoMenu] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 w-full glass-card border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-2xl">
+    <header className="sticky top-0 z-40 w-full glass-card border-b border-zinc-800/80 bg-zinc-950/85 backdrop-blur-2xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         {/* Brand & Royal Crest */}
         <div className="flex items-center gap-3">
@@ -32,14 +32,14 @@ export function Navbar() {
         </div>
 
         {/* Real-time Status Badge */}
-        <div className="hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-900/90 border border-zinc-800/80 text-xs shadow-inner">
+        <div className="hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-full neon-emerald-pill text-xs font-bold">
           {isConnected ? (
             <>
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
               </span>
-              <span className="text-zinc-200 font-semibold">Herald SSE Live</span>
+              <span className="text-emerald-200 font-bold">Herald SSE Live</span>
             </>
           ) : (
             <>
@@ -58,7 +58,7 @@ export function Navbar() {
               {user.role === 'admin' && (
                 <Link
                   href="/admin/moderation"
-                  className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-extrabold text-amber-300 bg-amber-500/15 border border-amber-500/40 hover:bg-amber-500/25 transition-all shadow-sm shadow-amber-500/10"
+                  className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-extrabold text-amber-300 bg-amber-500/15 border border-amber-500/40 hover:bg-amber-500/25 transition-all shadow-sm"
                 >
                   <Shield className="w-3.5 h-3.5" />
                   <span>Court Admin</span>
@@ -109,7 +109,7 @@ export function Navbar() {
 
               {/* Demo Sign In Dropdown */}
               {showDemoMenu && (
-                <div className="absolute right-0 mt-2 w-60 p-2.5 rounded-2xl glass-card bg-zinc-950/98 border border-amber-500/30 shadow-2xl z-50 animate-in fade-in zoom-in-95">
+                <div className="absolute right-0 mt-2 w-60 p-2.5 rounded-2xl glass-card bg-zinc-950/98 border border-amber-500/35 shadow-2xl z-50 animate-in fade-in zoom-in-95">
                   <div className="text-[11px] font-extrabold uppercase tracking-widest text-amber-400 px-3 py-1 flex items-center gap-1.5">
                     <Crown className="w-3.5 h-3.5" />
                     <span>Instant Demo Sign In</span>

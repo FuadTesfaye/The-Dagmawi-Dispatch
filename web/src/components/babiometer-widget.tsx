@@ -37,14 +37,14 @@ export function BabiometerWidget({ channel = 'dagmawi_babi' }: BabiometerProps) 
   const volume = getVolumeLevel(postCount);
 
   return (
-    <div className="glass-card rounded-3xl p-5 sm:p-6 border border-amber-500/30 flex flex-col gap-4 relative overflow-hidden bg-gradient-to-br from-amber-500/15 via-zinc-950/80 to-zinc-950 shadow-2xl">
+    <div className="glass-card rounded-3xl p-6 border border-amber-500/35 flex flex-col gap-4 relative overflow-hidden bg-gradient-to-br from-amber-500/20 via-zinc-950/80 to-zinc-950 shadow-2xl royal-glow">
       {/* Ambient Radial Mesh Glow */}
-      <div className="absolute -top-16 -right-16 w-40 h-40 bg-amber-500/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -top-16 -right-16 w-48 h-48 bg-amber-500/25 rounded-full blur-3xl pointer-events-none animate-ambient-glow" />
 
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-lg border border-amber-500/40 shadow-inner">
+          <div className="w-11 h-11 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-black text-xl border border-amber-500/40 shadow-inner">
             🎺
           </div>
           <div className="flex flex-col">
@@ -55,29 +55,29 @@ export function BabiometerWidget({ channel = 'dagmawi_babi' }: BabiometerProps) 
           </div>
         </div>
 
-        <span className="text-xs px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 font-extrabold border border-amber-500/40 shadow-sm">
+        <span className="text-xs px-3.5 py-1.5 rounded-full neon-amber-pill font-black">
           {volume.level} Index
         </span>
       </div>
 
       {/* Progress Bar & Blasts */}
-      <div className="flex flex-col gap-3 p-4 rounded-2xl bg-zinc-900/80 border border-zinc-800">
+      <div className="flex flex-col gap-3 p-4.5 rounded-2xl bg-zinc-900/90 border border-zinc-800 shadow-inner">
         <div className="flex items-center justify-between">
           <div className="text-xl sm:text-2xl tracking-widest">{volume.blasts}</div>
-          <div className="text-lg sm:text-xl font-black text-amber-400">
+          <div className="text-lg sm:text-2xl font-black text-gradient-amber">
             {loading ? '...' : `${postCount} Posts Today`}
           </div>
         </div>
 
         {/* Animated Bar */}
-        <div className="w-full bg-zinc-800 h-2.5 rounded-full overflow-hidden p-0.5">
+        <div className="w-full bg-zinc-800/90 h-3 rounded-full overflow-hidden p-0.5 border border-zinc-700/50">
           <div
-            className={`h-full rounded-full bg-gradient-to-r ${volume.color} transition-all duration-1000 ease-out`}
+            className={`h-full rounded-full bg-gradient-to-r ${volume.color} transition-all duration-1000 ease-out shadow-sm`}
             style={{ width: `${volume.percent}%` }}
           />
         </div>
 
-        <p className="text-xs text-zinc-300 italic text-center font-medium leading-relaxed mt-1">
+        <p className="text-xs text-zinc-200 italic text-center font-medium leading-relaxed mt-1">
           &ldquo;{volume.verdict}&rdquo;
         </p>
       </div>

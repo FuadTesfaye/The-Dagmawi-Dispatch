@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#08090d',
+  themeColor: '#040508',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -35,12 +35,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className="min-h-screen bg-[#08090d] text-zinc-100 antialiased selection:bg-amber-500/30 selection:text-amber-200">
+      <body className="min-h-screen ambient-mesh-bg text-zinc-100 antialiased selection:bg-amber-500/30 selection:text-amber-200">
         <Providers>
-          {/* Ambient Glows */}
+          {/* Animated Ambient Light Orbs */}
           <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-            <div className="absolute top-[-10%] left-[15%] w-[500px] h-[500px] bg-amber-600/10 rounded-full blur-[140px] mix-blend-screen animate-subtle-glow" />
-            <div className="absolute top-[40%] right-[10%] w-[400px] h-[400px] bg-amber-500/5 rounded-full blur-[120px] mix-blend-screen" />
+            <div className="absolute top-[-10%] left-[10%] w-[600px] h-[600px] bg-amber-500/10 rounded-full blur-[150px] animate-orb-float" />
+            <div className="absolute top-[45%] right-[5%] w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[160px] animate-orb-float" style={{ animationDelay: '4s' }} />
+            <div className="absolute bottom-[-10%] left-[30%] w-[550px] h-[550px] bg-amber-400/5 rounded-full blur-[140px] animate-orb-float" style={{ animationDelay: '8s' }} />
           </div>
 
           <div className="relative z-10 flex flex-col min-h-screen">
