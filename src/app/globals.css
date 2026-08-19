@@ -1,63 +1,123 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --ink-bg: #0c0d10;
+  --ink-surface: #14161d;
+  --paper-cream: #f4f0e6;
+  --paper-muted: #a39e93;
+  --ink-border: #262936;
+  --ink-border-heavy: #3d4257;
+  --royal-ochre: #d97706;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  
-  /* Search Engine Theme Colors */
-  --color-bg: #0a0c10;
-  --color-surface: #10141b;
-  --color-surface-2: #161b24;
-  --color-border: #222a36;
-  --color-border-bright: #2f3a4a;
-  --color-muted: #6b7686;
-  --color-fg: #d7dde6;
-  --color-fg-bright: #f2f5f9;
-  --color-accent: #3ddc97;
-  --color-accent-dim: #1f6b4d;
-  --color-warn: #f5a623;
-  --color-danger: #ff5c5c;
-  --color-info: #5ac8fa;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@theme {
+  --color-bg: #0c0d10;
+  --color-surface: #14161d;
+  --color-surface-2: #1a1e28;
+  --color-border: #262936;
+  --color-border-bright: #3d4257;
+  --color-muted: #a39e93;
+  --color-fg: #f4f0e6;
+  --color-fg-bright: #ffffff;
+  --color-accent: #d97706;
+  --color-accent-dim: #785a28;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--ink-bg);
+  color: var(--paper-cream);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow-x: hidden;
+  letter-spacing: -0.01em;
 }
 
-/* ─── Search Engine UI Styles ─── */
-.search-engine-theme {
-  background-image:
-    linear-gradient(rgba(34, 42, 54, 0.35) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(34, 42, 54, 0.35) 1px, transparent 1px);
-  background-size: 44px 44px;
-  background-position: -1px -1px;
+/* Serif Masthead Utility */
+.font-broadsheet {
+  font-family: "Playfair Display", "Times New Roman", "Georgia", "Newsreader", serif;
 }
 
-@layer components {
-  .panel {
-    @apply rounded-lg border border-border bg-surface/80 backdrop-blur-sm;
-  }
-  .mono-label {
-    @apply font-mono text-[11px] uppercase tracking-[0.18em] text-muted;
-  }
-  .focus-ring {
-    @apply outline-none ring-1 ring-transparent focus-visible:ring-accent/60;
-  }
+/* Monospace Teletype Utility */
+.font-teletype {
+  font-family: "SF Mono", "Courier New", Courier, monospace;
 }
 
+/* Broadsheet Borders & Dividers */
+.broadsheet-card {
+  background-color: #12141c;
+  border: 1px solid var(--ink-border);
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 0.8);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.broadsheet-card:hover {
+  border-color: var(--ink-border-heavy);
+  transform: translate(-1px, -1px);
+  box-shadow: 6px 6px 0px 0px rgba(0, 0, 0, 0.9);
+}
+
+.double-rule-b {
+  border-bottom: 3px double var(--ink-border);
+}
+
+.double-rule-t {
+  border-top: 3px double var(--ink-border);
+}
+
+.stamp-badge {
+  font-family: "SF Mono", "Courier New", monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border: 1px solid var(--ink-border);
+  background-color: #171a24;
+  color: #d6d0c2;
+}
+
+.stamp-badge-gold {
+  border-color: #785a28;
+  background-color: #241c10;
+  color: #f6d89b;
+}
+
+/* Tactile Stamp Button */
+.stamp-btn {
+  font-family: "SF Mono", "Courier New", monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 700;
+  border: 1px solid var(--ink-border-heavy);
+  background-color: #171922;
+  color: #ece7db;
+  padding: 6px 12px;
+  box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 0.7);
+  transition: all 0.1s ease;
+}
+
+.stamp-btn:hover {
+  background-color: #f4f0e6;
+  color: #0c0d10;
+  border-color: #f4f0e6;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px 0px rgba(0, 0, 0, 0.9);
+}
+
+.stamp-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 0px 0px 0px 0px rgba(0, 0, 0, 0.9);
+}
+
+/* Search Engine Panel Adapter */
+.panel {
+  background-color: #12141c;
+  border: 1px solid var(--ink-border);
+  box-shadow: 3px 3px 0px 0px rgba(0, 0, 0, 0.7);
+}
+
+.mono-label {
+  font-family: "SF Mono", "Courier New", monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--paper-muted);
+}

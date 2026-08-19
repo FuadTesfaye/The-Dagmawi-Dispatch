@@ -25,27 +25,27 @@ export function SearchBar({
     });
   }
 
-  const pad = size === "lg" ? "py-4 text-base" : "py-2.5 text-sm";
+  const pad = size === "lg" ? "py-3.5 text-sm sm:text-base" : "py-2.5 text-xs sm:text-sm";
 
   return (
-    <form onSubmit={submit} className="w-full">
-      <div className="group flex items-center gap-3 rounded-lg border border-border bg-surface px-4 transition-colors focus-within:border-accent/60 focus-within:shadow-glow">
-        <span className="font-mono text-accent select-none">{">"}</span>
+    <form onSubmit={submit} className="w-full font-teletype">
+      <div className="group flex items-center gap-2.5 bg-[#12141c] border-2 border-[#262936] px-3.5 shadow-[4px_4px_0px_0px_#000000] focus-within:border-[#f4f0e6] transition-colors">
+        <span className="font-bold text-[#d97706] select-none text-sm">{">"}</span>
         <input
           // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus={autoFocus}
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          placeholder="phones ethiopia · crypto signals · addis jobs"
+          placeholder="SEARCH TELEGRAM CHANNELS & POSTS..."
           spellCheck={false}
-          className={`flex-1 bg-transparent font-mono text-fg-bright placeholder:text-muted/60 focus:outline-none ${pad}`}
+          className={`flex-1 bg-transparent text-[#f4f0e6] placeholder:text-[#6b665c] uppercase focus:outline-none ${pad}`}
         />
         <button
           type="submit"
           disabled={pending}
-          className="rounded border border-accent/40 bg-accent/10 px-3 py-1 font-mono text-xs text-accent transition-colors hover:bg-accent/20 disabled:opacity-50"
+          className="stamp-btn !py-1 !px-3 !text-xs shrink-0"
         >
-          {pending ? "…" : "search"}
+          {pending ? "..." : "QUERY"}
         </button>
       </div>
     </form>

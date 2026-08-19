@@ -34,11 +34,11 @@ export function TelegramPost({ tgUrl }: { tgUrl: string }) {
   }, [post]);
 
   return (
-    <div className="overflow-hidden rounded-md border border-border bg-surface-2/40">
+    <div className="overflow-hidden bg-[#12141c] border border-[#262936] p-2">
       {!loaded && (
-        <div className="flex items-center gap-2 px-3 py-4 font-mono text-[11px] text-muted">
-          <span className="h-1.5 w-1.5 animate-blink rounded-full bg-accent" />
-          loading post…
+        <div className="flex items-center gap-2 px-3 py-4 font-teletype text-[11px] text-[#a39e93] uppercase">
+          <span className="h-2 w-2 animate-pulse bg-[#d97706]" />
+          [ DECODING TELETYPE EMBED WIRE... ]
         </div>
       )}
       <div ref={ref} />
