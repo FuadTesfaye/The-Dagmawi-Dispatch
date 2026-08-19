@@ -1,11 +1,19 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema';
+import dotenv from 'dotenv';
+import path from 'path';
+
+// Automatically load .env.local from parent directory when running inside web/
+if (!process.env.DATABASE_URL && !process.env.DB_URL_1) {
+  dotenv.config({ path: path.resolve(process.cwd(), '../.env.local') });
+  dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+}
 
 function getDatabaseUrls(): { primary: string; readPool: string[] } {
   const primary = process.env.DB_URL_1 || process.env.DATABASE_URL;
   if (!primary) {
-    throw new Error('DATABASE_URL or DB_URL_1 must be set');
+    throw new Error('DATABASE_URL or DB_URL_1 must be set in .env.local or environment variables');
   }
 
   const readPool: string[] = [];

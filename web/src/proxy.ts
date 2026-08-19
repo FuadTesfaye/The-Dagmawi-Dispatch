@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function middleware(request: NextRequest) {
-  // Web platform middleware handles session validation and security headers
+export async function proxy(request: NextRequest) {
   const response = NextResponse.next();
   response.headers.set('x-dispatch-platform', 'web');
   return response;

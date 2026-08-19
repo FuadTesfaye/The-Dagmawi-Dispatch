@@ -1,4 +1,12 @@
 import Groq from 'groq-sdk';
+import dotenv from 'dotenv';
+import path from 'path';
+
+// Automatically load .env.local from parent directory when running inside web/
+if (!process.env.GROQ_API_KEY && !process.env.GROQ_API_KEY_1) {
+  dotenv.config({ path: path.resolve(process.cwd(), '../.env.local') });
+  dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+}
 
 interface KeyState {
   key: string;
