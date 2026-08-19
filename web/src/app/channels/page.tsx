@@ -30,15 +30,15 @@ export default function ChannelsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-amber-400 text-xs font-bold uppercase tracking-wider mb-1">
+          <div className="flex items-center gap-2 text-amber-400 text-xs font-black uppercase tracking-wider mb-1">
             <Radio className="w-4 h-4" />
-            <span>Kingdom Radio Network</span>
+            <span>Kingdom Network</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-zinc-100">
+          <h1 className="text-2xl sm:text-4xl font-black text-gradient-amber">
             Channel Directory
           </h1>
-          <p className="text-xs text-zinc-400 mt-1">
-            Browse and subscribe to verified Telegram dispatches.
+          <p className="text-xs text-zinc-400 mt-1 font-medium">
+            Browse and subscribe to verified Telegram dispatches across the realm.
           </p>
         </div>
 
@@ -49,7 +49,7 @@ export default function ChannelsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search channels..."
-            className="w-full py-2.5 pl-9 pr-4 rounded-2xl bg-zinc-900 border border-zinc-800 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-amber-500/50"
+            className="w-full py-2.5 pl-9 pr-4 rounded-2xl bg-zinc-900/90 border border-zinc-800 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-amber-500/50 font-medium"
           />
           <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-3.5" />
         </div>
@@ -61,7 +61,7 @@ export default function ChannelsPage() {
           <Loader2 className="w-8 h-8 animate-spin" />
         </div>
       ) : channels.length === 0 ? (
-        <div className="glass-panel rounded-3xl p-12 text-center flex flex-col items-center justify-center gap-3">
+        <div className="glass-card rounded-3xl p-12 text-center flex flex-col items-center justify-center gap-3">
           <span className="text-4xl">📡</span>
           <h3 className="font-extrabold text-base text-zinc-100">No channels found</h3>
           <p className="text-xs text-zinc-400">

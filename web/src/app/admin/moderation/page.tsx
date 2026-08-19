@@ -59,15 +59,15 @@ export default function AdminModerationPage() {
 
   if (!user || (user.role !== 'admin' && user.role !== 'moderator')) {
     return (
-      <div className="max-w-md mx-auto py-12 text-center glass-panel rounded-3xl p-8 flex flex-col items-center gap-4 border border-rose-500/30">
+      <div className="max-w-md mx-auto py-12 text-center glass-card rounded-3xl p-8 flex flex-col items-center gap-4 border border-rose-500/30">
         <AlertTriangle className="w-12 h-12 text-rose-400" />
-        <h2 className="text-xl font-extrabold text-zinc-100">Court Access Denied</h2>
-        <p className="text-xs text-zinc-400">
+        <h2 className="text-xl font-black text-zinc-100">Court Access Denied</h2>
+        <p className="text-xs text-zinc-400 font-medium">
           Only royal court admins and moderators can inspect community reports.
         </p>
         <Link
           href="/"
-          className="px-4 py-2 rounded-full bg-amber-500 text-zinc-950 font-bold text-xs shadow-md shadow-amber-500/20"
+          className="px-5 py-2.5 rounded-full bg-amber-500 text-zinc-950 font-black text-xs shadow-md shadow-amber-500/20"
         >
           Return to Feed
         </Link>
@@ -79,15 +79,15 @@ export default function AdminModerationPage() {
     <div className="flex flex-col gap-6 max-w-5xl mx-auto">
       {/* Header */}
       <div>
-        <div className="flex items-center gap-2 text-amber-400 text-xs font-bold uppercase tracking-wider mb-1">
+        <div className="flex items-center gap-2 text-amber-400 text-xs font-black uppercase tracking-wider mb-1">
           <Shield className="w-4 h-4" />
           <span>Royal Court Moderation</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-black text-zinc-100">
+        <h1 className="text-2xl sm:text-4xl font-black text-gradient-amber">
           Community Reports ({reports.length})
         </h1>
-        <p className="text-xs text-zinc-400 mt-1">
-          Inspect flagged posts and user comments to maintain civility across the kingdom.
+        <p className="text-xs text-zinc-400 mt-1 font-medium">
+          Inspect flagged posts and user comments to maintain civility across the realm.
         </p>
       </div>
 
@@ -97,7 +97,7 @@ export default function AdminModerationPage() {
           <Loader2 className="w-8 h-8 animate-spin" />
         </div>
       ) : reports.length === 0 ? (
-        <div className="glass-panel rounded-3xl p-12 text-center text-zinc-400 text-xs flex flex-col items-center gap-2">
+        <div className="glass-card rounded-3xl p-12 text-center text-zinc-400 text-xs font-medium flex flex-col items-center gap-2">
           <span>🛡️</span>
           <p>No community reports pending. The court is peaceful!</p>
         </div>
@@ -106,24 +106,24 @@ export default function AdminModerationPage() {
           {reports.map((r) => (
             <div
               key={r.id}
-              className={`p-5 rounded-3xl glass-panel border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all ${
+              className={`p-5 rounded-3xl glass-card border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all ${
                 r.status === 'pending'
-                  ? 'border-amber-500/30 bg-amber-500/5'
+                  ? 'border-amber-500/40 bg-amber-500/10'
                   : r.status === 'reviewed'
-                  ? 'border-emerald-500/30 bg-emerald-500/5'
+                  ? 'border-emerald-500/40 bg-emerald-500/10'
                   : 'border-zinc-800 opacity-60'
               }`}
             >
               <div className="flex flex-col gap-1.5">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-extrabold uppercase text-amber-400">
+                  <span className="text-xs font-black uppercase text-amber-400">
                     [{r.targetType.toUpperCase()}]
                   </span>
-                  <span className="text-xs text-zinc-300">
+                  <span className="text-xs font-bold text-zinc-300">
                     Channel: <strong>@{r.channel}</strong>
                   </span>
                   <span
-                    className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
+                    className={`text-[10px] px-2.5 py-0.5 rounded-full font-black uppercase ${
                       r.status === 'pending'
                         ? 'bg-amber-500/20 text-amber-300'
                         : r.status === 'reviewed'
@@ -135,10 +135,10 @@ export default function AdminModerationPage() {
                   </span>
                 </div>
 
-                <p className="text-sm font-semibold text-zinc-100">Reason: {r.reason}</p>
-                {r.details && <p className="text-xs text-zinc-400">Details: {r.details}</p>}
+                <p className="text-sm font-bold text-zinc-100">Reason: {r.reason}</p>
+                {r.details && <p className="text-xs text-zinc-400 font-medium">Details: {r.details}</p>}
 
-                <span className="text-[11px] text-zinc-500">
+                <span className="text-[11px] text-zinc-500 font-semibold">
                   Reported by {r.user?.displayName || 'Anonymous'} · {r.createdAt}
                 </span>
               </div>
@@ -148,14 +148,14 @@ export default function AdminModerationPage() {
                 <div className="flex items-center gap-2 shrink-0">
                   <button
                     onClick={() => handleUpdateStatus(r.id, 'reviewed')}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-bold transition-all"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-black transition-all"
                   >
                     <Check className="w-3.5 h-3.5" />
                     <span>Resolve</span>
                   </button>
                   <button
                     onClick={() => handleUpdateStatus(r.id, 'dismissed')}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 text-xs font-semibold transition-all"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 text-xs font-bold transition-all"
                   >
                     <X className="w-3.5 h-3.5" />
                     <span>Dismiss</span>

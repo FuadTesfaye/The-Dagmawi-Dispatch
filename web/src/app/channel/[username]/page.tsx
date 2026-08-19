@@ -29,7 +29,6 @@ export default function ChannelProfilePage({
   useEffect(() => {
     setLoading(true);
 
-    // Fetch channel details & posts
     Promise.all([
       fetch(`/api/channels?q=${username}`).then((r) => r.json()),
       fetch(`/api/posts?channel=${username}&limit=25`).then((r) => r.json()),
@@ -43,7 +42,6 @@ export default function ChannelProfilePage({
           setIsSubscribed(found.isSubscribed || false);
           setSubCount(found.subscriberCount || 0);
         } else {
-          // Fallback channel info
           setChannelInfo({
             id: username,
             name: `@${username}`,
@@ -97,14 +95,14 @@ export default function ChannelProfilePage({
       {/* Back Button */}
       <Link
         href="/channels"
-        className="inline-flex items-center gap-2 text-xs font-semibold text-zinc-400 hover:text-zinc-100 transition-colors self-start"
+        className="inline-flex items-center gap-2 text-xs font-bold text-zinc-400 hover:text-zinc-100 transition-colors self-start"
       >
         <ArrowLeft className="w-4 h-4" />
         <span>Back to Channel Directory</span>
       </Link>
 
       {/* Channel Hero Card */}
-      <div className="glass-panel rounded-3xl p-6 sm:p-8 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative overflow-hidden shadow-2xl">
+      <div className="glass-card rounded-3xl p-6 sm:p-8 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative overflow-hidden shadow-2xl">
         <div className="flex items-center gap-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -117,17 +115,17 @@ export default function ChannelProfilePage({
           />
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-black text-zinc-100">
+              <h1 className="text-xl sm:text-3xl font-black text-zinc-100">
                 {channelInfo?.name || `@${username}`}
               </h1>
               {channelInfo?.isVerified && (
-                <span className="text-amber-400 text-sm font-bold" title="Verified Channel">
+                <span className="text-amber-400 text-sm font-extrabold" title="Verified Channel">
                   ✓
                 </span>
               )}
             </div>
-            <span className="text-xs text-zinc-400 font-semibold">@{username}</span>
-            <div className="flex items-center gap-3 text-xs text-zinc-400 mt-1">
+            <span className="text-xs text-zinc-400 font-bold">@{username}</span>
+            <div className="flex items-center gap-3 text-xs text-zinc-400 mt-1 font-semibold">
               <span className="flex items-center gap-1">
                 <Users className="w-3.5 h-3.5 text-amber-400" />
                 {formatNumber(subCount)} subscribers
@@ -142,10 +140,10 @@ export default function ChannelProfilePage({
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <button
             onClick={handleToggleSubscribe}
-            className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-xs font-bold transition-all ${
+            className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-xs font-black transition-all ${
               isSubscribed
                 ? 'bg-zinc-800 text-zinc-300 border border-zinc-700 hover:bg-rose-950/40 hover:text-rose-300'
-                : 'bg-amber-500 hover:bg-amber-400 text-zinc-950 shadow-lg shadow-amber-500/20 active:scale-95'
+                : 'bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-zinc-950 shadow-lg shadow-amber-500/25 active:scale-95'
             }`}
           >
             {isSubscribed ? (
@@ -183,7 +181,7 @@ export default function ChannelProfilePage({
         </h2>
 
         {posts.length === 0 ? (
-          <div className="glass-panel rounded-3xl p-12 text-center text-zinc-400 text-xs">
+          <div className="glass-card rounded-3xl p-12 text-center text-zinc-400 text-xs font-medium">
             No posts recorded for this channel yet.
           </div>
         ) : (
