@@ -1,81 +1,103 @@
-import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
+import * as schema from './schema';
+import dotenv from 'dotenv';
+import path from 'path';
 
-const poolConfig = {
+// Automatically load .env.local from parent directory when running inside web/
+if (!process.env.DATABASE_URL && !process.env.DB_URL_1) {
+  dotenv.config({ path: path.resolve(process.cwd(), '../.env.local') });
+  dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+}
+
+function getDatabaseUrls(): { primary: string; readPool: string[] } {
+  const primary = process.env.DATABASE_URL || process.env.DB_URL_1 || process.env.DB_URL_2;
+  if (!primary) {
+    throw new Error('DATABASE_URL or DB_URL_1 must be set in .env.local or environment variables');
+  }
+
+  const readPool: string[] = [];
+  if (process.env.DATABASE_URL) readPool.push(process.env.DATABASE_URL);
+  if (process.env.DB_URL_2) readPool.push(process.env.DB_URL_2);
+  if (process.env.DB_URL_1) readPool.push(process.env.DB_URL_1);
+
+  const uniquePool = [...new Set(readPool.length > 0 ? readPool : [primary])];
+  return { primary, readPool: uniquePool };
+}
+
+const maxConnections = Number(process.env.DB_POOL_MAX) || 5;
+
+const clientConfig = {
   prepare: false as const,
-  max: Number(process.env.DB_POOL_MAX ?? 20),
+  ssl: 'require' as const,
+  max: maxConnections,
   idle_timeout: 20,
   connect_timeout: 10,
-  max_lifetime: 60 * 30,
 };
 
-const botDbUrls = [
-  process.env.DB_URL_1,
-  process.env.DB_URL_2,
-  process.env.DB_URL_3,
-].filter(Boolean) as string[];
-
-const uniqueBotUrls = [...new Set(botDbUrls.length > 0 ? botDbUrls : [process.env.DATABASE_URL].filter(Boolean) as string[])];
-
-if (uniqueBotUrls.length === 0) {
-  throw new Error("No database URLs configured (DB_URL_1, DB_URL_2, DB_URL_3, or DATABASE_URL).");
-}
-
-const clients = uniqueBotUrls.map((url) => postgres(url, poolConfig));
-const dbs = clients.map((client) => drizzle(client));
-
-export type AppDb = PostgresJsDatabase<Record<string, never>>;
-
-/** Primary database — all writes go here. */
-export const writeDb: AppDb = dbs[0];
-
-/** @deprecated Prefer readDb() for selects and writeDb for mutations. */
-export const db = writeDb;
-
+// Lazy client caches
+let writeClient: ReturnType<typeof postgres> | null = null;
+let writeDbInstance: ReturnType<typeof drizzle<typeof schema>> | null = null;
+const readClients: ReturnType<typeof postgres>[] = [];
+const readDbInstances: ReturnType<typeof drizzle<typeof schema>>[] = [];
 let readIndex = 0;
 
-/**
- * Round-robin read pool across configured bot database URLs.
- * Falls back to primary when only one URL is configured.
- */
-export function readDb(): AppDb {
-  if (dbs.length === 1) return dbs[0];
-  const instance = dbs[readIndex];
-  readIndex = (readIndex + 1) % dbs.length;
-  return instance;
+function getWriteDb() {
+  if (!writeDbInstance) {
+    const { primary } = getDatabaseUrls();
+    writeClient = postgres(primary, clientConfig);
+    writeDbInstance = drizzle(writeClient, { schema });
+  }
+  return writeDbInstance;
 }
 
-/** Run a read query with automatic fallback to primary on failure. */
-export async function withReadDb<T>(fn: (db: AppDb) => Promise<T>): Promise<T> {
-  if (dbs.length === 1) return fn(dbs[0]);
+function initReadDbs() {
+  if (readDbInstances.length === 0) {
+    const { readPool } = getDatabaseUrls();
+    for (const url of readPool) {
+      const client = postgres(url, clientConfig);
+      readClients.push(client);
+      readDbInstances.push(drizzle(client, { schema }));
+    }
+  }
+  return readDbInstances;
+}
 
-  const start = readIndex;
+export const writeDb = new Proxy({} as ReturnType<typeof drizzle<typeof schema>>, {
+  get(_target, prop) {
+    return (getWriteDb() as any)[prop];
+  },
+});
+
+export function getReadDb() {
+  const dbs = initReadDbs();
+  const db = dbs[readIndex % dbs.length];
+  readIndex++;
+  return db;
+}
+
+export async function withReadDb<T>(
+  fn: (db: ReturnType<typeof drizzle<typeof schema>>) => Promise<T>,
+): Promise<T> {
+  const dbs = initReadDbs();
+  const startIndex = readIndex % dbs.length;
+  readIndex++;
+
   let lastError: unknown;
-
   for (let i = 0; i < dbs.length; i++) {
-    const instance = dbs[(start + i) % dbs.length];
+    const candidate = dbs[(startIndex + i) % dbs.length];
     try {
-      return await fn(instance);
+      return await fn(candidate);
     } catch (err) {
       lastError = err;
+      console.warn(`[web/db] Read replica query failed, trying next replica...`, err);
     }
   }
 
+  // Fallback to write primary if all replicas fail
   try {
-    return await fn(writeDb);
-  } catch (err) {
-    throw lastError ?? err;
+    return await fn(getWriteDb());
+  } catch {
+    throw lastError;
   }
 }
-
-/** @deprecated Use readDb() instead. */
-export const getDb = readDb;
-
-const searchUrl = process.env.DATABASE_URL || process.env.DB_URL_1 || uniqueBotUrls[0];
-const searchDbClient = postgres(searchUrl, poolConfig);
-export const searchDb = drizzle(searchDbClient);
-
-export const dbPoolStats = () => ({
-  pools: uniqueBotUrls.length,
-  maxPerPool: poolConfig.max,
-});

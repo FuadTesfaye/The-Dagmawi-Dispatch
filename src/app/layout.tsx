@@ -1,54 +1,66 @@
-import type { Metadata, Viewport } from "next";
-import "./globals.css";
+import type { Metadata, Viewport } from 'next';
+import './globals.css';
+import { Providers } from '@/components/providers';
+import { Navbar } from '@/components/navbar';
+import { BottomNav } from '@/components/bottom-nav';
+import { PwaInstallPrompt } from '@/components/pwa-install-prompt';
 
 export const metadata: Metadata = {
-  title: "The Lurkening — Royal Broadsheet & Telegram Explorer",
-  description: "An avant-garde archival publication and teleprinter search engine for Telegram dispatches.",
-  manifest: "/manifest.json",
-  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "The Lurkening" },
+  title: 'The Lurkening — Royal Broadsheet & Telegram Chronicle',
+  description: 'Universal Telegram channel monitoring, Groq AI editorial intelligence, and multi-channel discovery.',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'The Lurkening',
+  },
   openGraph: {
-    title: "The Lurkening",
-    description: "Royal Broadsheet & Telegram Explorer",
-    type: "website",
+    title: 'The Lurkening',
+    description: 'The Royal Telegram Broadsheet & AI Editorial Chronicle',
+    type: 'website',
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0c0d10",
-  width: "device-width",
+  themeColor: '#0c0d10',
+  width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  viewportFit: 'cover',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html lang="en" className="dark h-full">
-      <head>
-        <link rel="apple-touch-icon" href="/logo.png" />
-        <meta name="mobile-web-app-capable" content="yes" />
-      </head>
-      <body className="min-h-full bg-[#0c0d10] text-[#f4f0e6] antialiased selection:bg-[#d97706] selection:text-black">
-        {/* Broadsheet Bulletin Line */}
-        <div className="w-full bg-[#161822] border-b border-[#262936] py-1 px-4 text-center font-teletype text-[10px] tracking-widest text-[#a39e93] uppercase flex items-center justify-between">
-          <span className="hidden sm:inline">✦ VOL. 2026 · NO. 88</span>
-          <span>THE LURKENING · ROYAL ARCHIVE & TELEGRAM INDEX</span>
-          <span className="hidden sm:inline">REAL-TIME INGESTION ✦</span>
-        </div>
+    <html lang="en" className="dark h-full" suppressHydrationWarning>
+      <body className="min-h-full font-sans antialiased selection:bg-[#d97706] selection:text-black bg-[var(--ink-bg)] text-[var(--paper-cream)]">
+        <Providers>
+          {/* Broadsheet Top Bulletin Banner */}
+          <div className="w-full bg-[var(--ink-surface)] border-b border-[var(--ink-border)] py-1 px-3 sm:px-4 text-center font-teletype text-[9px] sm:text-[10px] tracking-wider sm:tracking-widest text-[var(--paper-muted)] uppercase flex items-center justify-between overflow-hidden shrink-0">
+            <span className="hidden sm:inline">✦ VOL. 2026 · NO. 88</span>
+            <div className="flex items-center gap-1.5 mx-auto sm:mx-0 truncate">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+              <span className="truncate font-bold">THE LURKENING · TELEGRAM AI WIRE INDEX</span>
+            </div>
+            <span className="hidden sm:inline">REAL-TIME INGESTION ✦</span>
+          </div>
 
-        {children}
+          <div className="min-h-screen flex flex-col">
+            <Navbar />
 
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', () => {
-                  navigator.serviceWorker.register('/sw.js').catch(() => {});
-                });
-              }
-            `,
-          }}
-        />
+            {/* Expansive Content Canvas with safe area bottom padding on mobile */}
+            <main className="flex-1 w-full pb-24 lg:pb-12 pt-2 sm:pt-4">
+              {children}
+            </main>
+
+            <BottomNav />
+            <PwaInstallPrompt />
+          </div>
+        </Providers>
       </body>
     </html>
   );
