@@ -1,29 +1,43 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { TrackedChannel } from '@/lib/types';
 import { ChannelCard } from '@/components/channel-card';
 import { Search, Loader2, Radio } from 'lucide-react';
+import { fetchWithCache, getCached } from '@/lib/cache';
 
 export default function ChannelsPage() {
-  const [channels, setChannels] = useState<(TrackedChannel & { postCount?: number })[]>([]);
+  // Initialize immediately from memory cache if available (0ms loading!)
+  const initialCache = getCached<{ channels: (TrackedChannel & { postCount?: number })[] }>('/api/channels');
+  const [allChannels, setAllChannels] = useState<(TrackedChannel & { postCount?: number })[]>(
+    initialCache.data?.channels || []
+  );
   const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialCache.data);
 
+  // Fetch / Revalidate channels in background
   useEffect(() => {
-    const query = search.trim() ? `?q=${encodeURIComponent(search.trim())}` : '';
-    setLoading(true);
-
-    fetch(`/api/channels${query}`)
-      .then((res) => res.json())
+    fetchWithCache<{ channels: (TrackedChannel & { postCount?: number })[] }>('/api/channels')
       .then((data) => {
-        if (data.channels) {
-          setChannels(data.channels);
+        if (data?.channels) {
+          setAllChannels(data.channels);
         }
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [search]);
+  }, []);
+
+  // Instant 0ms local filter, memoized for high-fps typing
+  const filteredChannels = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return allChannels;
+    return allChannels.filter(
+      (c) =>
+        c.id.toLowerCase().includes(q) ||
+        c.name.toLowerCase().includes(q) ||
+        (c.description && c.description.toLowerCase().includes(q))
+    );
+  }, [allChannels, search]);
 
   return (
     <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 flex flex-col gap-6 sm:gap-8 font-teletype">
@@ -42,33 +56,33 @@ export default function ChannelsPage() {
           </p>
         </div>
 
-        {/* Search Input */}
+        {/* Instant Search Input */}
         <div className="relative w-full md:w-72 shrink-0">
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search handles & names..."
-            className="w-full py-2 pl-9 pr-3 bg-[var(--input-bg)] border border-[var(--ink-border)] text-xs text-[var(--paper-cream)] placeholder-[var(--paper-faint)] font-teletype uppercase focus:outline-none focus:border-[#d97706]"
+            placeholder="Instant search handles..."
+            className="w-full py-2 pl-9 pr-3 bg-[var(--input-bg)] border border-[var(--ink-border)] text-xs text-[var(--paper-cream)] placeholder-[var(--paper-faint)] font-teletype uppercase focus:outline-none focus:border-[#d97706] transition-colors"
           />
           <Search className="w-3.5 h-3.5 text-[var(--paper-muted)] absolute left-3 top-2.5" />
         </div>
       </div>
 
       {/* Channels Grid */}
-      {loading ? (
+      {loading && allChannels.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 gap-2 text-[var(--paper-muted)] font-teletype">
           <Loader2 className="w-6 h-6 animate-spin text-[#d97706]" />
           <span className="text-xs uppercase tracking-wider">[ Loading Publication Directory... ]</span>
         </div>
-      ) : channels.length === 0 ? (
+      ) : filteredChannels.length === 0 ? (
         <div className="broadsheet-card p-10 sm:p-14 text-center flex flex-col items-center justify-center gap-2 font-teletype">
           <h3 className="font-bold text-sm text-[var(--paper-cream)] uppercase">[ No Channels Found ]</h3>
           <p className="text-xs text-[var(--paper-muted)] font-sans">No registry records matched your search query.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-5">
-          {channels.map((ch) => (
+          {filteredChannels.map((ch) => (
             <ChannelCard key={ch.id} channel={ch} />
           ))}
         </div>

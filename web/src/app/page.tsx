@@ -10,62 +10,77 @@ import Link from 'next/link';
 
 import { SearchModal } from '@/components/search-modal';
 import { TELEGRAM_BOT_USERNAME } from '@/lib/constants';
+import { fetchWithCache, getCached } from '@/lib/cache';
 
 export default function HomePage() {
   const { subscribe } = useRealtime();
   const { showToast } = useToast();
   const { user } = useAuth();
 
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [channels, setChannels] = useState<TrackedChannel[]>([]);
+  // Instant SWR cache initialization
+  const initialChannels = getCached<{ channels: TrackedChannel[] }>('/api/channels').data?.channels || [];
+  const initialPosts = getCached<{ posts: Post[]; hasMore: boolean }>('/api/posts?page=1&limit=15').data?.posts || [];
+
+  const [posts, setPosts] = useState<Post[]>(initialPosts);
+  const [channels, setChannels] = useState<TrackedChannel[]>(initialChannels);
   const [selectedChannel, setSelectedChannel] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [page, setPage] = useState<number>(1);
   const [hasMore, setHasMore] = useState<boolean>(true);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(initialPosts.length === 0);
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const botUsername = TELEGRAM_BOT_USERNAME;
 
-  // Fetch Channels
+  // Fetch Channels with SWR cache
   useEffect(() => {
-    fetch('/api/channels')
-      .then((res) => res.json())
+    fetchWithCache<{ channels: TrackedChannel[] }>('/api/channels')
       .then((data) => {
-        if (data.channels) {
+        if (data?.channels) {
           setChannels(data.channels);
         }
       })
       .catch(() => {});
   }, []);
 
-  // Fetch Posts
+  // Fetch Posts with SWR cache
   const fetchPosts = useCallback(
     async (pageNum = 1, isInitial = false) => {
-      if (isInitial) setLoading(true);
-      else setLoadingMore(true);
+      const queryParams = new URLSearchParams({
+        page: String(pageNum),
+        limit: '15',
+      });
+      if (selectedChannel && selectedChannel !== 'all') {
+        queryParams.set('channel', selectedChannel);
+      }
+      if (searchQuery.trim()) {
+        queryParams.set('search', searchQuery.trim());
+      }
+
+      const cacheKey = `/api/posts?${queryParams.toString()}`;
+      const cached = getCached<{ posts: Post[]; hasMore: boolean }>(cacheKey);
+
+      if (isInitial) {
+        if (cached.data) {
+          setPosts(cached.data.posts || []);
+          setHasMore(cached.data.hasMore ?? true);
+          setLoading(false);
+        } else {
+          setLoading(true);
+        }
+      } else {
+        setLoadingMore(true);
+      }
 
       try {
-        const queryParams = new URLSearchParams({
-          page: String(pageNum),
-          limit: '15',
-        });
-        if (selectedChannel && selectedChannel !== 'all') {
-          queryParams.set('channel', selectedChannel);
-        }
-        if (searchQuery.trim()) {
-          queryParams.set('search', searchQuery.trim());
-        }
-
-        const res = await fetch(`/api/posts?${queryParams.toString()}`);
-        if (res.ok) {
-          const data = await res.json();
+        const data = await fetchWithCache<{ posts: Post[]; hasMore: boolean }>(cacheKey);
+        if (data) {
           if (pageNum === 1) {
             setPosts(data.posts || []);
           } else {
             setPosts((prev) => [...prev, ...(data.posts || [])]);
           }
-          setHasMore(data.hasMore);
+          setHasMore(data.hasMore ?? true);
           setPage(pageNum);
         }
       } catch {

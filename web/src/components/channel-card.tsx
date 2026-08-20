@@ -11,7 +11,7 @@ interface ChannelCardProps {
   channel: TrackedChannel & { postCount?: number };
 }
 
-export function ChannelCard({ channel }: ChannelCardProps) {
+export const ChannelCard = React.memo(function ChannelCard({ channel }: ChannelCardProps) {
   const { user } = useAuth();
   const { showToast } = useToast();
 
@@ -128,4 +128,4 @@ export function ChannelCard({ channel }: ChannelCardProps) {
       </div>
     </div>
   );
-}
+});

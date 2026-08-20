@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  color-scheme: dark;
   --ink-bg: #0c0d10;
   --ink-surface: #12141c;
   --ink-surface-hover: #171a24;
@@ -21,6 +22,7 @@
 }
 
 html.light, .light {
+  color-scheme: light;
   --ink-bg: #f6f3eb; /* Authentic creamy broadsheet newsprint paper */
   --ink-surface: #ffffff; /* Crisp white news sheet */
   --ink-surface-hover: #f0ebe0;

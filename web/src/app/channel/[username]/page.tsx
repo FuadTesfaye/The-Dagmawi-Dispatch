@@ -9,6 +9,8 @@ import { formatNumber } from '@/lib/utils';
 import { Check, Plus, ArrowLeft, Loader2, ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
 
+import { fetchWithCache, getCached } from '@/lib/cache';
+
 export default function ChannelProfilePage({
   params,
 }: {
@@ -20,18 +22,22 @@ export default function ChannelProfilePage({
   const { user } = useAuth();
   const { showToast } = useToast();
 
-  const [channelInfo, setChannelInfo] = useState<TrackedChannel | null>(null);
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [isSubscribed, setIsSubscribed] = useState(false);
-  const [subCount, setSubCount] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const channelsCache = getCached<{ channels: TrackedChannel[] }>('/api/channels');
+  const cachedChannel = channelsCache.data?.channels?.find(
+    (c) => c.id.toLowerCase() === username.toLowerCase()
+  );
+  const postsCache = getCached<{ posts: Post[] }>(`/api/posts?channel=${username}&limit=30`);
+
+  const [channelInfo, setChannelInfo] = useState<TrackedChannel | null>(cachedChannel || null);
+  const [posts, setPosts] = useState<Post[]>(postsCache.data?.posts || []);
+  const [isSubscribed, setIsSubscribed] = useState(cachedChannel?.isSubscribed || false);
+  const [subCount, setSubCount] = useState(cachedChannel?.subscriberCount || 0);
+  const [loading, setLoading] = useState(!cachedChannel && !postsCache.data);
 
   useEffect(() => {
-    setLoading(true);
-
     Promise.all([
-      fetch(`/api/channels?q=${username}`).then((r) => r.json()),
-      fetch(`/api/posts?channel=${username}&limit=30`).then((r) => r.json()),
+      fetchWithCache<{ channels: TrackedChannel[] }>(`/api/channels?q=${username}`),
+      fetchWithCache<{ posts: Post[] }>(`/api/posts?channel=${username}&limit=30`),
     ])
       .then(([chanData, postData]) => {
         const found = chanData.channels?.find(
@@ -41,7 +47,7 @@ export default function ChannelProfilePage({
           setChannelInfo(found);
           setIsSubscribed(found.isSubscribed || false);
           setSubCount(found.subscriberCount || 0);
-        } else {
+        } else if (!channelInfo) {
           setChannelInfo({
             id: username,
             name: `@${username}`,
@@ -53,7 +59,7 @@ export default function ChannelProfilePage({
           });
         }
 
-        if (postData.posts) {
+        if (postData?.posts) {
           setPosts(postData.posts);
         }
       })

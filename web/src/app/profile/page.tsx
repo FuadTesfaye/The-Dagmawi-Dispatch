@@ -9,35 +9,37 @@ import { User, LogOut, Loader2, Radio } from 'lucide-react';
 import Link from 'next/link';
 import { formatNumber } from '@/lib/utils';
 
+import { fetchWithCache, getCached } from '@/lib/cache';
+
 export default function ProfilePage() {
   const { user, loading, logout, loginDemo } = useAuth();
   const { showToast } = useToast();
-  const [subscribedChannels, setSubscribedChannels] = useState<TrackedChannel[]>([]);
-  const [posts, setPosts] = useState<Post[]>([]);
+
+  const initialChannels = getCached<{ channels: TrackedChannel[] }>('/api/channels').data?.channels || [];
+  const initialSubs = initialChannels.filter((c) => c.isSubscribed);
+  const initialPosts = getCached<{ posts: Post[] }>('/api/posts?limit=25').data?.posts || [];
+
+  const [subscribedChannels, setSubscribedChannels] = useState<TrackedChannel[]>(initialSubs);
+  const [posts, setPosts] = useState<Post[]>(initialPosts);
   const [activeTab, setActiveTab] = useState('Dispatches');
   const [loadingSubs, setLoadingSubs] = useState(false);
-  const [loadingPosts, setLoadingPosts] = useState(false);
+  const [loadingPosts, setLoadingPosts] = useState(initialPosts.length === 0);
 
   useEffect(() => {
     if (user) {
-      setLoadingSubs(true);
-      fetch('/api/channels')
-        .then((res) => res.json())
+      fetchWithCache<{ channels: TrackedChannel[] }>('/api/channels')
         .then((data) => {
-          if (data.channels) {
+          if (data?.channels) {
             const subs = data.channels.filter((c: any) => c.isSubscribed);
             setSubscribedChannels(subs);
           }
         })
-        .catch(() => {})
-        .finally(() => setLoadingSubs(false));
+        .catch(() => {});
     }
 
-    setLoadingPosts(true);
-    fetch('/api/posts?limit=25')
-      .then((res) => res.json())
+    fetchWithCache<{ posts: Post[] }>('/api/posts?limit=25')
       .then((data) => {
-        if (data.posts) {
+        if (data?.posts) {
           setPosts(data.posts);
         }
       })

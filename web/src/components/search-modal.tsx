@@ -6,6 +6,8 @@ import { Search, X, Loader2, Radio, BookOpen, ArrowRight, ArrowUpRight } from 'l
 import { TrackedChannel, Post } from '@/lib/types';
 import { formatTimeAgo } from '@/lib/utils';
 
+import { fetchWithCache, getCached } from '@/lib/cache';
+
 interface SearchModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -41,28 +43,40 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  // Debounced search query
+  // Instant local lookup + debounced server query
   useEffect(() => {
-    if (!query.trim()) {
+    const q = query.trim().toLowerCase();
+    if (!q) {
       setPosts([]);
       setChannels([]);
       setLoading(false);
       return;
     }
 
+    // 1. Instant 0ms local channel lookup from memory cache
+    const cachedChannels = getCached<{ channels: TrackedChannel[] }>('/api/channels').data?.channels;
+    if (cachedChannels) {
+      const instantMatches = cachedChannels.filter(
+        (c) => c.id.toLowerCase().includes(q) || c.name.toLowerCase().includes(q)
+      );
+      if (instantMatches.length > 0) {
+        setChannels(instantMatches);
+      }
+    }
+
     setLoading(true);
     const timer = setTimeout(() => {
       Promise.all([
-        fetch(`/api/channels?q=${encodeURIComponent(query.trim())}`).then((r) => r.json()),
-        fetch(`/api/posts?search=${encodeURIComponent(query.trim())}&limit=12`).then((r) => r.json()),
+        fetchWithCache<{ channels: TrackedChannel[] }>(`/api/channels?q=${encodeURIComponent(query.trim())}`),
+        fetchWithCache<{ posts: Post[] }>(`/api/posts?search=${encodeURIComponent(query.trim())}&limit=12`),
       ])
         .then(([chanData, postData]) => {
-          setChannels(chanData.channels || []);
-          setPosts(postData.posts || []);
+          if (chanData?.channels) setChannels(chanData.channels);
+          if (postData?.posts) setPosts(postData.posts);
         })
         .catch(() => {})
         .finally(() => setLoading(false));
-    }, 200);
+    }, 150);
 
     return () => clearTimeout(timer);
   }, [query]);

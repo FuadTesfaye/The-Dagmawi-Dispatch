@@ -243,11 +243,32 @@ export function Providers({ children }: { children: React.ReactNode }) {
     [listeners]
   );
 
+  // Memoized context values to prevent cascading re-renders across the app
+  const themeValue = React.useMemo(
+    () => ({ theme, toggleTheme, setTheme }),
+    [theme, toggleTheme, setTheme]
+  );
+
+  const authValue = React.useMemo(
+    () => ({ user, loading, loginDemo, loginWithHandle, logout, refreshUser }),
+    [user, loading, loginDemo, loginWithHandle, logout, refreshUser]
+  );
+
+  const toastValue = React.useMemo(
+    () => ({ showToast }),
+    [showToast]
+  );
+
+  const realtimeValue = React.useMemo(
+    () => ({ isConnected, subscribe: subscribeRealtime }),
+    [isConnected, subscribeRealtime]
+  );
+
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>
-      <AuthContext.Provider value={{ user, loading, loginDemo, loginWithHandle, logout, refreshUser }}>
-        <ToastContext.Provider value={{ showToast }}>
-          <RealtimeContext.Provider value={{ isConnected, subscribe: subscribeRealtime }}>
+    <ThemeContext.Provider value={themeValue}>
+      <AuthContext.Provider value={authValue}>
+        <ToastContext.Provider value={toastValue}>
+          <RealtimeContext.Provider value={realtimeValue}>
             {children}
 
             {/* Floating Toast Notification Stack */}

@@ -3,6 +3,10 @@ import path from "path";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  compress: true,
+  experimental: {
+    optimizePackageImports: ['lucide-react'],
+  },
   turbopack: {
     root: path.resolve(__dirname, "../"),
   },

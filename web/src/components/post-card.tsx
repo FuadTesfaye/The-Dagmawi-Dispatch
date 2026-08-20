@@ -23,7 +23,7 @@ const AVAILABLE_REACTIONS = [
 ];
 
 /** Rich text renderer with URLs, channel mentions, and hashtags */
-function RenderFormattedText({ text }: { text: string }) {
+const RenderFormattedText = React.memo(function RenderFormattedText({ text }: { text: string }) {
   if (!text) {
     return <span className="italic text-[var(--paper-faint)] font-teletype text-xs">[ WIRE: NO TEXT PAYLOAD IN THIS DISPATCH ]</span>;
   }
@@ -70,9 +70,9 @@ function RenderFormattedText({ text }: { text: string }) {
       })}
     </>
   );
-}
+});
 
-export function PostCard({ post }: PostCardProps) {
+export const PostCard = React.memo(function PostCard({ post }: PostCardProps) {
   const { user } = useAuth();
   const { showToast } = useToast();
 
@@ -474,4 +474,4 @@ export function PostCard({ post }: PostCardProps) {
       )}
     </article>
   );
-}
+});
