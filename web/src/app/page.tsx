@@ -9,6 +9,8 @@ import { Search, Radio, Loader2, ArrowUpRight, Bot, Shield, Database, Sparkles, 
 import Link from 'next/link';
 import { formatNumber } from '@/lib/utils';
 
+import { SearchModal } from '@/components/search-modal';
+
 export default function HomePage() {
   const { subscribe } = useRealtime();
   const { showToast } = useToast();
@@ -22,6 +24,7 @@ export default function HomePage() {
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(true);
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
   // Fetch Channels
   useEffect(() => {
@@ -175,13 +178,13 @@ export default function HomePage() {
             <span>SUMMON @lurklord_bot</span>
           </a>
 
-          <Link
-            href="/channels"
+          <button
+            onClick={() => setIsSearchModalOpen(true)}
             className="stamp-btn !bg-[#12141c] !text-[#a39e93] hover:!text-[#f4f0e6] flex items-center gap-2 !py-2.5 !px-5 text-xs"
           >
             <Search className="w-4 h-4 text-[#d97706]" />
             <span>SEARCH ENGINE & GRAPH</span>
-          </Link>
+          </button>
         </div>
       </div>
 
@@ -413,6 +416,12 @@ export default function HomePage() {
         <span>THE LURKENING · UNIVERSAL TELEGRAM CHRONICLE</span>
         <span>AUTONOMOUS INGESTION ENGINE ACTIVE</span>
       </div>
+
+      {/* Hero Search Modal */}
+      <SearchModal
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+      />
     </div>
   );
 }

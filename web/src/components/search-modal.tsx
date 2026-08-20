@@ -1,0 +1,275 @@
+'use client';
+
+import React, { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
+import { Search, X, Loader2, Radio, BookOpen, ArrowRight, ArrowUpRight } from 'lucide-react';
+import { TrackedChannel, Post } from '@/lib/types';
+import { formatTimeAgo } from '@/lib/utils';
+
+interface SearchModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export function SearchModal({ isOpen, onClose }: SearchModalProps) {
+  const [query, setQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<'all' | 'posts' | 'channels'>('all');
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [channels, setChannels] = useState<TrackedChannel[]>([]);
+  const [loading, setLoading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Auto focus on open
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => inputRef.current?.focus(), 50);
+    } else {
+      setQuery('');
+      setPosts([]);
+      setChannels([]);
+    }
+  }, [isOpen]);
+
+  // Handle escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
+  // Debounced search query
+  useEffect(() => {
+    if (!query.trim()) {
+      setPosts([]);
+      setChannels([]);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    const timer = setTimeout(() => {
+      Promise.all([
+        fetch(`/api/channels?q=${encodeURIComponent(query.trim())}`).then((r) => r.json()),
+        fetch(`/api/posts?search=${encodeURIComponent(query.trim())}&limit=12`).then((r) => r.json()),
+      ])
+        .then(([chanData, postData]) => {
+          setChannels(chanData.channels || []);
+          setPosts(postData.posts || []);
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  if (!isOpen) return null;
+
+  const totalResults = posts.length + channels.length;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-12 sm:pt-20 px-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
+      <div
+        className="w-full max-w-2xl bg-[#12141c] border-2 border-[#3d4257] shadow-[10px_10px_0px_0px_#000000] flex flex-col font-teletype overflow-hidden animate-in zoom-in-95 duration-150"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Modal Top Bar */}
+        <div className="flex items-center justify-between px-4 py-2.5 bg-[#171a24] border-b border-[#262936] text-[10px] text-[#a39e93] uppercase tracking-wider">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 bg-[#d97706]" />
+            <span>UNIVERSAL ARCHIVE SEARCH & INDEX</span>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1 hover:text-[#f4f0e6] transition-colors"
+            title="Close (Esc)"
+          >
+            [ ESC / ✕ ]
+          </button>
+        </div>
+
+        {/* Search Input Box */}
+        <div className="relative flex items-center border-b-2 border-[#262936] bg-[#0c0d10] px-4 py-3">
+          <Search className="w-5 h-5 text-[#d97706] shrink-0" />
+          <input
+            ref={inputRef}
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search telegraph wires, channels, keywords, hashtags..."
+            className="w-full pl-3 pr-8 py-1 bg-transparent text-sm sm:text-base text-[#f4f0e6] placeholder-[#6b665c] font-teletype uppercase focus:outline-none"
+          />
+          {query && (
+            <button
+              onClick={() => setQuery('')}
+              className="text-[#a39e93] hover:text-[#f4f0e6] p-1 text-xs"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+        {/* Filter Tabs */}
+        {query.trim() && (
+          <div className="flex items-center gap-2 px-4 py-2 bg-[#14161f] border-b border-[#262936] text-xs">
+            <button
+              onClick={() => setActiveTab('all')}
+              className={`px-2.5 py-1 border transition-colors uppercase ${
+                activeTab === 'all'
+                  ? 'bg-[#f4f0e6] text-[#0c0d10] border-[#f4f0e6] font-bold'
+                  : 'bg-[#12141c] text-[#a39e93] border-[#262936] hover:text-[#f4f0e6]'
+              }`}
+            >
+              ALL ({totalResults})
+            </button>
+            <button
+              onClick={() => setActiveTab('posts')}
+              className={`px-2.5 py-1 border transition-colors uppercase ${
+                activeTab === 'posts'
+                  ? 'bg-[#f4f0e6] text-[#0c0d10] border-[#f4f0e6] font-bold'
+                  : 'bg-[#12141c] text-[#a39e93] border-[#262936] hover:text-[#f4f0e6]'
+              }`}
+            >
+              DISPATCHES ({posts.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('channels')}
+              className={`px-2.5 py-1 border transition-colors uppercase ${
+                activeTab === 'channels'
+                  ? 'bg-[#f4f0e6] text-[#0c0d10] border-[#f4f0e6] font-bold'
+                  : 'bg-[#12141c] text-[#a39e93] border-[#262936] hover:text-[#f4f0e6]'
+              }`}
+            >
+              CHANNELS ({channels.length})
+            </button>
+          </div>
+        )}
+
+        {/* Search Results Area */}
+        <div className="max-h-[60vh] overflow-y-auto p-4 flex flex-col gap-4">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-2 text-[#a39e93]">
+              <Loader2 className="w-6 h-6 animate-spin text-[#d97706]" />
+              <span className="text-xs uppercase">[ SCANNING DISPATCH ARCHIVES... ]</span>
+            </div>
+          ) : !query.trim() ? (
+            <div className="flex flex-col gap-4 py-8 text-center text-[#a39e93]">
+              <p className="text-xs uppercase">[ TYPE A QUERY TO BEGIN DECODING ARCHIVES ]</p>
+              <div className="flex flex-wrap items-center justify-center gap-2 text-[11px]">
+                <span className="text-[#6b665c]">QUICK SUGGESTIONS:</span>
+                {['dagmawi_babi', 'tech', 'ethiopia', 'ai', 'crypto'].map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => setQuery(tag)}
+                    className="px-2 py-0.5 border border-[#262936] bg-[#171a24] hover:border-[#d97706] hover:text-[#d97706] transition-colors"
+                  >
+                    #{tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : totalResults === 0 ? (
+            <div className="py-12 text-center text-[#a39e93] flex flex-col gap-2">
+              <span className="font-bold text-sm text-[#f4f0e6] uppercase">[ NO RECORDS FOUND ]</span>
+              <p className="text-xs">No dispatches or monitored channels matched &ldquo;{query}&rdquo;.</p>
+            </div>
+          ) : (
+            <>
+              {/* Channel Results */}
+              {(activeTab === 'all' || activeTab === 'channels') && channels.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#d97706] uppercase tracking-wider border-b border-[#262936] pb-1">
+                    <Radio className="w-3 h-3" />
+                    <span>CHANNELS ({channels.length})</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {channels.map((ch) => (
+                      <Link
+                        key={ch.id}
+                        href={`/channel/${ch.id}`}
+                        onClick={onClose}
+                        className="p-2.5 bg-[#171a24] border border-[#262936] hover:border-[#d97706] flex items-center justify-between gap-2 group transition-all"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={ch.avatarUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${ch.id}`}
+                            alt={ch.name}
+                            className="w-8 h-8 border border-[#262936] bg-[#12141c] object-cover shrink-0"
+                          />
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-xs font-bold text-[#f4f0e6] group-hover:text-[#d97706] transition-colors truncate uppercase">
+                              {ch.name}
+                            </span>
+                            <span className="text-[10px] text-[#a39e93]">@{ch.id}</span>
+                          </div>
+                        </div>
+                        <ArrowRight className="w-3.5 h-3.5 text-[#a39e93] group-hover:text-[#d97706] shrink-0" />
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Post Results */}
+              {(activeTab === 'all' || activeTab === 'posts') && posts.length > 0 && (
+                <div className="flex flex-col gap-2 pt-2">
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#d97706] uppercase tracking-wider border-b border-[#262936] pb-1">
+                    <BookOpen className="w-3 h-3" />
+                    <span>DISPATCHES ({posts.length})</span>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    {posts.map((post) => {
+                      const snippet = post.text
+                        ? post.text.slice(0, 160) + (post.text.length > 160 ? '...' : '')
+                        : '[ MEDIA TRANSMISSION ]';
+
+                      return (
+                        <Link
+                          key={`${post.channel}-${post.id}`}
+                          href={`/post/${post.id}?channel=${post.channel}`}
+                          onClick={onClose}
+                          className="p-3 bg-[#171a24] border border-[#262936] hover:border-[#d97706] flex flex-col gap-1.5 group transition-all"
+                        >
+                          <div className="flex items-center justify-between text-[10px] text-[#a39e93]">
+                            <span className="font-bold text-[#f4f0e6] uppercase group-hover:text-[#d97706]">
+                              @{post.channel}
+                            </span>
+                            <span>{formatTimeAgo(post.date)}</span>
+                          </div>
+
+                          <p className="text-xs text-[#d6d0c2] font-sans line-clamp-2 leading-relaxed">
+                            {snippet}
+                          </p>
+
+                          <div className="flex items-center justify-between text-[9px] text-[#6b665c] uppercase pt-1 border-t border-[#262936]/60">
+                            <span>DISPATCH #{post.id}</span>
+                            <span className="group-hover:text-[#d97706] transition-colors inline-flex items-center gap-0.5">
+                              READ FULL DISPATCH <ArrowUpRight className="w-2.5 h-2.5" />
+                            </span>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Modal Footer Keyboard Guide */}
+        <div className="px-4 py-2 bg-[#171a24] border-t border-[#262936] flex items-center justify-between text-[10px] text-[#a39e93] uppercase">
+          <span>UNIVERSAL WIRE INDEX</span>
+          <span>PRESS [ ESC ] TO DISMISS</span>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -76,6 +76,7 @@ export function PostCard({ post }: PostCardProps) {
   const [reactions, setReactions] = useState<Record<string, number>>(post.reactions || {});
   const [userReactions, setUserReactions] = useState<string[]>(post.userReactions || []);
   const [commentCount, setCommentCount] = useState<number>(post.commentCount || 0);
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [isCommentDrawerOpen, setIsCommentDrawerOpen] = useState(false);
@@ -125,6 +126,9 @@ export function PostCard({ post }: PostCardProps) {
   const lines = post.text ? post.text.trim().split('\n') : [];
   const firstLine = lines[0] || '';
   const remainingText = lines.slice(1).join('\n').trim();
+
+  // Check if post is lengthy
+  const isLongPost = (post.text && post.text.length > 280) || lines.length > 4;
 
   return (
     <article className="broadsheet-card p-5 sm:p-7 flex flex-col gap-4 font-teletype">
@@ -177,7 +181,7 @@ export function PostCard({ post }: PostCardProps) {
         )}
       </div>
 
-      {/* Post Body */}
+      {/* Post Body with Clean Broadsheet Expansion */}
       <div className="flex flex-col gap-2">
         {firstLine && (
           <h2 className="font-broadsheet font-bold text-xl sm:text-2xl text-[#f4f0e6] leading-tight tracking-tight">
@@ -186,8 +190,38 @@ export function PostCard({ post }: PostCardProps) {
         )}
 
         {remainingText && (
-          <div className="text-[#d6d0c2] text-sm leading-relaxed whitespace-pre-wrap font-sans break-words pt-1">
-            <RenderFormattedText text={remainingText} />
+          <div className="relative">
+            <div
+              className={`text-[#d6d0c2] text-sm leading-relaxed whitespace-pre-wrap font-sans break-words pt-1 transition-all duration-200 ${
+                !isExpanded && isLongPost ? 'max-h-36 overflow-hidden' : ''
+              }`}
+            >
+              <RenderFormattedText text={remainingText} />
+            </div>
+
+            {/* Gradient Fade & Expand Button when Collapsed */}
+            {!isExpanded && isLongPost && (
+              <div className="absolute inset-x-0 bottom-0 pt-16 bg-gradient-to-t from-[#12141c] via-[#12141c]/90 to-transparent flex items-end justify-center pb-0.5">
+                <button
+                  onClick={() => setIsExpanded(true)}
+                  className="stamp-btn !bg-[#171a24] !text-[#d97706] hover:!bg-[#d97706] hover:!text-black !py-1.5 !px-4 !text-xs font-bold shadow-[2px_2px_0px_0px_#000000]"
+                >
+                  <span>↓ READ FULL DISPATCH ({lines.length} LINES)</span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Collapse Button when Expanded */}
+        {isExpanded && isLongPost && (
+          <div className="pt-2 flex justify-start">
+            <button
+              onClick={() => setIsExpanded(false)}
+              className="stamp-btn !bg-[#12141c] !text-[#a39e93] hover:!text-[#f4f0e6] !py-1 !px-3 !text-[10px] font-bold"
+            >
+              <span>↑ COLLAPSE DISPATCH</span>
+            </button>
           </div>
         )}
       </div>

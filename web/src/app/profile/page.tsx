@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/components/providers';
 import { TrackedChannel, Post } from '@/lib/types';
+import { PostCard } from '@/components/post-card';
 import { User, LogOut, Loader2, Heart, MessageSquare, Share2, Shield, Bot, ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
 import { formatTimeAgo, formatNumber } from '@/lib/utils';
@@ -178,86 +179,9 @@ export default function ProfilePage() {
             [ NO POSTS FOUND IN PUBLICATION LEDGER ]
           </div>
         ) : (
-          posts.map((post) => {
-            const lines = post.text ? post.text.trim().split('\n') : [];
-            const title = lines[0] || 'Media Broadcast Dispatch';
-            const body = lines.slice(1).join(' ').trim();
-
-            return (
-              <article
-                key={`${post.channel}-${post.id}`}
-                className="broadsheet-card p-5 sm:p-6 flex flex-col gap-3 group"
-              >
-                {/* Author row & Date */}
-                <div className="flex items-center justify-between gap-2 border-b border-[#262936] pb-2">
-                  <div className="flex items-center gap-2">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={
-                        post.channelInfo?.avatarUrl ||
-                        `https://api.dicebear.com/7.x/identicon/svg?seed=${post.channel}`
-                      }
-                      alt={post.channel}
-                      className="w-5 h-5 bg-[#12141c] border border-[#262936]"
-                    />
-                    <span className="text-xs font-bold uppercase tracking-wider text-[#a39e93] group-hover:text-[#d97706] transition-colors">
-                      {post.channelInfo?.name || `@${post.channel}`}
-                    </span>
-                  </div>
-                  <span className="text-[10px] text-[#a39e93] uppercase">
-                    {formatTimeAgo(post.date)}
-                  </span>
-                </div>
-
-                {/* Main Content & Thumbnail */}
-                <div className="flex items-start justify-between gap-6">
-                  <div className="flex-1 flex flex-col gap-1.5">
-                    <h2 className="font-broadsheet font-bold text-lg sm:text-xl text-[#f4f0e6] leading-tight group-hover:text-[#d97706] transition-colors line-clamp-2 uppercase">
-                      {title}
-                    </h2>
-                    {body && (
-                      <p className="text-xs sm:text-sm text-[#a39e93] leading-relaxed line-clamp-3 font-sans">
-                        {body}
-                      </p>
-                    )}
-                    <div className="text-[10px] text-[#6b665c] uppercase mt-1">
-                      PARCHMENT WIRE · {post.channel.toUpperCase()}
-                    </div>
-                  </div>
-
-                  {/* Thumbnail / Media Preview */}
-                  {post.mediaType && post.mediaType !== 'none' && (
-                    <div className="w-20 h-20 bg-[#12141c] border border-[#262936] flex flex-col items-center justify-center shrink-0 text-[#a39e93]">
-                      <span className="text-[9px] font-bold uppercase text-[#d97706]">
-                        {post.mediaType}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Engagement Bar */}
-                <div className="flex items-center gap-4 mt-1 text-xs text-[#a39e93] pt-2 border-t border-[#262936]">
-                  <div className="flex items-center gap-1.5 hover:text-[#d97706] cursor-pointer transition-colors">
-                    <Heart className="w-3.5 h-3.5 text-[#d97706]" />
-                    <span>
-                      {formatNumber(
-                        (post.reactions &&
-                          Object.values(post.reactions).reduce((a, b) => a + b, 0)) ||
-                          0
-                      )}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5 hover:text-[#f4f0e6] cursor-pointer transition-colors">
-                    <MessageSquare className="w-3.5 h-3.5" />
-                    <span>{post.commentCount || 0}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 hover:text-[#f4f0e6] cursor-pointer transition-colors ml-auto">
-                    <Share2 className="w-3.5 h-3.5" />
-                  </div>
-                </div>
-              </article>
-            );
-          })
+          posts.map((post) => (
+            <PostCard key={`${post.channel}-${post.id}`} post={post} />
+          ))
         )}
 
         {/* Not Logged In Prompt at the bottom */}
