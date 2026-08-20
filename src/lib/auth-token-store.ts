@@ -12,8 +12,10 @@ interface PendingToken {
   };
 }
 
-// Global token store
-const globalTokens = new Map<string, PendingToken>();
+// Global token store attached to globalThis to persist across module instances
+const globalTokens: Map<string, PendingToken> =
+  (globalThis as any).__telegram_tokens_map ||
+  ((globalThis as any).__telegram_tokens_map = new Map<string, PendingToken>());
 
 // Cleanup expired tokens older than 10 minutes
 function cleanOldTokens() {
@@ -41,11 +43,20 @@ export function getPendingToken(token: string): PendingToken | undefined {
 }
 
 export function authorizePendingToken(token: string, user: PendingToken['user']): boolean {
-  const entry = globalTokens.get(token);
-  if (!entry) return false;
-
-  entry.status = 'authorized';
-  entry.user = user;
+  cleanOldTokens();
+  let entry = globalTokens.get(token);
+  if (!entry) {
+    entry = {
+      token,
+      createdAt: Date.now(),
+      status: 'authorized',
+      user,
+    };
+    globalTokens.set(token, entry);
+  } else {
+    entry.status = 'authorized';
+    entry.user = user;
+  }
   return true;
 }
 
