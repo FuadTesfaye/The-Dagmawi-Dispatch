@@ -168,14 +168,55 @@ bot.command("start", async (ctx) => {
   const userId = String(ctx.from?.id || "0");
   const payload = ctx.match?.trim();
 
-  // 1. Check if user came from a web login handshake (start=lurk_xxxx)
-  if (payload && payload.startsWith("lurk_")) {
+  // 1. Check if user came from a web login handshake (start=lurk_xxxx or login_xxxx)
+  if (payload && (payload.startsWith("lurk_") || payload.startsWith("login_"))) {
+    const token = payload.startsWith("lurk_") ? payload : payload.replace("login_", "lurk_");
     await ctx.replyWithChatAction("typing");
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || "http://localhost:3000";
+    const botSecret = process.env.TELEGRAM_BOT_TOKEN;
+
+    try {
+      const authRes = await fetch(`${appUrl}/api/auth/token-authorize`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${botSecret}`,
+        },
+        body: JSON.stringify({
+          token,
+          telegramUserId: userId,
+          username: ctx.from?.username || null,
+          displayName: getDisplayName(ctx),
+          photoUrl: null,
+        }),
+      });
+
+      if (authRes.ok) {
+        await ctx.reply(
+          `👑 *ROYAL SCRIBE AUTHENTICATED!*\n` +
+          `━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+          `Welcome, *${name}*! Your Telegram identity (@${ctx.from?.username || name}) has been confirmed for the Broadsheet Gazette.\n\n` +
+          `Your browser session has been authorized in real-time. You can now return to the web dispatch to stamp reactions, request AI briefs, and browse the archives.`,
+          {
+            parse_mode: "Markdown",
+            reply_markup: new InlineKeyboard()
+              .url("🌐 Return to Web Gazette", `${appUrl}`)
+              .row()
+              .text("🎛️ Open Bot Dashboard", "menu_main"),
+          }
+        );
+        return;
+      }
+    } catch (err) {
+      console.error("[bot] Error authorizing web token:", err);
+    }
+
     await ctx.reply(
       `👑 *ROYAL SCRIBE AUTHENTICATED!*\n` +
       `━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
       `Welcome, *${name}*! Your Telegram identity has been confirmed for the Broadsheet Gazette.\n\n` +
-      `Your browser session has been authorized. You can now return to the web dispatch to stamp reactions, request AI briefs, and browse the archives.`,
+      `Your browser session has been authorized. You can now return to the web dispatch.`,
       {
         parse_mode: "Markdown",
         reply_markup: new InlineKeyboard()
@@ -203,6 +244,56 @@ bot.command("start", async (ctx) => {
       reply_markup: buildMainMenuKeyboard(channel, subscribed),
     }
   );
+});
+
+// ─── /login <token> ───────────────────────────────────────────────
+bot.command("login", async (ctx) => {
+  const name = ctx.from?.first_name || "Citizen Scribe";
+  const userId = String(ctx.from?.id || "0");
+  const token = ctx.match?.trim();
+
+  if (!token) {
+    await ctx.reply("Please provide a login token from the web app: `/login <token>`", { parse_mode: "Markdown" });
+    return;
+  }
+
+  const cleanToken = token.startsWith("lurk_") ? token : `lurk_${token}`;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || "http://localhost:3000";
+  const botSecret = process.env.TELEGRAM_BOT_TOKEN;
+
+  try {
+    const authRes = await fetch(`${appUrl}/api/auth/token-authorize`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${botSecret}`,
+      },
+      body: JSON.stringify({
+        token: cleanToken,
+        telegramUserId: userId,
+        username: ctx.from?.username || null,
+        displayName: getDisplayName(ctx),
+        photoUrl: null,
+      }),
+    });
+
+    if (authRes.ok) {
+      await ctx.reply(
+        `👑 *ROYAL SCRIBE AUTHENTICATED!*\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `Welcome, *${name}*! Your web session has been verified and logged in.`,
+        {
+          parse_mode: "Markdown",
+          reply_markup: new InlineKeyboard().url("🌐 Return to Web Gazette", `${appUrl}`),
+        }
+      );
+      return;
+    }
+  } catch (err) {
+    console.error("[bot] Error authorizing web token:", err);
+  }
+
+  await ctx.reply("❌ Invalid or expired login token. Please request a new token from the web app.");
 });
 
 // ─── /menu ───────────────────────────────────────────────────────
