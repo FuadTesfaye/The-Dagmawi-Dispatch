@@ -8,6 +8,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   loginDemo: (persona: 'admin' | 'reader' | 'vip') => Promise<void>;
+  loginWithHandle: (username: string, displayName?: string) => Promise<boolean>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -16,6 +17,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   loginDemo: async () => {},
+  loginWithHandle: async () => false,
   logout: async () => {},
   refreshUser: async () => {},
 });
@@ -87,6 +89,29 @@ export function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     refreshUser();
   }, [refreshUser]);
+
+  const loginWithHandle = async (username: string, displayName?: string): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/auth/handle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, displayName }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data.user);
+        showToast(`Entered archive as ${data.user.displayName}`, 'success');
+        return true;
+      } else {
+        const data = await res.json().catch(() => ({}));
+        showToast(data.error || 'Failed to authenticate', 'error');
+        return false;
+      }
+    } catch {
+      showToast('Network error during login', 'error');
+      return false;
+    }
+  };
 
   const loginDemo = async (persona: 'admin' | 'reader' | 'vip') => {
     try {
@@ -162,7 +187,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <AuthContext.Provider value={{ user, loading, loginDemo, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, loginDemo, loginWithHandle, logout, refreshUser }}>
       <ToastContext.Provider value={{ showToast }}>
         <RealtimeContext.Provider value={{ isConnected, subscribe: subscribeRealtime }}>
           {children}
