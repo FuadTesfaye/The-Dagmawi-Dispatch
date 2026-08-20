@@ -3,9 +3,10 @@ import type { MetadataRoute } from 'next';
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: '/',
-    name: 'The Lurkening — Royal Broadsheet',
+    name: 'The Lurkening — Universal Telegram Chronicle',
     short_name: 'The Lurkening',
-    description: 'An avant-garde archival publication and teleprinter feed of high-frequency Telegram dispatches with AI editorial synthesis.',
+    description:
+      'Universal Telegram channel monitoring, Groq AI editorial intelligence, and real-time archival discovery across Telegram networks.',
     start_url: '/',
     scope: '/',
     display: 'standalone',

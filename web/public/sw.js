@@ -1,19 +1,17 @@
-const CACHE_NAME = 'dispatch-broadsheet-pwa-v2';
-const STATIC_ASSETS = [
+// Service Worker for The Lurkening — PWA & Push Notification Engine
+
+const CACHE_NAME = 'lurkening-v1';
+const ASSETS_TO_CACHE = [
   '/',
-  '/channels',
   '/manifest.webmanifest',
-  '/favicon.ico',
-  '/icon-192.png',
-  '/icon-512.png',
+  '/channels',
+  '/app',
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS).catch((err) => {
-        console.warn('[SW] Cache addAll error:', err);
-      });
+      return cache.addAll(ASSETS_TO_CACHE).catch(() => {});
     })
   );
   self.skipWaiting();
@@ -21,49 +19,73 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
+    caches.keys().then((keys) =>
+      Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) {
             return caches.delete(key);
           }
         })
-      );
-    })
+      )
+    )
   );
   self.clients.claim();
 });
 
-self.addEventListener('fetch', (event) => {
-  // Only cache GET requests
-  if (event.request.method !== 'GET') return;
+// Push Notification Handler
+self.addEventListener('push', (event) => {
+  let data = {
+    title: '✦ Royal Telegraph Bulletin',
+    body: 'A new breaking dispatch has arrived in the royal archives.',
+    icon: 'https://api.dicebear.com/7.x/bottts/svg?seed=lurkening_bot',
+    badge: 'https://api.dicebear.com/7.x/bottts/svg?seed=badge',
+    url: '/',
+  };
 
-  const url = new URL(event.request.url);
-
-  // NEVER cache Server-Sent Events real-time stream
-  if (url.pathname.startsWith('/api/realtime/')) return;
-
-  // Network-first with cache fallback for HTML documents and static assets
-  if (url.origin === self.location.origin) {
-    event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          if (response && response.status === 200) {
-            const responseToCache = response.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseToCache);
-            });
-          }
-          return response;
-        })
-        .catch(() => {
-          return caches.match(event.request).then((cachedResponse) => {
-            if (cachedResponse) return cachedResponse;
-            if (event.request.destination === 'document') {
-              return caches.match('/');
-            }
-          });
-        })
-    );
+  if (event.data) {
+    try {
+      const payload = event.data.json();
+      data = { ...data, ...payload };
+    } catch {
+      data.body = event.data.text();
+    }
   }
+
+  const options = {
+    body: data.body,
+    icon: data.icon,
+    badge: data.badge,
+    data: { url: data.url || '/' },
+    vibrate: [100, 50, 100],
+    actions: [
+      { action: 'open', title: 'Open Dispatch' },
+      { action: 'dismiss', title: 'Dismiss' },
+    ],
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, options)
+  );
+});
+
+// Notification Click Handler
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  if (event.action === 'dismiss') return;
+
+  const targetUrl = event.notification.data?.url || '/';
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url === targetUrl && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(targetUrl);
+      }
+    })
+  );
 });

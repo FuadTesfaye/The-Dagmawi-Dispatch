@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth, useRealtime, useTheme } from './providers';
-import { LogOut, Shield, Menu, X, ChevronDown, Radio, BookOpen, User, Bot, ArrowUpRight, Search, Sun, Moon } from 'lucide-react';
+import { LogOut, Shield, Menu, X, ChevronDown, Radio, BookOpen, User, Bot, ArrowUpRight, Search, Sun, Moon, Smartphone } from 'lucide-react';
 import { SearchModal } from './search-modal';
 import { TELEGRAM_BOT_USERNAME, TELEGRAM_BOT_URL } from '@/lib/constants';
 
@@ -43,6 +43,7 @@ export function Navbar() {
   const navLinks = [
     { label: 'Dispatches', href: '/', icon: BookOpen },
     { label: 'Channels', href: '/channels', icon: Radio },
+    { label: 'Mobile App', href: '/app', icon: Smartphone },
     { label: 'Profile', href: '/profile', icon: User },
   ];
 
