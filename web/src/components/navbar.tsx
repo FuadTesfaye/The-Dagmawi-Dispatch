@@ -19,7 +19,7 @@ export function Navbar() {
 
   const botUsername = TELEGRAM_BOT_USERNAME;
 
-  // Global shortcut: Cmd+K or Ctrl+K or / to open search
+  // Global shortcut: Cmd+K or Ctrl+K or / to open search & Escape to close menus
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -28,6 +28,9 @@ export function Navbar() {
       } else if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
         e.preventDefault();
         setIsSearchModalOpen(true);
+      } else if (e.key === 'Escape') {
+        setShowDemoMenu(false);
+        setIsMenuOpen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -37,6 +40,7 @@ export function Navbar() {
   // Close mobile menu on route change
   useEffect(() => {
     setIsMenuOpen(false);
+    setShowDemoMenu(false);
   }, [pathname]);
 
   const navLinks = [
@@ -192,38 +196,44 @@ export function Navbar() {
 
                 {/* Demo Menu Dropdown */}
                 {showDemoMenu && (
-                  <div className="absolute right-0 top-11 w-52 p-2 bg-[var(--card-bg)] border-2 border-[var(--ink-border-heavy)] shadow-[6px_6px_0px_0px_var(--shadow-color)] z-50 font-teletype text-xs animate-in fade-in zoom-in-95 duration-100">
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--paper-muted)] px-2 py-1 border-b border-[var(--ink-border)] mb-1">
-                      Select Persona
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setShowDemoMenu(false)}
+                    />
+                    <div className="absolute right-0 top-11 w-52 p-2 bg-[var(--card-bg)] border-2 border-[var(--ink-border-heavy)] shadow-[6px_6px_0px_0px_var(--shadow-color)] z-50 font-teletype text-xs animate-in fade-in zoom-in-95 duration-100">
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--paper-muted)] px-2 py-1 border-b border-[var(--ink-border)] mb-1">
+                        Select Persona
+                      </div>
+                      <button
+                        onClick={() => {
+                          loginDemo('admin');
+                          setShowDemoMenu(false);
+                        }}
+                        className="w-full text-left px-2.5 py-1.5 text-[var(--paper-cream)] hover:bg-[var(--paper-cream)] hover:text-[var(--ink-bg)] transition-colors font-bold flex items-center gap-2"
+                      >
+                        <span>✦ Royal Editor (Admin)</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          loginDemo('reader');
+                          setShowDemoMenu(false);
+                        }}
+                        className="w-full text-left px-2.5 py-1.5 text-[var(--paper-cream)] hover:bg-[var(--paper-cream)] hover:text-[var(--ink-bg)] transition-colors font-bold flex items-center gap-2"
+                      >
+                        <span>✦ Citizen Reader</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          loginDemo('vip');
+                          setShowDemoMenu(false);
+                        }}
+                        className="w-full text-left px-2.5 py-1.5 text-[var(--paper-cream)] hover:bg-[var(--paper-cream)] hover:text-[var(--ink-bg)] transition-colors font-bold flex items-center gap-2"
+                      >
+                        <span>✦ Foreign Envoy</span>
+                      </button>
                     </div>
-                    <button
-                      onClick={() => {
-                        loginDemo('admin');
-                        setShowDemoMenu(false);
-                      }}
-                      className="w-full text-left px-2.5 py-1.5 text-[var(--paper-cream)] hover:bg-[var(--paper-cream)] hover:text-[var(--ink-bg)] transition-colors font-bold flex items-center gap-2"
-                    >
-                      <span>✦ Royal Editor (Admin)</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        loginDemo('reader');
-                        setShowDemoMenu(false);
-                      }}
-                      className="w-full text-left px-2.5 py-1.5 text-[var(--paper-cream)] hover:bg-[var(--paper-cream)] hover:text-[var(--ink-bg)] transition-colors font-bold flex items-center gap-2"
-                    >
-                      <span>✦ Citizen Reader</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        loginDemo('vip');
-                        setShowDemoMenu(false);
-                      }}
-                      className="w-full text-left px-2.5 py-1.5 text-[var(--paper-cream)] hover:bg-[var(--paper-cream)] hover:text-[var(--ink-bg)] transition-colors font-bold flex items-center gap-2"
-                    >
-                      <span>✦ Foreign Envoy</span>
-                    </button>
-                  </div>
+                  </>
                 )}
               </div>
             )}

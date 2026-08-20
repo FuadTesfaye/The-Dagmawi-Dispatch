@@ -81,14 +81,27 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
     return () => clearTimeout(timer);
   }, [query]);
 
+  // Body scroll lock
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const totalResults = posts.length + channels.length;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-4 sm:pt-16 md:pt-20 px-2.5 sm:px-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150">
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center pt-4 sm:pt-16 md:pt-20 px-2.5 sm:px-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150 cursor-pointer"
+      onClick={onClose}
+    >
       <div
-        className="w-full max-w-2xl max-h-[92vh] sm:max-h-[85vh] bg-[var(--card-bg)] border-2 border-[var(--ink-border-heavy)] shadow-[6px_6px_0px_0px_var(--shadow-color)] sm:shadow-[10px_10px_0px_0px_var(--shadow-color)] flex flex-col font-teletype overflow-hidden animate-in zoom-in-95 duration-150"
+        className="w-full max-w-2xl max-h-[92vh] sm:max-h-[85vh] bg-[var(--card-bg)] border-2 border-[var(--ink-border-heavy)] shadow-[6px_6px_0px_0px_var(--shadow-color)] sm:shadow-[10px_10px_0px_0px_var(--shadow-color)] flex flex-col font-teletype overflow-hidden animate-in zoom-in-95 duration-150 cursor-default"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Top Bar */}

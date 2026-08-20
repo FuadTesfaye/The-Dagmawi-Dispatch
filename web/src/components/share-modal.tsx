@@ -68,10 +68,34 @@ export function ShareModal({ isOpen, onClose, post }: ShareModalProps) {
   const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(postUrl)}&text=${encodeURIComponent(shareText)}`;
   const twitterShareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(postUrl)}&text=${encodeURIComponent(`Dispatch #${post.id} from @${post.channel} via @lurkening_bot`)}`;
 
+  // Escape key handler & scroll lock
+  React.useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm font-teletype animate-in fade-in duration-150">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm font-teletype animate-in fade-in duration-150 cursor-pointer"
+      onClick={onClose}
+    >
       <div
-        className="relative w-full max-w-md bg-[var(--card-bg)] border-2 border-[var(--ink-border-heavy)] p-4 sm:p-6 shadow-[6px_6px_0px_0px_var(--shadow-color)] sm:shadow-[8px_8px_0px_0px_var(--shadow-color)] flex flex-col gap-4 animate-in zoom-in-95 duration-150"
+        className="relative w-full max-w-md bg-[var(--card-bg)] border-2 border-[var(--ink-border-heavy)] p-4 sm:p-6 shadow-[6px_6px_0px_0px_var(--shadow-color)] sm:shadow-[8px_8px_0px_0px_var(--shadow-color)] flex flex-col gap-4 animate-in zoom-in-95 duration-150 cursor-default"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

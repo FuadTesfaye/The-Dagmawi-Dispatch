@@ -111,13 +111,35 @@ export function CommentDrawer({
     }
   };
 
+  // Escape key handler & scroll lock
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-end bg-black/80 backdrop-blur-sm font-teletype animate-in fade-in duration-150">
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-end bg-black/80 backdrop-blur-sm font-teletype animate-in fade-in duration-150 cursor-pointer"
+      onClick={onClose}
+    >
       {/* Mobile Bottom-Sheet or Desktop Right-Drawer */}
       <div
-        className="relative w-full sm:max-w-md h-[88vh] sm:h-full bg-[var(--card-bg)] border-t-2 sm:border-t-0 sm:border-l-2 border-[var(--ink-border-heavy)] p-4 sm:p-5 flex flex-col justify-between shadow-2xl animate-in slide-in-from-bottom sm:slide-in-from-right duration-200"
+        className="relative w-full sm:max-w-md h-[88vh] sm:h-full bg-[var(--card-bg)] border-t-2 sm:border-t-0 sm:border-l-2 border-[var(--ink-border-heavy)] p-4 sm:p-5 flex flex-col justify-between shadow-2xl animate-in slide-in-from-bottom sm:slide-in-from-right duration-200 cursor-default"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Mobile Drag Indicator Bar */}
