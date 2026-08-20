@@ -9,6 +9,7 @@ import { useAuth } from './providers';
 export function Sidebar() {
   const pathname = usePathname();
   const { user } = useAuth();
+  const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'BabisummarizeBot';
 
   const navItems = [
     {
@@ -81,15 +82,15 @@ export function Sidebar() {
           <Bot className="w-3.5 h-3.5 text-[#d97706]" />
         </div>
         <p className="text-xs text-[#a39e93] font-sans leading-relaxed">
-          Monitor any channel, query daily digests, and command roasts directly via @lurklord_bot.
+          Monitor any channel, query daily digests, and command roasts directly via @{botUsername}.
         </p>
         <a
-          href="https://t.me/lurklord_bot"
+          href={`https://t.me/${botUsername}`}
           target="_blank"
           rel="noopener noreferrer"
           className="stamp-btn flex items-center justify-between text-xs"
         >
-          <span>@lurklord_bot</span>
+          <span>@{botUsername}</span>
           <ArrowUpRight className="w-3 h-3 text-[#d97706]" />
         </a>
       </div>

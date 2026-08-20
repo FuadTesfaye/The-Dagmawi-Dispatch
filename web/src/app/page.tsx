@@ -25,6 +25,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'BabisummarizeBot';
 
   // Fetch Channels
   useEffect(() => {
@@ -169,13 +170,13 @@ export default function HomePage() {
         {/* Action Stamps */}
         <div className="flex flex-wrap items-center justify-center gap-3 pt-4 border-t border-[#262936] w-full">
           <a
-            href="https://t.me/lurklord_bot"
+            href={`https://t.me/${botUsername}`}
             target="_blank"
             rel="noopener noreferrer"
             className="stamp-btn flex items-center gap-2 !py-2.5 !px-5 text-xs"
           >
             <Bot className="w-4 h-4 text-[#d97706]" />
-            <span>SUMMON @lurklord_bot</span>
+            <span>SUMMON @{botUsername}</span>
           </a>
 
           <button
@@ -399,12 +400,12 @@ export default function HomePage() {
               Command digests, channel searches, and live summaries directly in Telegram.
             </p>
             <a
-              href="https://t.me/lurklord_bot"
+              href={`https://t.me/${botUsername}`}
               target="_blank"
               rel="noopener noreferrer"
               className="stamp-btn !bg-[#d97706] !text-black !border-[#d97706] hover:!bg-[#f4f0e6] justify-between !py-2 text-xs"
             >
-              <span>Summon @lurklord_bot</span>
+              <span>Summon @{botUsername}</span>
               <ArrowUpRight className="w-3.5 h-3.5" />
             </a>
           </div>

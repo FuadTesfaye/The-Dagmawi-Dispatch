@@ -15,6 +15,8 @@ export function Navbar() {
   const [showDemoMenu, setShowDemoMenu] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
+  const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'BabisummarizeBot';
+
   // Global shortcut: Cmd+K or Ctrl+K or / to open search
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -104,13 +106,13 @@ export function Navbar() {
 
             {/* Bot Callout */}
             <a
-              href="https://t.me/lurklord_bot"
+              href={`https://t.me/${botUsername}`}
               target="_blank"
               rel="noopener noreferrer"
               className="hidden lg:inline-flex items-center gap-1.5 stamp-btn !bg-[#241c10] !border-[#785a28] !text-[#f6d89b] hover:!bg-[#d97706] hover:!text-black !py-1.5 !px-3"
             >
               <Bot className="w-3.5 h-3.5 text-[#d97706]" />
-              <span>@lurklord_bot</span>
+              <span>@{botUsername}</span>
               <ArrowUpRight className="w-3 h-3 opacity-70" />
             </a>
 
@@ -226,12 +228,12 @@ export function Navbar() {
               </Link>
             ))}
             <a
-              href="https://t.me/lurklord_bot"
+              href={`https://t.me/${botUsername}`}
               target="_blank"
               rel="noopener noreferrer"
               className="p-2.5 border border-[#785a28] bg-[#241c10] text-[#f6d89b] flex items-center justify-between"
             >
-              <span>SUMMON @lurklord_bot</span>
+              <span>SUMMON @{botUsername}</span>
               <ArrowUpRight className="w-3.5 h-3.5" />
             </a>
           </div>
