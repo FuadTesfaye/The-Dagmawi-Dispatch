@@ -27,6 +27,12 @@
   --color-paper-600: #6b665c;
 }
 
+/* Base Body Styling with Safe Areas & Mobile Tap Polish */
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
 body {
   background-color: var(--ink-bg);
   color: var(--paper-cream);
@@ -34,6 +40,10 @@ body {
   overflow-x: hidden;
   letter-spacing: -0.01em;
   min-height: 100vh;
+  min-height: 100dvh;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Serif Masthead Utility */
@@ -50,13 +60,18 @@ body {
 .broadsheet-card {
   background-color: #12141c;
   border: 1px solid var(--ink-border);
-  box-shadow: 3px 3px 0px 0px rgba(0, 0, 0, 0.9);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 0.9);
+  transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.15s cubic-bezier(0.2, 0, 0, 1), border-color 0.15s ease;
 }
 
-.broadsheet-card:hover {
-  border-color: var(--ink-border-heavy);
-  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+@media (min-width: 640px) {
+  .broadsheet-card {
+    box-shadow: 3px 3px 0px 0px rgba(0, 0, 0, 0.9);
+  }
+  .broadsheet-card:hover {
+    border-color: var(--ink-border-heavy);
+    box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+  }
 }
 
 .double-rule-b {
@@ -70,13 +85,21 @@ body {
 /* Stamp Badge */
 .stamp-badge {
   font-family: "SF Mono", "Menlo", monospace;
-  font-size: 11px;
+  font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  padding: 2px 8px;
+  padding: 2px 6px;
   border: 1px solid var(--ink-border);
   background-color: #171a24;
   color: #d6d0c2;
+  border-radius: 2px;
+}
+
+@media (min-width: 640px) {
+  .stamp-badge {
+    font-size: 11px;
+    padding: 2px 8px;
+  }
 }
 
 .stamp-badge-gold {
@@ -85,7 +108,7 @@ body {
   color: #f6d89b;
 }
 
-/* Tactile Stamp Button */
+/* Tactile Stamp Button with Mobile Haptic Feel */
 .stamp-btn {
   font-family: "SF Mono", "Menlo", monospace;
   font-size: 11px;
@@ -94,7 +117,7 @@ body {
   border: 1px solid var(--ink-border-heavy);
   background-color: #171a24;
   color: #ece7db;
-  padding: 6px 14px;
+  padding: 6px 12px;
   box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 0.8);
   transition: all 0.12s ease;
   display: inline-flex;
@@ -102,6 +125,14 @@ body {
   justify-content: center;
   gap: 6px;
   cursor: pointer;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+@media (min-width: 640px) {
+  .stamp-btn {
+    padding: 6px 14px;
+  }
 }
 
 .stamp-btn:hover {
@@ -113,14 +144,59 @@ body {
 }
 
 .stamp-btn:active {
-  transform: translate(1px, 1px);
+  transform: translate(1px, 1px) scale(0.98);
   box-shadow: 0px 0px 0px 0px rgba(0, 0, 0, 1);
+}
+
+/* Glassmorphism & Bottom Bar Dock */
+.glass-dock {
+  background: rgba(18, 20, 28, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-panel {
+  background: rgba(18, 20, 28, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Social Story / Channel Ring */
+.story-ring-active {
+  background: linear-gradient(45deg, #d97706, #f59e0b, #e11d48, #d97706);
+  padding: 2px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Safe Area Inset Helpers */
+.pb-safe {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+.pt-safe {
+  padding-top: max(0.5rem, env(safe-area-inset-top));
+}
+
+/* Micro-Interactions & Pop Animations */
+@keyframes reaction-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+
+.animate-reaction-pop {
+  animation: reaction-pop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -129,6 +205,7 @@ body {
 
 ::-webkit-scrollbar-thumb {
   background: #262936;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -141,4 +218,5 @@ body {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }

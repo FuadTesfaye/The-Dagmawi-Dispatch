@@ -5,7 +5,7 @@ import { StringSession } from "telegram/sessions";
 const apiId = parseInt(process.env.TELEGRAM_API_ID!);
 const apiHash = process.env.TELEGRAM_API_HASH!;
 const sessionString = process.env.TELEGRAM_USERBOT_SESSION!;
-const botUsername = "BabisummarizeBot"; // The deployed bot
+const botUsername = "lurkening_bot"; // The deployed bot
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 

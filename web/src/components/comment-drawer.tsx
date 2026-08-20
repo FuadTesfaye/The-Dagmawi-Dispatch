@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Comment } from '@/lib/types';
 import { useAuth, useToast, useRealtime } from './providers';
 import { formatTimeAgo } from '@/lib/utils';
-import { MessageSquare, Send, X, Loader2, CornerDownRight } from 'lucide-react';
+import { Send, X, Loader2, CornerDownRight } from 'lucide-react';
 
 interface CommentDrawerProps {
   isOpen: boolean;
@@ -32,6 +32,7 @@ export function CommentDrawer({
   const [replyTo, setReplyTo] = useState<Comment | null>(null);
 
   const commentsEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Load comments
   useEffect(() => {
@@ -113,43 +114,56 @@ export function CommentDrawer({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/80 backdrop-blur-sm font-teletype">
-      <div className="relative w-full max-w-md h-full bg-[#12141c] border-l-2 border-[#3d4257] p-5 flex flex-col justify-between shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-end bg-black/80 backdrop-blur-sm font-teletype animate-in fade-in duration-150">
+      {/* Mobile Bottom-Sheet or Desktop Right-Drawer */}
+      <div
+        className="relative w-full sm:max-w-md h-[88vh] sm:h-full bg-[#12141c] border-t-2 sm:border-t-0 sm:border-l-2 border-[#3d4257] p-4 sm:p-5 flex flex-col justify-between shadow-2xl animate-in slide-in-from-bottom sm:slide-in-from-right duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Mobile Drag Indicator Bar */}
+        <div className="sm:hidden w-12 h-1 bg-[#3d4257] rounded-full mx-auto -mt-1 mb-2" />
+
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b-2 border-[#262936]">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 bg-[#d97706]" />
-            <h3 className="font-bold text-xs text-[#f4f0e6] uppercase">
-              Court Inquest Record ({comments.length})
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="w-2 h-2 rounded-full bg-[#d97706] shrink-0" />
+            <h3 className="font-bold text-xs sm:text-sm text-[#f4f0e6] uppercase truncate">
+              Court Testimony ({comments.length})
             </h3>
-            <span className="text-[10px] text-[#a39e93]">#{postId}</span>
+            <span className="text-[10px] text-[#a39e93] shrink-0">#{postId}</span>
           </div>
           <button
             onClick={onClose}
-            className="p-1 border border-[#262936] text-[#a39e93] hover:text-[#f4f0e6] transition-colors"
+            className="p-1 border border-[#262936] text-[#a39e93] hover:text-[#f4f0e6] hover:bg-[#171a24] transition-colors active:scale-95 shrink-0"
+            aria-label="Close"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Comment Thread List */}
-        <div className="flex-1 overflow-y-auto py-3 flex flex-col gap-2.5">
+        <div className="flex-1 overflow-y-auto py-3 flex flex-col gap-2.5 no-scrollbar">
           {loading ? (
-            <div className="flex items-center justify-center py-16 text-[#a39e93]">
+            <div className="flex flex-col items-center justify-center py-20 gap-2 text-[#a39e93]">
               <Loader2 className="w-5 h-5 animate-spin text-[#d97706]" />
+              <span className="text-[11px] uppercase">[ RETRIEVING COURT RECORDS... ]</span>
             </div>
           ) : comments.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center text-[#a39e93] gap-1">
-              <p className="text-xs uppercase">[ NO COURT TESTIMONY FILED YET ]</p>
+            <div className="flex flex-col items-center justify-center py-20 text-center text-[#a39e93] gap-2">
+              <span className="text-2xl">📜</span>
+              <p className="text-xs uppercase font-bold">[ NO COURT TESTIMONY FILED YET ]</p>
+              <p className="text-[11px] font-sans max-w-xs text-[#6b665c]">
+                Be the first scribe to enter a record on this dispatch.
+              </p>
             </div>
           ) : (
             comments.map((c) => (
               <div
                 key={c.id}
-                className="p-3 bg-[#0c0d10] border border-[#262936] flex flex-col gap-1.5"
+                className="p-3 bg-[#0c0d10] border border-[#262936] flex flex-col gap-1.5 transition-colors hover:border-[#3d4257]"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 min-w-0">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={
@@ -157,27 +171,32 @@ export function CommentDrawer({
                         `https://api.dicebear.com/7.x/bottts/svg?seed=${c.user?.displayName || c.userId}`
                       }
                       alt={c.user?.displayName || 'User'}
-                      className="w-4 h-4 rounded-none bg-zinc-800"
+                      className="w-4 h-4 rounded-none bg-zinc-800 shrink-0"
                     />
-                    <span className="text-xs font-bold text-[#f4f0e6]">
+                    <span className="text-xs font-bold text-[#f4f0e6] truncate">
                       {c.user?.displayName || 'CITIZEN SCRIBE'}
                     </span>
                     {c.user?.role === 'admin' && (
-                      <span className="stamp-badge-gold stamp-badge !text-[9px] !py-0 !px-1">
+                      <span className="stamp-badge-gold stamp-badge !text-[8px] sm:!text-[9px] !py-0 !px-1 shrink-0">
                         ADMIN
                       </span>
                     )}
                   </div>
-                  <span className="text-[10px] text-[#a39e93]">{formatTimeAgo(c.createdAt).toUpperCase()}</span>
+                  <span className="text-[9px] sm:text-[10px] text-[#a39e93] shrink-0 uppercase">
+                    {formatTimeAgo(c.createdAt)}
+                  </span>
                 </div>
 
-                <p className="text-xs text-[#f4f0e6] font-sans whitespace-pre-wrap leading-relaxed">
+                <p className="text-xs sm:text-sm text-[#f4f0e6] font-sans whitespace-pre-wrap leading-relaxed break-words">
                   {c.content}
                 </p>
 
                 <button
-                  onClick={() => setReplyTo(c)}
-                  className="text-[10px] text-[#d97706] hover:underline self-start flex items-center gap-0.5 mt-0.5 uppercase font-bold"
+                  onClick={() => {
+                    setReplyTo(c);
+                    inputRef.current?.focus();
+                  }}
+                  className="text-[10px] text-[#d97706] hover:underline self-start flex items-center gap-1 mt-0.5 uppercase font-bold active:scale-95"
                 >
                   <CornerDownRight className="w-2.5 h-2.5" />
                   <span>REPLY</span>
@@ -189,14 +208,16 @@ export function CommentDrawer({
         </div>
 
         {/* Comment Composer */}
-        <form onSubmit={handleSubmit} className="pt-3 border-t border-[#262936] flex flex-col gap-2">
+        <form onSubmit={handleSubmit} className="pt-2 border-t border-[#262936] flex flex-col gap-2 pb-safe">
           {replyTo && (
             <div className="flex items-center justify-between px-2.5 py-1 bg-[#171a24] border border-[#262936] text-[10px] text-[#d6d0c2]">
-              <span>REPLYING TO {replyTo.user?.displayName?.toUpperCase() || 'SCRIBE'}</span>
+              <span className="truncate">
+                REPLYING TO {replyTo.user?.displayName?.toUpperCase() || 'SCRIBE'}
+              </span>
               <button
                 type="button"
                 onClick={() => setReplyTo(null)}
-                className="text-[#d97706]"
+                className="text-[#d97706] hover:text-white px-1"
               >
                 ✕
               </button>
@@ -205,22 +226,24 @@ export function CommentDrawer({
 
           <div className="relative flex items-center">
             <input
+              ref={inputRef}
               type="text"
               value={newContent}
               onChange={(e) => setNewContent(e.target.value)}
               placeholder={user ? 'ENTER TESTIMONY...' : 'SIGN IN TO TESTIFY...'}
               disabled={!user || submitting}
-              className="w-full py-2 pl-3 pr-10 bg-[#0c0d10] border border-[#262936] text-xs text-[#f4f0e6] placeholder-[#6b665c] font-teletype uppercase focus:outline-none focus:border-[#f4f0e6] disabled:opacity-50"
+              className="w-full py-2.5 pl-3 pr-11 bg-[#0c0d10] border border-[#262936] text-xs sm:text-sm text-[#f4f0e6] placeholder-[#6b665c] font-teletype uppercase focus:outline-none focus:border-[#d97706] disabled:opacity-50"
             />
             <button
               type="submit"
               disabled={!user || !newContent.trim() || submitting}
-              className="stamp-btn absolute right-1 !py-1 !px-2.5"
+              aria-label="Send Testimony"
+              className="stamp-btn absolute right-1 !py-1.5 !px-2.5 active:scale-95"
             >
               {submitting ? (
-                <Loader2 className="w-3 h-3 animate-spin" />
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
-                <Send className="w-3 h-3" />
+                <Send className="w-3.5 h-3.5" />
               )}
             </button>
           </div>

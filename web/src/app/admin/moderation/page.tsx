@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth, useToast } from '@/components/providers';
 import { ModerationReport } from '@/lib/types';
-import { Shield, Check, X, Flag, AlertTriangle, Loader2 } from 'lucide-react';
+import { Shield, Check, X, AlertTriangle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminModerationPage() {
@@ -59,10 +59,10 @@ export default function AdminModerationPage() {
 
   if (!user || (user.role !== 'admin' && user.role !== 'moderator')) {
     return (
-      <div className="max-w-md mx-auto py-12 text-center broadsheet-card p-8 flex flex-col items-center gap-4 font-teletype">
+      <div className="max-w-md mx-auto py-12 px-3 text-center broadsheet-card p-6 sm:p-8 flex flex-col items-center gap-4 font-teletype">
         <AlertTriangle className="w-10 h-10 text-rose-500" />
         <h2 className="text-sm font-bold text-[#f4f0e6] uppercase">[ COURT INQUEST ACCESS DENIED ]</h2>
-        <p className="text-xs text-[#a39e93]">
+        <p className="text-xs text-[#a39e93] font-sans">
           Only authenticated royal court scribes may inspect community inquest citations.
         </p>
         <Link
@@ -76,7 +76,7 @@ export default function AdminModerationPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 max-w-5xl mx-auto font-teletype">
+    <div className="flex flex-col gap-6 max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-8 font-teletype">
       {/* Header */}
       <div className="border-b-2 border-[#262936] pb-4">
         <div className="flex items-center gap-2 text-[#d97706] text-[10px] font-bold uppercase tracking-widest mb-1">
@@ -86,7 +86,7 @@ export default function AdminModerationPage() {
         <h1 className="font-broadsheet font-black text-2xl sm:text-4xl text-[#f4f0e6] uppercase">
           Inquest Citations ({reports.length})
         </h1>
-        <p className="text-xs text-[#a39e93] mt-1">
+        <p className="text-xs text-[#a39e93] mt-1 font-sans">
           Review citations and maintain decorum across the telegraphic broadcast network.
         </p>
       </div>
@@ -97,7 +97,7 @@ export default function AdminModerationPage() {
           <Loader2 className="w-6 h-6 animate-spin text-[#d97706]" />
         </div>
       ) : reports.length === 0 ? (
-        <div className="broadsheet-card p-12 text-center text-[#a39e93] text-xs flex flex-col items-center gap-2">
+        <div className="broadsheet-card p-10 sm:p-12 text-center text-[#a39e93] text-xs flex flex-col items-center gap-2">
           <p>[ NO PENDING COURT CITATIONS. THE REALM IS AT PEACE. ]</p>
         </div>
       ) : (
@@ -105,7 +105,7 @@ export default function AdminModerationPage() {
           {reports.map((r) => (
             <div
               key={r.id}
-              className={`p-5 broadsheet-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all ${
+              className={`p-4 sm:p-5 broadsheet-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all ${
                 r.status === 'pending'
                   ? 'border-[#785a28] bg-[#1a1710]'
                   : r.status === 'reviewed'
@@ -136,7 +136,7 @@ export default function AdminModerationPage() {
 
                 <p className="text-xs font-bold text-[#f4f0e6] uppercase">REASON: {r.reason}</p>
                 {r.details && (
-                  <p className="text-xs text-[#a39e93] font-sans">DETAILS: {r.details}</p>
+                  <p className="text-xs text-[#a39e93] font-sans break-words">DETAILS: {r.details}</p>
                 )}
 
                 <span className="text-[10px] text-[#a39e93]">
@@ -146,17 +146,17 @@ export default function AdminModerationPage() {
 
               {/* Status Action Buttons */}
               {r.status === 'pending' && (
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#262936] w-full sm:w-auto">
                   <button
                     onClick={() => handleUpdateStatus(r.id, 'reviewed')}
-                    className="stamp-btn !bg-emerald-950 !border-emerald-700 !text-emerald-300 hover:!bg-emerald-600 hover:!text-black flex items-center gap-1 !text-[10px]"
+                    className="stamp-btn !bg-emerald-950 !border-emerald-700 !text-emerald-300 hover:!bg-emerald-600 hover:!text-black flex items-center gap-1 !text-[10px] flex-1 sm:flex-initial active:scale-95"
                   >
                     <Check className="w-3.5 h-3.5" />
                     <span>RESOLVE</span>
                   </button>
                   <button
                     onClick={() => handleUpdateStatus(r.id, 'dismissed')}
-                    className="stamp-btn !bg-[#12141c] !text-[#a39e93] hover:!text-[#f4f0e6] flex items-center gap-1 !text-[10px]"
+                    className="stamp-btn !bg-[#12141c] !text-[#a39e93] hover:!text-[#f4f0e6] flex items-center gap-1 !text-[10px] flex-1 sm:flex-initial active:scale-95"
                   >
                     <X className="w-3.5 h-3.5" />
                     <span>DISMISS</span>

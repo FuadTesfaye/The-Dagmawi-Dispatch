@@ -6,7 +6,7 @@ import { PostCard } from '@/components/post-card';
 import { BabiometerWidget } from '@/components/babiometer-widget';
 import { useAuth, useToast } from '@/components/providers';
 import { formatNumber } from '@/lib/utils';
-import { Check, Plus, ArrowLeft, Loader2, ExternalLink, Radio, Users } from 'lucide-react';
+import { Check, Plus, ArrowLeft, Loader2, ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ChannelProfilePage({
@@ -67,8 +67,13 @@ export default function ChannelProfilePage({
       return;
     }
 
-    setIsSubscribed((prev) => !prev);
-    setSubCount((prev) => (isSubscribed ? Math.max(0, prev - 1) : prev + 1));
+    if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+      navigator.vibrate(30);
+    }
+
+    const nextSub = !isSubscribed;
+    setIsSubscribed(nextSub);
+    setSubCount((prev) => (nextSub ? prev + 1 : Math.max(0, prev - 1)));
 
     try {
       const res = await fetch(`/api/channels/${username}/subscribe`, { method: 'POST' });
@@ -76,9 +81,14 @@ export default function ChannelProfilePage({
         const data = await res.json();
         setIsSubscribed(data.isSubscribed);
         setSubCount(data.subscriberCount);
+        showToast(
+          data.isSubscribed ? `Now following @${username}` : `Unfollowed @${username}`,
+          'success'
+        );
       }
     } catch {
       showToast('Subscription error', 'error');
+      setIsSubscribed(!nextSub);
     }
   };
 
@@ -91,19 +101,19 @@ export default function ChannelProfilePage({
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 flex flex-col gap-8">
+    <div className="w-full max-w-4xl mx-auto px-3 sm:px-6 py-4 sm:py-8 flex flex-col gap-6 sm:gap-8 font-teletype">
       {/* Back Button */}
       <Link
         href="/channels"
-        className="inline-flex items-center gap-2 text-xs font-teletype font-semibold text-[#a39e93] hover:text-[#f4f0e6] transition-colors self-start uppercase"
+        className="inline-flex items-center gap-1.5 text-xs text-[#a39e93] hover:text-[#f4f0e6] transition-colors self-start uppercase font-bold active:scale-95"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
         <span>Return to Publication Directory</span>
       </Link>
 
-      {/* Substack Publication Hero Banner */}
-      <div className="p-6 sm:p-8 rounded-2xl bg-gradient-to-b from-[#141722] to-[#0f1118] border border-[#1f2330] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 shadow-sm">
-        <div className="flex items-center gap-4 sm:gap-5 min-w-0">
+      {/* Channel Profile Hero Banner */}
+      <div className="p-4 sm:p-7 bg-[#12141c] border-2 border-[#262936] shadow-[4px_4px_0px_0px_#000000] sm:shadow-[6px_6px_0px_0px_#000000] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
+        <div className="flex items-center gap-3.5 sm:gap-5 min-w-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={
@@ -111,47 +121,45 @@ export default function ChannelProfilePage({
               `https://api.dicebear.com/7.x/bottts/svg?seed=${username}`
             }
             alt={channelInfo?.name || username}
-            className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-[#2e3547] bg-[#161822] object-cover shrink-0 shadow-md"
+            className="w-16 h-16 sm:w-20 sm:h-20 border-2 border-[#3d4257] bg-[#0c0d10] object-cover shrink-0 rounded-sm"
           />
           <div className="flex flex-col min-w-0 gap-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="font-broadsheet font-black text-2xl sm:text-3xl text-[#f4f0e6] tracking-tight">
+              <h1 className="font-broadsheet font-black text-2xl sm:text-3xl text-[#f4f0e6] tracking-tight uppercase truncate">
                 {channelInfo?.name || `@${username}`}
               </h1>
               {channelInfo?.isVerified && (
-                <span className="w-4 h-4 rounded-full bg-[#d97706]/20 text-[#d97706] text-[10px] font-bold inline-flex items-center justify-center">
-                  ✓
+                <span className="stamp-badge-gold stamp-badge text-[10px]">
+                  VERIFIED
                 </span>
               )}
             </div>
-            <span className="font-teletype text-xs text-[#a39e93]">@{username}</span>
-            <div className="flex items-center gap-3 text-xs font-teletype text-[#a39e93] mt-1">
-              <span>{formatNumber(subCount)} Followers</span>
-              <span>•</span>
-              <span>{posts.length} Dispatches</span>
+            <span className="text-xs text-[#a39e93]">@{username}</span>
+            <div className="flex items-center gap-2.5 text-xs text-[#a39e93] mt-0.5">
+              <span>{formatNumber(subCount)} FOLLOWERS</span>
+              <span>·</span>
+              <span>{posts.length} DISPATCHES</span>
             </div>
           </div>
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+        <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#262936]">
           <button
             onClick={handleToggleSubscribe}
-            className={`flex-1 sm:flex-initial px-5 py-2 rounded-full font-teletype font-semibold text-xs transition-all flex items-center justify-center gap-1.5 ${
-              isSubscribed
-                ? 'bg-[#d97706] text-black shadow-sm'
-                : 'substack-btn-primary'
+            className={`stamp-btn flex-1 sm:flex-initial !py-2 !px-4 text-xs font-bold active:scale-95 ${
+              isSubscribed ? '!bg-[#d97706] !text-black !border-[#d97706]' : ''
             }`}
           >
             {isSubscribed ? (
               <>
                 <Check className="w-3.5 h-3.5" />
-                <span>Following</span>
+                <span>FOLLOWING</span>
               </>
             ) : (
               <>
                 <Plus className="w-3.5 h-3.5" />
-                <span>Follow Channel</span>
+                <span>FOLLOW CHANNEL</span>
               </>
             )}
           </button>
@@ -161,16 +169,17 @@ export default function ChannelProfilePage({
             target="_blank"
             rel="noopener noreferrer"
             title="Open in Telegram"
-            className="p-2.5 rounded-full border border-[#1f2330] hover:border-[#2e3547] bg-[#151822] text-[#a39e93] hover:text-[#f4f0e6] transition-colors"
+            className="stamp-btn !py-2 !px-3 text-xs flex items-center gap-1 active:scale-95"
           >
-            <ExternalLink className="w-4 h-4" />
+            <span>WIRE</span>
+            <ArrowUpRight className="w-3.5 h-3.5 text-[#d97706]" />
           </a>
         </div>
       </div>
 
       {/* Description */}
       {channelInfo?.description && (
-        <p className="text-sm sm:text-base text-[#d6d0c2] leading-relaxed -mt-2">
+        <p className="text-xs sm:text-sm text-[#d6d0c2] leading-relaxed font-sans -mt-2 sm:-mt-4">
           {channelInfo.description}
         </p>
       )}
@@ -178,15 +187,15 @@ export default function ChannelProfilePage({
       {/* Activity Gauge */}
       <BabiometerWidget channel={username} />
 
-      {/* Posts Feed Header */}
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between border-b border-[#1f2330] pb-2 font-teletype text-xs uppercase tracking-wider text-[#a39e93]">
+      {/* Posts Feed Section */}
+      <div className="flex flex-col gap-3.5 sm:gap-4">
+        <div className="flex items-center justify-between border-b border-[#262936] pb-2 text-xs uppercase tracking-wider text-[#a39e93]">
           <span>Dispatch Ledger Archive</span>
           <span>{posts.length} Transmissions</span>
         </div>
 
         {posts.length === 0 ? (
-          <div className="substack-card p-12 rounded-2xl text-center text-[#a39e93] text-xs font-teletype">
+          <div className="broadsheet-card p-10 text-center text-[#a39e93] text-xs">
             [ NO TRANSMISSIONS RECORDED FOR THIS CHANNEL ]
           </div>
         ) : (

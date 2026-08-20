@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth, useRealtime } from './providers';
-import { LogOut, Shield, Menu, X, ChevronDown, Radio, BookOpen, User, Bot, ArrowUpRight, Search } from 'lucide-react';
+import { LogOut, Shield, Menu, X, ChevronDown, Radio, BookOpen, User, Bot, ArrowUpRight, Search, Sparkles } from 'lucide-react';
 import { SearchModal } from './search-modal';
 
 export function Navbar() {
@@ -15,7 +15,7 @@ export function Navbar() {
   const [showDemoMenu, setShowDemoMenu] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
-  const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'BabisummarizeBot';
+  const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'lurkening_bot';
 
   // Global shortcut: Cmd+K or Ctrl+K or / to open search
   useEffect(() => {
@@ -32,6 +32,11 @@ export function Navbar() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [pathname]);
+
   const navLinks = [
     { label: 'Dispatches', href: '/', icon: BookOpen },
     { label: 'Channels', href: '/channels', icon: Radio },
@@ -44,33 +49,33 @@ export function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full bg-[#12141c] border-b-2 border-[#262936] double-rule-b font-teletype">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <header className="sticky top-0 z-40 w-full bg-[#12141c]/95 backdrop-blur-md border-b-2 border-[#262936] font-teletype shadow-lg transition-colors">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
           {/* Left: Brand / Masthead */}
-          <div className="flex items-center gap-6">
-            <Link href="/" className="flex items-center gap-3 group">
-              <div className="w-9 h-9 border-2 border-[#f4f0e6] bg-[#f4f0e6] text-[#0c0d10] flex items-center justify-center font-black font-broadsheet text-lg shadow-[2px_2px_0px_0px_#262936] shrink-0">
+          <div className="flex items-center gap-3 sm:gap-6 min-w-0">
+            <Link href="/" className="flex items-center gap-2 sm:gap-3 group shrink-0">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 border-2 border-[#f4f0e6] bg-[#f4f0e6] text-[#0c0d10] flex items-center justify-center font-black font-broadsheet text-base sm:text-lg shadow-[2px_2px_0px_0px_#262936] transition-transform group-active:scale-95">
                 §
               </div>
-              <div className="flex flex-col">
-                <span className="font-broadsheet font-black text-base sm:text-lg tracking-tight text-[#f4f0e6] uppercase group-hover:text-[#d97706] transition-colors">
+              <div className="flex flex-col min-w-0">
+                <span className="font-broadsheet font-black text-sm sm:text-lg tracking-tight text-[#f4f0e6] uppercase group-hover:text-[#d97706] transition-colors truncate">
                   The Lurkening
                 </span>
-                <span className="font-teletype text-[9px] tracking-widest text-[#a39e93] uppercase hidden xs:inline">
+                <span className="font-teletype text-[8px] sm:text-[9px] tracking-widest text-[#a39e93] uppercase hidden xs:inline">
                   Gazette & Teleprinter
                 </span>
               </div>
             </Link>
 
             {/* Desktop Navigation Links */}
-            <nav className="hidden md:flex items-center gap-1 font-teletype text-xs">
+            <nav className="hidden md:flex items-center gap-1.5 font-teletype text-xs">
               {navLinks.map((item) => {
                 const isActive = pathname === item.href;
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`px-3 py-1.5 border transition-all uppercase font-bold text-xs ${
+                    className={`px-3 py-1.5 border transition-all uppercase font-bold text-xs active:scale-95 ${
                       isActive
                         ? 'bg-[#f4f0e6] text-[#0c0d10] border-[#f4f0e6] shadow-[2px_2px_0px_0px_#000000]'
                         : 'bg-[#12141c] text-[#a39e93] border-[#262936] hover:border-[#f4f0e6] hover:text-[#f4f0e6]'
@@ -84,27 +89,28 @@ export function Navbar() {
           </div>
 
           {/* Right: Status, Universal Search & Actions */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             {/* Universal Search Button */}
             <button
               onClick={() => setIsSearchModalOpen(true)}
-              className="stamp-btn !py-1.5 !px-3 text-xs flex items-center gap-2 hover:border-[#d97706]"
+              className="stamp-btn !py-1.5 !px-2.5 sm:!px-3 text-xs flex items-center gap-1.5 sm:gap-2 hover:border-[#d97706] active:scale-95"
               title="Search Archives (Cmd+K or /)"
             >
               <Search className="w-3.5 h-3.5 text-[#d97706]" />
-              <span className="hidden sm:inline font-bold">SEARCH ARCHIVE</span>
-              <kbd className="hidden lg:inline px-1 bg-[#12141c] border border-[#3d4257] text-[9px] text-[#a39e93]">
+              <span className="hidden md:inline font-bold">SEARCH ARCHIVE</span>
+              <span className="md:hidden text-[10px] font-bold">SEARCH</span>
+              <kbd className="hidden lg:inline px-1 bg-[#0c0d10] border border-[#3d4257] text-[9px] text-[#a39e93]">
                 ⌘K
               </kbd>
             </button>
 
-            {/* Live Status Badge */}
-            <div className="hidden xl:flex items-center gap-2 font-teletype text-[10px] px-2.5 py-1 bg-[#171a24] border border-[#262936] text-[#d6d0c2]">
-              <span className={`w-2 h-2 ${isConnected ? 'bg-emerald-400' : 'bg-amber-400'}`} />
-              <span>{isConnected ? 'TELETYPE: CONNECTED' : 'TELETYPE: POLLING'}</span>
+            {/* Live Status Badge (Desktop) */}
+            <div className="hidden xl:flex items-center gap-1.5 font-teletype text-[10px] px-2.5 py-1 bg-[#171a24] border border-[#262936] text-[#d6d0c2]">
+              <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+              <span>{isConnected ? 'LIVE WIRE' : 'POLLING'}</span>
             </div>
 
-            {/* Bot Callout */}
+            {/* Bot Callout (Desktop) */}
             <a
               href={`https://t.me/${botUsername}`}
               target="_blank"
@@ -118,20 +124,20 @@ export function Navbar() {
 
             {/* User Section */}
             {loading ? (
-              <div className="w-8 h-8 bg-zinc-800 animate-pulse border border-zinc-700" />
+              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-zinc-800 animate-pulse border border-zinc-700" />
             ) : user ? (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 <Link
                   href="/profile"
-                  className="flex items-center gap-2 px-2.5 py-1.5 bg-[#171a24] border border-[#262936] hover:border-[#f4f0e6] transition-all"
+                  className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1.5 bg-[#171a24] border border-[#262936] hover:border-[#f4f0e6] transition-all active:scale-95"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={user.photoUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${user.displayName}`}
                     alt={user.displayName}
-                    className="w-4 h-4 bg-zinc-800 object-cover"
+                    className="w-4 h-4 sm:w-5 sm:h-5 bg-zinc-800 object-cover shrink-0"
                   />
-                  <span className="font-teletype text-xs font-semibold text-[#f4f0e6] hidden sm:inline max-w-[120px] truncate">
+                  <span className="font-teletype text-xs font-semibold text-[#f4f0e6] hidden sm:inline max-w-[100px] lg:max-w-[130px] truncate">
                     {user.displayName}
                   </span>
                 </Link>
@@ -139,31 +145,32 @@ export function Navbar() {
                 <button
                   onClick={logout}
                   title="Sign Out"
-                  className="p-1.5 border border-[#262936] text-[#a39e93] hover:text-rose-400 hover:border-rose-500 hover:bg-[#171a24] transition-colors"
+                  className="p-1.5 border border-[#262936] text-[#a39e93] hover:text-rose-400 hover:border-rose-500 hover:bg-[#171a24] transition-colors hidden sm:inline-flex active:scale-95"
                 >
                   <LogOut className="w-3.5 h-3.5" />
                 </button>
               </div>
             ) : (
-              <div className="relative flex items-center gap-2">
+              <div className="relative flex items-center gap-1.5">
                 <Link
                   href="/login"
-                  className="stamp-btn !py-1.5 !px-3.5"
+                  className="stamp-btn !py-1 !px-2.5 sm:!py-1.5 sm:!px-3.5 text-xs font-bold"
                 >
                   Sign In
                 </Link>
 
                 <button
                   onClick={() => setShowDemoMenu(!showDemoMenu)}
-                  className="stamp-btn !bg-[#12141c] !text-[#a39e93] hover:!text-[#f4f0e6] !py-1.5 !px-2.5 flex items-center gap-1"
+                  className="stamp-btn !bg-[#12141c] !text-[#a39e93] hover:!text-[#f4f0e6] !py-1 !px-1.5 sm:!py-1.5 sm:!px-2.5 flex items-center gap-1"
+                  title="Quick Demo Persona"
                 >
-                  <span>Demo</span>
+                  <span className="hidden xs:inline">Demo</span>
                   <ChevronDown className="w-3 h-3 text-[#a39e93]" />
                 </button>
 
-                {/* Demo Menu */}
+                {/* Demo Menu Dropdown */}
                 {showDemoMenu && (
-                  <div className="absolute right-0 top-11 w-52 p-2 bg-[#12141c] border-2 border-[#3d4257] shadow-[6px_6px_0px_0px_#000000] z-50 font-teletype text-xs">
+                  <div className="absolute right-0 top-11 w-52 p-2 bg-[#12141c] border-2 border-[#3d4257] shadow-[6px_6px_0px_0px_#000000] z-50 font-teletype text-xs animate-in fade-in zoom-in-95 duration-100">
                     <div className="text-[10px] font-bold uppercase tracking-widest text-[#a39e93] px-2 py-1 border-b border-[#262936] mb-1">
                       Select Persona
                     </div>
@@ -174,7 +181,7 @@ export function Navbar() {
                       }}
                       className="w-full text-left px-2.5 py-1.5 text-[#f4f0e6] hover:bg-[#f4f0e6] hover:text-[#0c0d10] transition-colors font-bold flex items-center gap-2"
                     >
-                      <span>✦ Royal Editor</span>
+                      <span>✦ Royal Editor (Admin)</span>
                     </button>
                     <button
                       onClick={() => {
@@ -199,43 +206,76 @@ export function Navbar() {
               </div>
             )}
 
-            {/* Mobile Menu Button */}
+            {/* Mobile Menu Hamburger */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 border border-[#262936] text-[#f4f0e6] hover:bg-[#171a24]"
+              className="md:hidden p-2 border border-[#262936] text-[#f4f0e6] hover:bg-[#171a24] active:scale-95"
+              aria-label="Toggle menu"
             >
-              {isMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+              {isMenuOpen ? <X className="w-4 h-4 text-[#d97706]" /> : <Menu className="w-4 h-4" />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Drawer */}
+        {/* Mobile Navigation Drawer / Dropdown */}
         {isMenuOpen && (
-          <div className="md:hidden border-t-2 border-[#262936] bg-[#12141c] p-4 flex flex-col gap-2 font-teletype text-xs">
+          <div className="md:hidden border-t-2 border-[#262936] bg-[#12141c] p-4 flex flex-col gap-2.5 font-teletype text-xs shadow-2xl animate-in slide-in-from-top-2 duration-150">
+            {/* Live connection state */}
+            <div className="flex items-center justify-between px-3 py-2 bg-[#171a24] border border-[#262936] text-[10px]">
+              <span className="text-[#a39e93]">TELETYPE SYSTEM STATUS</span>
+              <div className="flex items-center gap-1.5">
+                <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+                <span className="font-bold text-[#f4f0e6]">{isConnected ? 'ONLINE & SYNCED' : 'POLLING'}</span>
+              </div>
+            </div>
+
+            {/* Nav links */}
             {navLinks.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={() => setIsMenuOpen(false)}
-                className={`p-2.5 border transition-colors flex items-center gap-2 ${
+                className={`p-3 border transition-colors flex items-center justify-between ${
                   pathname === item.href
-                    ? 'bg-[#f4f0e6] text-[#0c0d10] border-[#f4f0e6]'
+                    ? 'bg-[#f4f0e6] text-[#0c0d10] border-[#f4f0e6] font-bold'
                     : 'text-[#f4f0e6] border-[#262936] hover:bg-[#171a24]'
                 }`}
               >
-                <item.icon className="w-4 h-4 text-[#d97706]" />
-                <span className="font-bold uppercase">{item.label}</span>
+                <div className="flex items-center gap-2.5">
+                  <item.icon className="w-4 h-4 text-[#d97706]" />
+                  <span className="font-bold uppercase tracking-wider">{item.label}</span>
+                </div>
+                <span className="text-[10px] text-[#a39e93]">→</span>
               </Link>
             ))}
+
+            {/* Telegram Bot Action */}
             <a
               href={`https://t.me/${botUsername}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2.5 border border-[#785a28] bg-[#241c10] text-[#f6d89b] flex items-center justify-between"
+              className="p-3 border border-[#785a28] bg-[#241c10] text-[#f6d89b] hover:bg-[#d97706] hover:text-black flex items-center justify-between transition-colors font-bold uppercase"
             >
-              <span>SUMMON @{botUsername}</span>
+              <div className="flex items-center gap-2">
+                <Bot className="w-4 h-4 text-[#d97706]" />
+                <span>SUMMON @{botUsername}</span>
+              </div>
               <ArrowUpRight className="w-3.5 h-3.5" />
             </a>
+
+            {/* Sign out if logged in on mobile */}
+            {user && (
+              <button
+                onClick={() => {
+                  logout();
+                  setIsMenuOpen(false);
+                }}
+                className="p-2.5 border border-rose-900/60 bg-rose-950/20 text-rose-300 hover:bg-rose-900/40 flex items-center justify-center gap-2 font-bold uppercase transition-colors"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Sign Out ({user.displayName})</span>
+              </button>
+            )}
           </div>
         )}
       </header>

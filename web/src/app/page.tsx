@@ -5,9 +5,8 @@ import { Post, TrackedChannel } from '@/lib/types';
 import { PostCard } from '@/components/post-card';
 import { BabiometerWidget } from '@/components/babiometer-widget';
 import { useRealtime, useToast, useAuth } from '@/components/providers';
-import { Search, Radio, Loader2, ArrowUpRight, Bot, Shield, Database, Sparkles, Check, Plus, Users } from 'lucide-react';
+import { Search, Radio, Loader2, ArrowUpRight, Bot, Sparkles, Check, Plus, Users, Compass } from 'lucide-react';
 import Link from 'next/link';
-import { formatNumber } from '@/lib/utils';
 
 import { SearchModal } from '@/components/search-modal';
 
@@ -25,7 +24,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
-  const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'BabisummarizeBot';
+  const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'lurkening_bot';
 
   // Fetch Channels
   useEffect(() => {
@@ -143,37 +142,33 @@ export default function HomePage() {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 flex flex-col gap-10 font-teletype">
-      {/* Frontpage Broadsheet Masthead */}
-      <div className="p-6 sm:p-12 bg-[#12141c] border-2 border-[#262936] shadow-[6px_6px_0px_0px_#000000] flex flex-col gap-6 text-center items-center">
+    <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 flex flex-col gap-6 sm:gap-8 font-teletype">
+      {/* Frontpage Broadsheet Masthead Banner */}
+      <div className="p-4 sm:p-8 md:p-10 bg-[#12141c] border-2 border-[#262936] shadow-[4px_4px_0px_0px_#000000] sm:shadow-[6px_6px_0px_0px_#000000] flex flex-col gap-4 sm:gap-6 text-center items-center">
         {/* Scribe Stamp */}
-        <div className="inline-flex items-center gap-2 stamp-badge-gold stamp-badge text-xs">
+        <div className="inline-flex items-center gap-1.5 sm:gap-2 stamp-badge-gold stamp-badge text-[10px] sm:text-xs">
           <span>§ UNIVERSAL TELEGRAM COMMUNITY LURKER</span>
           <span>·</span>
           <span>ISSUE NO. 88</span>
         </div>
 
         {/* Masthead Title */}
-        <div className="flex flex-col gap-2">
-          <h1 className="font-broadsheet font-black text-4xl sm:text-7xl text-[#f4f0e6] tracking-tight uppercase">
+        <div className="flex flex-col gap-1.5 sm:gap-2">
+          <h1 className="font-broadsheet font-black text-3xl sm:text-6xl lg:text-7xl text-[#f4f0e6] tracking-tight uppercase">
             The Lurkening
           </h1>
-          <p className="font-teletype text-xs sm:text-sm text-[#d6d0c2] max-w-2xl mx-auto leading-relaxed uppercase">
-            Universal Telegram channel monitoring, Groq AI editorial intelligence, and multi-channel discovery.
+          <p className="font-teletype text-[11px] sm:text-sm text-[#d6d0c2] max-w-2xl mx-auto leading-relaxed uppercase">
+            Telegram channel monitoring, Groq AI editorial intelligence, and multi-channel discovery.
           </p>
         </div>
 
-        <p className="italic font-sans text-xs sm:text-sm text-[#a39e93] max-w-lg">
-          &ldquo;Lurk on any Telegram channel without drowning in the endless flood of posts.&rdquo;
-        </p>
-
         {/* Action Stamps */}
-        <div className="flex flex-wrap items-center justify-center gap-3 pt-4 border-t border-[#262936] w-full">
+        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 pt-3 border-t border-[#262936] w-full">
           <a
             href={`https://t.me/${botUsername}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="stamp-btn flex items-center gap-2 !py-2.5 !px-5 text-xs"
+            className="stamp-btn !bg-[#241c10] !border-[#785a28] !text-[#f6d89b] hover:!bg-[#d97706] hover:!text-black flex items-center gap-1.5 !py-2 !px-3.5 sm:!py-2.5 sm:!px-5 text-xs active:scale-95"
           >
             <Bot className="w-4 h-4 text-[#d97706]" />
             <span>SUMMON @{botUsername}</span>
@@ -181,61 +176,117 @@ export default function HomePage() {
 
           <button
             onClick={() => setIsSearchModalOpen(true)}
-            className="stamp-btn !bg-[#12141c] !text-[#a39e93] hover:!text-[#f4f0e6] flex items-center gap-2 !py-2.5 !px-5 text-xs"
+            className="stamp-btn !bg-[#12141c] !text-[#a39e93] hover:!text-[#f4f0e6] flex items-center gap-1.5 !py-2 !px-3.5 sm:!py-2.5 sm:!px-5 text-xs active:scale-95"
           >
             <Search className="w-4 h-4 text-[#d97706]" />
-            <span>SEARCH ENGINE & GRAPH</span>
+            <span>SEARCH ARCHIVE & GRAPH</span>
           </button>
         </div>
       </div>
 
-      {/* 3 Feature Columns */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <div className="broadsheet-card p-5 sm:p-6 flex flex-col gap-3">
-          <div className="flex items-center justify-between border-b border-[#262936] pb-2">
-            <span className="text-xs font-bold text-[#d97706] uppercase">[ 01 LURKOMETER ]</span>
-            <span className="text-[10px] text-[#a39e93]">TELETYPE</span>
+      {/* Stories / Monitored Channels Carousel Bar */}
+      <div className="broadsheet-card p-3 sm:p-4 flex flex-col gap-2.5 overflow-hidden">
+        <div className="flex items-center justify-between text-[11px] uppercase font-bold text-[#a39e93] px-1 border-b border-[#262936] pb-2">
+          <div className="flex items-center gap-1.5 text-[#d97706]">
+            <Radio className="w-3.5 h-3.5 animate-pulse" />
+            <span>Active Telegraph Channels</span>
           </div>
-          <h3 className="font-broadsheet font-bold text-lg text-[#f4f0e6] uppercase">The Lurk-O-Meter</h3>
-          <p className="font-sans text-xs text-[#a39e93] leading-relaxed">
-            Real-time activity gauge measuring daily broadcast volume across any tracked channel so you know before you read.
-          </p>
+          <Link href="/channels" className="text-[#d97706] hover:underline flex items-center gap-0.5">
+            <span>Explore All</span>
+            <ArrowUpRight className="w-3 h-3" />
+          </Link>
         </div>
 
-        <div className="broadsheet-card p-5 sm:p-6 flex flex-col gap-3">
-          <div className="flex items-center justify-between border-b border-[#262936] pb-2">
-            <span className="text-xs font-bold text-[#d97706] uppercase">[ 02 SYNTHESIS ]</span>
-            <span className="text-[10px] text-[#a39e93]">GROQ AI</span>
-          </div>
-          <h3 className="font-broadsheet font-bold text-lg text-[#f4f0e6] uppercase">AI Summaries & Roasts</h3>
-          <p className="font-sans text-xs text-[#a39e93] leading-relaxed">
-            Multi-model Groq Llama-3.3 engine delivers executive summaries, satire roasts, context checks, and ELI5 breakdowns for any channel.
-          </p>
-        </div>
+        {/* Horizontal Swiper Row */}
+        <div className="flex items-center gap-3 sm:gap-4 overflow-x-auto py-1 px-1 no-scrollbar select-none">
+          {/* 'All' Channel Story Pill */}
+          <button
+            onClick={() => setSelectedChannel('all')}
+            className={`flex flex-col items-center gap-1.5 shrink-0 transition-transform active:scale-95 group focus:outline-none`}
+          >
+            <div
+              className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center border-2 transition-all ${
+                selectedChannel === 'all'
+                  ? 'border-[#d97706] bg-[#d97706] text-black shadow-[0_0_12px_rgba(217,119,6,0.5)]'
+                  : 'border-[#262936] bg-[#171a24] text-[#f4f0e6] group-hover:border-[#f4f0e6]'
+              }`}
+            >
+              <Compass className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+            <span
+              className={`text-[10px] sm:text-[11px] font-bold uppercase max-w-[64px] truncate text-center ${
+                selectedChannel === 'all' ? 'text-[#d97706]' : 'text-[#a39e93] group-hover:text-[#f4f0e6]'
+              }`}
+            >
+              All Wires
+            </span>
+          </button>
 
-        <div className="broadsheet-card p-5 sm:p-6 flex flex-col gap-3">
-          <div className="flex items-center justify-between border-b border-[#262936] pb-2">
-            <span className="text-xs font-bold text-[#d97706] uppercase">[ 03 EXPLORER ]</span>
-            <span className="text-[10px] text-[#a39e93]">DATABASE</span>
-          </div>
-          <h3 className="font-broadsheet font-bold text-lg text-[#f4f0e6] uppercase">Full-Text Registry</h3>
-          <p className="font-sans text-xs text-[#a39e93] leading-relaxed">
-            Search historical archives across all monitored Telegram channels with interactive network graphs and category indexes.
-          </p>
+          {/* Individual Channel Story Avatars */}
+          {channels.map((ch) => {
+            const isSelected = selectedChannel === ch.id;
+            return (
+              <button
+                key={ch.id}
+                onClick={() => setSelectedChannel(ch.id)}
+                className={`flex flex-col items-center gap-1.5 shrink-0 transition-transform active:scale-95 group focus:outline-none`}
+              >
+                <div
+                  className={`relative p-0.5 rounded-full border-2 transition-all ${
+                    isSelected
+                      ? 'border-[#d97706] shadow-[0_0_12px_rgba(217,119,6,0.6)]'
+                      : 'border-[#262936] group-hover:border-[#a39e93]'
+                  }`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={ch.avatarUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${ch.id}`}
+                    alt={ch.name}
+                    className="w-11 h-11 sm:w-13 sm:h-13 rounded-full object-cover bg-[#0c0d10]"
+                  />
+                  {ch.isVerified && (
+                    <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-[#d97706] text-black text-[9px] font-bold flex items-center justify-center border border-[#0c0d10]">
+                      ✓
+                    </span>
+                  )}
+                </div>
+                <span
+                  className={`text-[10px] sm:text-[11px] font-bold uppercase max-w-[68px] sm:max-w-[76px] truncate text-center ${
+                    isSelected ? 'text-[#d97706]' : 'text-[#a39e93] group-hover:text-[#f4f0e6]'
+                  }`}
+                >
+                  {ch.name.split(' ')[0]}
+                </span>
+              </button>
+            );
+          })}
+
+          {/* Plus Add Channel Shortcut */}
+          <Link
+            href="/channels"
+            className="flex flex-col items-center gap-1.5 shrink-0 transition-transform active:scale-95 group focus:outline-none"
+          >
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 border-dashed border-[#262936] bg-[#12141c] text-[#a39e93] group-hover:border-[#d97706] group-hover:text-[#d97706] flex items-center justify-center transition-all">
+              <Plus className="w-5 h-5" />
+            </div>
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase text-[#a39e93] group-hover:text-[#d97706] text-center">
+              More
+            </span>
+          </Link>
         </div>
       </div>
 
-      {/* Main 2-Column Section: Feed on Left + Right Rail Sidebar */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      {/* Main 2-Column Section: Feed on Left + Right Rail Sidebar on Desktop */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
         {/* Left / Main Post Stream */}
-        <div className="lg:col-span-8 flex flex-col gap-6">
-          {/* Filter & Search Controls */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-            {/* Channel Selection Stamps */}
+        <div className="lg:col-span-8 flex flex-col gap-4 sm:gap-6">
+          {/* Filter & Search Bar */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+            {/* Filter Selection Chips */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
               <button
                 onClick={() => setSelectedChannel('all')}
-                className={`px-3 py-1.5 text-xs font-bold uppercase border transition-colors shrink-0 ${
+                className={`px-3 py-1.5 text-xs font-bold uppercase border transition-all shrink-0 active:scale-95 ${
                   selectedChannel === 'all'
                     ? 'bg-[#f4f0e6] text-[#0c0d10] border-[#f4f0e6] shadow-[2px_2px_0px_0px_#000000]'
                     : 'bg-[#12141c] text-[#a39e93] border-[#262936] hover:border-[#f4f0e6] hover:text-[#f4f0e6]'
@@ -243,11 +294,11 @@ export default function HomePage() {
               >
                 [ ALL CHANNELS ]
               </button>
-              {channels.slice(0, 8).map((ch) => (
+              {channels.slice(0, 6).map((ch) => (
                 <button
                   key={ch.id}
                   onClick={() => setSelectedChannel(ch.id)}
-                  className={`px-3 py-1.5 text-xs font-bold uppercase border transition-colors shrink-0 ${
+                  className={`px-3 py-1.5 text-xs font-bold uppercase border transition-all shrink-0 active:scale-95 ${
                     selectedChannel === ch.id
                       ? 'bg-[#f4f0e6] text-[#0c0d10] border-[#f4f0e6] shadow-[2px_2px_0px_0px_#000000]'
                       : 'bg-[#12141c] text-[#a39e93] border-[#262936] hover:border-[#f4f0e6] hover:text-[#f4f0e6]'
@@ -256,43 +307,43 @@ export default function HomePage() {
                   @{ch.id}
                 </button>
               ))}
-              {channels.length > 8 && (
+              {channels.length > 6 && (
                 <Link
                   href="/channels"
                   className="px-2 text-xs font-bold text-[#d97706] hover:underline shrink-0"
                 >
-                  +{channels.length - 8} MORE
+                  +{channels.length - 6} MORE
                 </Link>
               )}
             </div>
 
-            {/* Search Input */}
-            <div className="relative shrink-0 sm:w-60">
+            {/* Inline Quick Search Input */}
+            <div className="relative shrink-0 sm:w-56">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="FILTER DISPATCHES..."
-                className="w-full py-1.5 pl-8 pr-3 bg-[#12141c] border border-[#262936] text-xs text-[#f4f0e6] placeholder-[#6b665c] font-teletype uppercase focus:outline-none focus:border-[#f4f0e6]"
+                placeholder="FILTER FEED..."
+                className="w-full py-1.5 pl-8 pr-3 bg-[#12141c] border border-[#262936] text-xs text-[#f4f0e6] placeholder-[#6b665c] font-teletype uppercase focus:outline-none focus:border-[#d97706]"
               />
               <Search className="w-3.5 h-3.5 text-[#a39e93] absolute left-2.5 top-2.5" />
             </div>
           </div>
 
-          {/* Posts Feed */}
-          <div className="flex flex-col gap-4">
+          {/* Posts Feed Stream */}
+          <div className="flex flex-col gap-3.5 sm:gap-4">
             {loading ? (
               <div className="flex flex-col items-center justify-center py-20 gap-2 text-[#a39e93] font-teletype">
                 <Loader2 className="w-6 h-6 animate-spin text-[#d97706]" />
                 <span className="text-xs tracking-wider uppercase">[ DECODING TELETYPE WIRES... ]</span>
               </div>
             ) : posts.length === 0 ? (
-              <div className="broadsheet-card p-12 text-center flex flex-col items-center justify-center gap-2 font-teletype">
+              <div className="broadsheet-card p-8 sm:p-12 text-center flex flex-col items-center justify-center gap-2 font-teletype">
                 <h3 className="font-bold text-sm text-[#f4f0e6] uppercase">[ NO DISPATCHES FOUND ]</h3>
-                <p className="text-xs text-[#a39e93] max-w-sm">
+                <p className="text-xs text-[#a39e93] max-w-sm font-sans">
                   {searchQuery
-                    ? `NO RECORDS MATCHED "${searchQuery.toUpperCase()}".`
-                    : 'NO TRANSMISSIONS LOGGED FOR THIS CHANNEL.'}
+                    ? `No records matched "${searchQuery.toUpperCase()}".`
+                    : 'No transmissions logged for this channel.'}
                 </p>
               </div>
             ) : (
@@ -303,11 +354,11 @@ export default function HomePage() {
 
                 {/* Pagination Button */}
                 {hasMore && (
-                  <div className="flex justify-center pt-3">
+                  <div className="flex justify-center pt-2">
                     <button
                       onClick={() => fetchPosts(page + 1)}
                       disabled={loadingMore}
-                      className="stamp-btn !py-2.5 !px-6 flex items-center gap-2"
+                      className="stamp-btn !py-2.5 !px-6 flex items-center gap-2 w-full sm:w-auto text-xs active:scale-95"
                     >
                       {loadingMore ? (
                         <>
@@ -315,7 +366,7 @@ export default function HomePage() {
                           <span>RETRIEVING NEXT PARCHMENT...</span>
                         </>
                       ) : (
-                        <span>LOAD MORE BROADSHEET DISPATCHES ↓</span>
+                        <span>LOAD MORE DISPATCHES ↓</span>
                       )}
                     </button>
                   </div>
@@ -326,7 +377,7 @@ export default function HomePage() {
         </div>
 
         {/* Right Rail (Sticky Desktop Broadsheet Sidebar) */}
-        <aside className="lg:col-span-4 hidden lg:flex flex-col gap-6 sticky top-24 font-teletype">
+        <aside className="lg:col-span-4 hidden lg:flex flex-col gap-6 sticky top-20 font-teletype">
           {/* Lurkometer Widget */}
           <BabiometerWidget channel={selectedChannel === 'all' ? (channels[0]?.id || 'dagmawi_babi') : selectedChannel} />
 
@@ -352,7 +403,7 @@ export default function HomePage() {
                     <img
                       src={ch.avatarUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${ch.id}`}
                       alt={ch.name}
-                      className="w-8 h-8 border border-[#262936] bg-[#12141c] object-cover shrink-0"
+                      className="w-8 h-8 border border-[#262936] bg-[#12141c] object-cover shrink-0 rounded-sm"
                     />
                     <div className="flex flex-col min-w-0">
                       <span className="text-xs font-bold text-[#f4f0e6] group-hover:text-[#d97706] transition-colors truncate uppercase">
@@ -364,7 +415,7 @@ export default function HomePage() {
 
                   <button
                     onClick={() => handleFollowChannel(ch.id, !!ch.isSubscribed)}
-                    className={`stamp-btn !p-1.5 !text-[10px] shrink-0 ${
+                    className={`stamp-btn !p-1.5 !text-[10px] shrink-0 active:scale-95 ${
                       ch.isSubscribed ? '!bg-[#d97706] !text-black !border-[#d97706]' : ''
                     }`}
                     title={ch.isSubscribed ? 'Following' : 'Follow'}
@@ -383,7 +434,7 @@ export default function HomePage() {
               <span>Groq AI Editorial Intelligence</span>
             </div>
             <p className="text-xs text-[#a39e93] font-sans leading-relaxed">
-              Multi-model Groq Llama-3.3 engine generates on-demand executive summaries, satyrical roasts, context checks, and ELI5 breakdowns for every post in real time.
+              Multi-model Groq Llama-3.3 engine generates on-demand executive summaries, satire roasts, context checks, and ELI5 breakdowns for every post in real time.
             </p>
           </div>
 
@@ -403,7 +454,7 @@ export default function HomePage() {
               href={`https://t.me/${botUsername}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="stamp-btn !bg-[#d97706] !text-black !border-[#d97706] hover:!bg-[#f4f0e6] justify-between !py-2 text-xs"
+              className="stamp-btn !bg-[#d97706] !text-black !border-[#d97706] hover:!bg-[#f4f0e6] justify-between !py-2 text-xs active:scale-95"
             >
               <span>Summon @{botUsername}</span>
               <ArrowUpRight className="w-3.5 h-3.5" />

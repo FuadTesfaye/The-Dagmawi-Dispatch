@@ -9,7 +9,7 @@ import { useAuth } from './providers';
 export function Sidebar() {
   const pathname = usePathname();
   const { user } = useAuth();
-  const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'BabisummarizeBot';
+  const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'lurkening_bot';
 
   const navItems = [
     {

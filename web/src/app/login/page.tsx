@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, useToast } from '@/components/providers';
-import { Shield, UserCheck, Sparkles, Bot, Loader2, ArrowUpRight, ArrowRight, User } from 'lucide-react';
+import { Shield, UserCheck, Sparkles, Bot, Loader2, ArrowUpRight, ArrowRight } from 'lucide-react';
 
 export default function LoginPage() {
   const { user, loginDemo, loginWithHandle } = useAuth();
@@ -12,7 +12,7 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
   const telegramContainerRef = useRef<HTMLDivElement>(null);
 
-  const [activeMethod, setActiveMethod] = useState<'direct' | 'widget' | 'bot' | 'personas'>('direct');
+  const [activeMethod, setActiveMethod] = useState<'direct' | 'personas' | 'widget' | 'bot'>('direct');
   const [handleInput, setHandleInput] = useState('');
   const [displayNameInput, setDisplayNameInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -84,7 +84,7 @@ export default function LoginPage() {
   const handleDirectLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!handleInput.trim()) {
-      showToast('Please enter your Telegram handle or name', 'info');
+      showToast('Please enter your Telegram handle or username', 'info');
       return;
     }
 
@@ -134,28 +134,28 @@ export default function LoginPage() {
   }, [botToken, user, showToast, router]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-12rem)] max-w-lg mx-auto py-8 px-4 font-teletype">
-      <div className="w-full broadsheet-card p-6 sm:p-8 flex flex-col items-center text-center gap-6 shadow-[8px_8px_0px_0px_#000000]">
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-14rem)] max-w-lg mx-auto py-4 sm:py-8 px-3 sm:px-4 font-teletype">
+      <div className="w-full broadsheet-card p-4 sm:p-8 flex flex-col items-center text-center gap-4 sm:gap-6 shadow-[6px_6px_0px_0px_#000000] sm:shadow-[8px_8px_0px_0px_#000000]">
         {/* Seal Mark */}
-        <div className="w-12 h-12 border-2 border-[#f4f0e6] bg-[#f4f0e6] text-[#0c0d10] flex items-center justify-center font-black font-broadsheet text-2xl shadow-[3px_3px_0px_0px_#000000]">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 border-2 border-[#f4f0e6] bg-[#f4f0e6] text-[#0c0d10] flex items-center justify-center font-black font-broadsheet text-xl sm:text-2xl shadow-[3px_3px_0px_0px_#000000]">
           §
         </div>
 
         <div>
-          <div className="stamp-badge-gold stamp-badge mb-2 inline-block">
+          <div className="stamp-badge-gold stamp-badge mb-2 inline-block text-[10px]">
             AUTHENTICATION REGISTRY
           </div>
           <h1 className="font-broadsheet font-black text-2xl sm:text-3xl text-[#f4f0e6] uppercase">
             Court Scribe Entry
           </h1>
-          <p className="text-xs text-[#a39e93] mt-1.5 leading-relaxed font-sans max-w-sm mx-auto">
+          <p className="text-xs text-[#a39e93] mt-1 leading-relaxed font-sans max-w-sm mx-auto">
             Log in to stamp reactions, enter court testimony, bookmark dispatches, and request AI editorial intelligence.
           </p>
         </div>
 
         {/* Mini App Loading Banner */}
         {isMiniAppLoading && (
-          <div className="w-full p-3 bg-[#171a24] border border-[#d97706] flex items-center justify-center gap-2 text-xs text-[#d97706]">
+          <div className="w-full p-2.5 bg-[#171a24] border border-[#d97706] flex items-center justify-center gap-2 text-xs text-[#d97706]">
             <Loader2 className="w-4 h-4 animate-spin" />
             <span>AUTHENTICATING TELEGRAM MINI APP SESSION...</span>
           </div>
@@ -165,7 +165,7 @@ export default function LoginPage() {
         <div className="grid grid-cols-4 w-full border-2 border-[#262936] text-[10px] sm:text-xs">
           <button
             onClick={() => setActiveMethod('direct')}
-            className={`py-2 px-1 uppercase font-bold transition-colors ${
+            className={`py-2 px-0.5 sm:px-1 uppercase font-bold transition-colors active:scale-95 ${
               activeMethod === 'direct'
                 ? 'bg-[#f4f0e6] text-[#0c0d10]'
                 : 'bg-[#12141c] text-[#a39e93] hover:text-[#f4f0e6]'
@@ -175,7 +175,7 @@ export default function LoginPage() {
           </button>
           <button
             onClick={() => setActiveMethod('personas')}
-            className={`py-2 px-1 uppercase font-bold transition-colors border-l border-[#262936] ${
+            className={`py-2 px-0.5 sm:px-1 uppercase font-bold transition-colors border-l border-[#262936] active:scale-95 ${
               activeMethod === 'personas'
                 ? 'bg-[#f4f0e6] text-[#0c0d10]'
                 : 'bg-[#12141c] text-[#a39e93] hover:text-[#f4f0e6]'
@@ -185,7 +185,7 @@ export default function LoginPage() {
           </button>
           <button
             onClick={() => setActiveMethod('widget')}
-            className={`py-2 px-1 uppercase font-bold transition-colors border-l border-[#262936] ${
+            className={`py-2 px-0.5 sm:px-1 uppercase font-bold transition-colors border-l border-[#262936] active:scale-95 ${
               activeMethod === 'widget'
                 ? 'bg-[#f4f0e6] text-[#0c0d10]'
                 : 'bg-[#12141c] text-[#a39e93] hover:text-[#f4f0e6]'
@@ -198,7 +198,7 @@ export default function LoginPage() {
               setActiveMethod('bot');
               if (!botToken) handleRequestBotToken();
             }}
-            className={`py-2 px-1 uppercase font-bold transition-colors border-l border-[#262936] ${
+            className={`py-2 px-0.5 sm:px-1 uppercase font-bold transition-colors border-l border-[#262936] active:scale-95 ${
               activeMethod === 'bot'
                 ? 'bg-[#f4f0e6] text-[#0c0d10]'
                 : 'bg-[#12141c] text-[#a39e93] hover:text-[#f4f0e6]'
@@ -208,7 +208,7 @@ export default function LoginPage() {
           </button>
         </div>
 
-        {/* Method 1: Direct Web Handle Login (Cleanest & fastest) */}
+        {/* Method 1: Direct Web Handle Login */}
         {activeMethod === 'direct' && (
           <form onSubmit={handleDirectLogin} className="flex flex-col gap-3 w-full text-left">
             <div className="flex flex-col gap-1">
@@ -221,7 +221,10 @@ export default function LoginPage() {
                   type="text"
                   value={handleInput}
                   onChange={(e) => setHandleInput(e.target.value)}
-                  placeholder="dagmawi_babi, fuad, or your handle"
+                  placeholder="dagmawi_babi, fuad, or handle"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                   required
                   className="w-full pl-8 pr-3 py-2.5 bg-[#0c0d10] border border-[#262936] text-[#f4f0e6] placeholder-[#6b665c] text-sm font-teletype uppercase focus:border-[#d97706] focus:outline-none"
                 />
@@ -244,7 +247,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="stamp-btn !bg-[#d97706] !text-black !border-[#d97706] hover:!bg-[#f4f0e6] w-full flex items-center justify-center gap-2 !py-2.5 text-xs font-bold mt-2"
+              className="stamp-btn !bg-[#d97706] !text-black !border-[#d97706] hover:!bg-[#f4f0e6] w-full flex items-center justify-center gap-2 !py-2.5 text-xs font-bold mt-1 active:scale-95"
             >
               {isSubmitting ? (
                 <>
@@ -266,7 +269,7 @@ export default function LoginPage() {
           <div className="w-full flex flex-col gap-2">
             <button
               onClick={() => loginDemo('admin')}
-              className="stamp-btn !bg-[#241c10] !border-[#785a28] !text-[#f6d89b] hover:!bg-[#f4f0e6] hover:!text-[#0c0d10] w-full flex items-center justify-center gap-2 !py-2.5"
+              className="stamp-btn !bg-[#241c10] !border-[#785a28] !text-[#f6d89b] hover:!bg-[#f4f0e6] hover:!text-[#0c0d10] w-full flex items-center justify-center gap-2 !py-2.5 text-xs active:scale-95"
             >
               <Shield className="w-4 h-4 text-[#d97706]" />
               <span>ENTER AS ROYAL SCRIBE (ADMIN)</span>
@@ -274,7 +277,7 @@ export default function LoginPage() {
 
             <button
               onClick={() => loginDemo('reader')}
-              className="stamp-btn w-full flex items-center justify-center gap-2 !py-2.5"
+              className="stamp-btn w-full flex items-center justify-center gap-2 !py-2.5 text-xs active:scale-95"
             >
               <UserCheck className="w-4 h-4" />
               <span>ENTER AS CITIZEN READER</span>
@@ -282,7 +285,7 @@ export default function LoginPage() {
 
             <button
               onClick={() => loginDemo('vip')}
-              className="stamp-btn !bg-[#12141c] !text-[#a39e93] hover:!text-[#f4f0e6] w-full flex items-center justify-center gap-2 !py-2.5"
+              className="stamp-btn !bg-[#12141c] !text-[#a39e93] hover:!text-[#f4f0e6] w-full flex items-center justify-center gap-2 !py-2.5 text-xs active:scale-95"
             >
               <Sparkles className="w-4 h-4 text-[#d97706]" />
               <span>ENTER AS FOREIGN ENVOY</span>
@@ -292,7 +295,7 @@ export default function LoginPage() {
 
         {/* Method 3: Official Telegram Widget */}
         {activeMethod === 'widget' && (
-          <div className="flex flex-col items-center gap-3 w-full py-5 px-4 bg-[#0c0d10] border border-[#262936]">
+          <div className="flex flex-col items-center gap-3 w-full py-4 px-3 bg-[#0c0d10] border border-[#262936]">
             <span className="text-[11px] font-bold text-[#f4f0e6] uppercase">
               [ TELEGRAM OIDC AUTHENTICATION ]
             </span>
@@ -308,13 +311,13 @@ export default function LoginPage() {
 
         {/* Method 4: Direct Bot Summon Link */}
         {activeMethod === 'bot' && (
-          <div className="flex flex-col items-center gap-3 w-full py-5 px-4 bg-[#0c0d10] border border-[#262936]">
+          <div className="flex flex-col items-center gap-3 w-full py-4 px-3 bg-[#0c0d10] border border-[#262936]">
             <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#d97706] uppercase">
               <Bot className="w-4 h-4" />
               <span>[ 1-CLICK BOT HANDSHAKE ]</span>
             </div>
             <p className="text-[11px] text-[#a39e93] font-sans">
-              Launch @{botUsername} in Telegram to grant instant session access without browser redirect cookies.
+              Launch @{botUsername} in Telegram to grant instant session access without browser cookies.
             </p>
 
             {isRequestingToken ? (
@@ -325,7 +328,7 @@ export default function LoginPage() {
                   href={botDeepLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="stamp-btn !bg-[#d97706] !text-black !border-[#d97706] hover:!bg-[#f4f0e6] w-full flex items-center justify-center gap-2 !py-2.5 text-xs font-bold"
+                  className="stamp-btn !bg-[#d97706] !text-black !border-[#d97706] hover:!bg-[#f4f0e6] w-full flex items-center justify-center gap-2 !py-2.5 text-xs font-bold active:scale-95"
                 >
                   <Bot className="w-4 h-4" />
                   <span>OPEN @{botUsername}</span>
@@ -340,7 +343,7 @@ export default function LoginPage() {
             ) : (
               <button
                 onClick={handleRequestBotToken}
-                className="stamp-btn text-xs !py-2 px-4"
+                className="stamp-btn text-xs !py-2 px-4 active:scale-95"
               >
                 GENERATE LOGIN LINK
               </button>
@@ -349,7 +352,7 @@ export default function LoginPage() {
         )}
 
         {/* Security Notice */}
-        <div className="text-[10px] text-[#6b665c] border-t border-[#262936] pt-4 w-full flex items-center justify-between">
+        <div className="text-[10px] text-[#6b665c] border-t border-[#262936] pt-3 w-full flex items-center justify-between">
           <span>HTTPONLY JWT ENCRYPTION</span>
           <span>EST. 2026 DISPATCH</span>
         </div>

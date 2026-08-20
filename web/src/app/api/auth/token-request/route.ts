@@ -7,7 +7,7 @@ export async function POST() {
     const token = `lurk_${crypto.randomBytes(12).toString('hex')}`;
     createPendingToken(token);
 
-    const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'BabisummarizeBot';
+    const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'lurkening_bot';
     const deepLink = `https://t.me/${botUsername}?start=${token}`;
 
     return NextResponse.json({

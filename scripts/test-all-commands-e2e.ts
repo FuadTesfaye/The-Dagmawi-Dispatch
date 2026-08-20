@@ -4,7 +4,7 @@ dotenv.config({ path: ".env.local" });
 import { TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions";
 
-const botUsername = "BabisummarizeBot";
+const botUsername = "lurkening_bot";
 
 const ERROR_PHRASES = [
   "something went wrong",

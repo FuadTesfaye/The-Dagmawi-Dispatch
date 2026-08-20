@@ -70,36 +70,40 @@ export function ReportModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm font-teletype">
-      <div className="relative w-full max-w-md bg-[#12141c] border-2 border-[#3d4257] p-6 shadow-[8px_8px_0px_0px_#000000] flex flex-col gap-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-sm font-teletype animate-in fade-in duration-150">
+      <div
+        className="relative w-full max-w-md bg-[#12141c] border-2 border-[#3d4257] p-4 sm:p-6 shadow-[6px_6px_0px_0px_#000000] sm:shadow-[8px_8px_0px_0px_#000000] flex flex-col gap-3.5 sm:gap-4 animate-in zoom-in-95 duration-150"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between border-b-2 border-[#262936] pb-3">
-          <div className="flex items-center gap-2 text-[#d97706]">
-            <Flag className="w-4 h-4" />
-            <h3 className="font-bold text-xs text-[#f4f0e6] uppercase">
-              File Court Inquest [{targetType.toUpperCase()}]
+        <div className="flex items-center justify-between border-b-2 border-[#262936] pb-2.5">
+          <div className="flex items-center gap-2 text-[#d97706] min-w-0">
+            <Flag className="w-4 h-4 shrink-0" />
+            <h3 className="font-bold text-xs sm:text-sm text-[#f4f0e6] uppercase truncate">
+              File Inquest Citation [{targetType.toUpperCase()}]
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1 border border-[#262936] text-[#a39e93] hover:text-[#f4f0e6] transition-colors"
+            className="p-1 border border-[#262936] text-[#a39e93] hover:text-[#f4f0e6] transition-colors active:scale-95 shrink-0"
+            aria-label="Close"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <p className="text-[11px] text-[#a39e93] leading-relaxed">
-          Cite this dispatch to the royal court moderators for review against realm guidelines.
+        <p className="text-[11px] text-[#a39e93] leading-relaxed font-sans">
+          Cite this dispatch to the royal court moderators for review against realm decorum guidelines.
         </p>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:gap-4">
           {/* Reason Selector */}
           <div className="flex flex-col gap-1.5">
             <label className="text-[11px] font-bold text-[#f4f0e6] uppercase">Citation Reason</label>
             <select
               value={selectedReason}
               onChange={(e) => setSelectedReason(e.target.value)}
-              className="w-full py-2 px-3 bg-[#0c0d10] border border-[#262936] text-xs text-[#f4f0e6] font-teletype uppercase focus:outline-none focus:border-[#f4f0e6]"
+              className="w-full py-2 px-3 bg-[#0c0d10] border border-[#262936] text-xs text-[#f4f0e6] font-teletype uppercase focus:outline-none focus:border-[#d97706]"
             >
               {REPORT_REASONS.map((r) => (
                 <option key={r} value={r}>
@@ -112,14 +116,14 @@ export function ReportModal({
           {/* Details Input */}
           <div className="flex flex-col gap-1.5">
             <label className="text-[11px] font-bold text-[#f4f0e6] uppercase">
-              Specific Citation Details (Optional)
+              Violation Details (Optional)
             </label>
             <textarea
               rows={3}
               value={details}
               onChange={(e) => setDetails(e.target.value)}
               placeholder="ENTER SPECIFIC VIOLATION CONTEXT..."
-              className="w-full p-2.5 bg-[#0c0d10] border border-[#262936] text-xs text-[#f4f0e6] placeholder-[#6b665c] font-teletype uppercase focus:outline-none focus:border-[#f4f0e6] resize-none"
+              className="w-full p-2.5 bg-[#0c0d10] border border-[#262936] text-xs text-[#f4f0e6] placeholder-[#6b665c] font-teletype uppercase focus:outline-none focus:border-[#d97706] resize-none"
             />
           </div>
 
@@ -128,14 +132,14 @@ export function ReportModal({
             <button
               type="button"
               onClick={onClose}
-              className="stamp-btn !bg-[#12141c] !text-[#a39e93] hover:!text-[#f4f0e6]"
+              className="stamp-btn !bg-[#12141c] !text-[#a39e93] hover:!text-[#f4f0e6] active:scale-95 text-xs"
             >
               CANCEL
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="stamp-btn !bg-rose-950/80 !border-rose-700 !text-rose-200 hover:!bg-rose-600 hover:!text-white flex items-center gap-1.5"
+              className="stamp-btn !bg-rose-950/80 !border-rose-700 !text-rose-200 hover:!bg-rose-600 hover:!text-white flex items-center gap-1.5 active:scale-95 text-xs font-bold"
             >
               {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               <span>FILE CITATION</span>

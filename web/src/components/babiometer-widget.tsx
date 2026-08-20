@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Radio } from 'lucide-react';
+import { Activity } from 'lucide-react';
 
 interface LurkometerProps {
   channel?: string;
@@ -39,31 +39,37 @@ export function BabiometerWidget({ channel = 'dagmawi_babi' }: LurkometerProps) 
   return (
     <div className="broadsheet-card p-4 sm:p-5 flex flex-col gap-3 font-teletype w-full overflow-hidden">
       {/* Header Stamp */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#262936] pb-2.5">
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 bg-[#d97706] shrink-0" />
-          <span className="text-xs font-bold text-[#f4f0e6] uppercase tracking-wider truncate max-w-[200px] sm:max-w-none">
-            Lurkometer Chrono // @{channel}
+      <div className="flex items-center justify-between gap-2 border-b border-[#262936] pb-2.5">
+        <div className="flex items-center gap-2 min-w-0">
+          <Activity className="w-3.5 h-3.5 text-[#d97706] shrink-0 animate-pulse" />
+          <span className="text-xs font-bold text-[#f4f0e6] uppercase tracking-wider truncate">
+            Lurkometer // @{channel}
           </span>
         </div>
-        <span className="stamp-badge-gold stamp-badge text-[10px]">
+        <span className="stamp-badge-gold stamp-badge text-[10px] shrink-0">
           {volume.level}
         </span>
       </div>
 
       {/* Mechanical Teletype Counter */}
-      <div className="p-3 bg-[#0c0d10] border border-[#262936] flex flex-col gap-2">
+      <div className="p-3 bg-[#0c0d10] border border-[#262936] flex flex-col gap-2.5">
         <div className="flex items-center justify-between text-xs flex-wrap gap-1">
-          <span className="text-[#a39e93] uppercase font-semibold text-[11px]">24-Hour Activity Gauge</span>
+          <span className="text-[#a39e93] uppercase font-semibold text-[10px] sm:text-[11px]">
+            24h Activity Gauge
+          </span>
           <span className="font-bold text-[#f4f0e6] text-xs sm:text-sm">
             {loading ? 'CALCULATING...' : `[ ${postCount} TRANSMISSIONS ]`}
           </span>
         </div>
 
         {/* ASCII / Block Gauge */}
-        <div className="text-xs sm:text-sm font-bold tracking-wider sm:tracking-widest text-[#f4f0e6] py-1 border-y border-[#262936] flex items-center justify-between overflow-x-hidden">
-          <span className="text-[#d97706] select-none font-mono">{volume.blocks}</span>
-          <span className="text-[11px] text-[#a39e93] shrink-0">{volume.percent}% CAPACITY</span>
+        <div className="text-xs sm:text-sm font-bold tracking-wider text-[#f4f0e6] py-1 border-y border-[#262936] flex items-center justify-between gap-2 overflow-x-hidden select-none">
+          <span className="text-[#d97706] font-mono tracking-widest text-xs sm:text-sm truncate">
+            {volume.blocks}
+          </span>
+          <span className="text-[10px] sm:text-[11px] text-[#a39e93] shrink-0">
+            {volume.percent}% CAPACITY
+          </span>
         </div>
 
         <p className="text-[10px] text-[#a39e93] italic font-sans leading-relaxed">
