@@ -2,11 +2,13 @@
 
 :root {
   --ink-bg: #0c0d10;
-  --ink-surface: #14161d;
+  --ink-surface: #12141c;
+  --ink-surface-hover: #171a24;
   --paper-cream: #f4f0e6;
   --paper-muted: #a39e93;
-  --ink-border: #262936;
-  --ink-border-heavy: #3d4257;
+  --paper-faint: #6b665c;
+  --ink-border: #1f2330;
+  --ink-border-heavy: #2e3547;
   --royal-ochre: #d97706;
   --royal-crimson: #be123c;
 }
@@ -28,33 +30,45 @@
 body {
   background-color: var(--ink-bg);
   color: var(--paper-cream);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   overflow-x: hidden;
   letter-spacing: -0.01em;
+  min-height: 100vh;
 }
 
 /* Serif Masthead Utility */
 .font-broadsheet {
-  font-family: "Playfair Display", "Times New Roman", "Georgia", "Newsreader", serif;
+  font-family: "Playfair Display", "Georgia", "Newsreader", "Times New Roman", serif;
 }
 
 /* Monospace Teletype Utility */
 .font-teletype {
-  font-family: "SF Mono", "Courier New", Courier, monospace;
+  font-family: "SF Mono", "Menlo", "Courier New", Courier, monospace;
+}
+
+/* Substack-style Clean Article & Card */
+.substack-card {
+  background-color: #11131a;
+  border: 1px solid var(--ink-border);
+  transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
+}
+
+.substack-card:hover {
+  border-color: var(--ink-border-heavy);
+  background-color: #141720;
 }
 
 /* Broadsheet Borders & Dividers */
 .broadsheet-card {
-  background-color: #12141c;
+  background-color: #11131a;
   border: 1px solid var(--ink-border);
-  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 0.8);
+  box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 0.6);
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
 .broadsheet-card:hover {
   border-color: var(--ink-border-heavy);
-  transform: translate(-1px, -1px);
-  box-shadow: 6px 6px 0px 0px rgba(0, 0, 0, 0.9);
+  box-shadow: 3px 3px 0px 0px rgba(0, 0, 0, 0.8);
 }
 
 .double-rule-b {
@@ -66,13 +80,13 @@ body {
 }
 
 .stamp-badge {
-  font-family: "SF Mono", "Courier New", monospace;
+  font-family: "SF Mono", "Menlo", monospace;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding: 2px 8px;
   border: 1px solid var(--ink-border);
-  background-color: #171a24;
+  background-color: #151822;
   color: #d6d0c2;
 }
 
@@ -84,16 +98,21 @@ body {
 
 /* Tactile Stamp Button */
 .stamp-btn {
-  font-family: "SF Mono", "Courier New", monospace;
+  font-family: "SF Mono", "Menlo", monospace;
   font-size: 11px;
   text-transform: uppercase;
   font-weight: 700;
   border: 1px solid var(--ink-border-heavy);
-  background-color: #171922;
+  background-color: #151822;
   color: #ece7db;
-  padding: 6px 12px;
+  padding: 6px 14px;
   box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 0.7);
-  transition: all 0.1s ease;
+  transition: all 0.12s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
 }
 
 .stamp-btn:hover {
@@ -109,6 +128,46 @@ body {
   box-shadow: 0px 0px 0px 0px rgba(0, 0, 0, 0.9);
 }
 
+/* Substack Action Button (Pill/Modern) */
+.substack-btn-primary {
+  background-color: #f4f0e6;
+  color: #0c0d10;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 6px 16px;
+  border-radius: 9999px;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.substack-btn-primary:hover {
+  background-color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(244, 240, 230, 0.15);
+}
+
+.substack-btn-secondary {
+  background-color: #151822;
+  color: #f4f0e6;
+  border: 1px solid var(--ink-border-heavy);
+  font-weight: 500;
+  font-size: 12px;
+  padding: 6px 16px;
+  border-radius: 9999px;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.substack-btn-secondary:hover {
+  background-color: #1f2330;
+  border-color: #f4f0e6;
+  color: #ffffff;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
@@ -120,9 +179,18 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #2b3042;
+  background: #232736;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #424963;
+  background: #383f56;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

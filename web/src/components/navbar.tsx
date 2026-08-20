@@ -2,68 +2,103 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useAuth, useRealtime } from './providers';
-import { LogIn, LogOut, Shield, Menu, X, ChevronDown } from 'lucide-react';
+import { LogOut, Shield, Menu, X, ChevronDown, Radio, BookOpen, User, Bot, ArrowUpRight } from 'lucide-react';
 
 export function Navbar() {
+  const pathname = usePathname();
   const { user, loading, logout, loginDemo } = useAuth();
   const { isConnected } = useRealtime();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showDemoMenu, setShowDemoMenu] = useState(false);
 
+  const navLinks = [
+    { label: 'Dispatches', href: '/', icon: BookOpen },
+    { label: 'Channels', href: '/channels', icon: Radio },
+    { label: 'Profile', href: '/profile', icon: User },
+  ];
+
+  if (user?.role === 'admin' || user?.role === 'moderator') {
+    navLinks.push({ label: 'Court Inquest', href: '/admin/moderation', icon: Shield });
+  }
+
   return (
-    <header className="sticky top-0 z-40 w-full bg-[#12141c] border-b-2 border-[#262936] double-rule-b">
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
-        {/* Masthead Brand */}
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <Link href="/" className="flex items-center gap-2 sm:gap-3 group min-w-0">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 border-2 border-[#f4f0e6] bg-[#f4f0e6] text-[#0c0d10] flex items-center justify-center font-black font-broadsheet text-base sm:text-lg shadow-[2px_2px_0px_0px_#262936] shrink-0">
+    <header className="sticky top-0 z-40 w-full bg-[#0c0d10]/90 backdrop-blur-md border-b border-[#1f2330]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+        {/* Left: Brand / Masthead */}
+        <div className="flex items-center gap-6">
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="w-8 h-8 rounded-lg border border-[#3d4257] bg-[#161822] text-[#f4f0e6] flex items-center justify-center font-bold font-broadsheet text-lg shadow-sm group-hover:border-[#d97706] transition-colors">
               §
             </div>
-            <div className="flex flex-col min-w-0">
-              <span className="font-broadsheet font-black text-sm sm:text-lg tracking-tight text-[#f4f0e6] uppercase truncate">
+            <div className="flex flex-col">
+              <span className="font-broadsheet font-black text-base sm:text-lg tracking-tight text-[#f4f0e6] uppercase group-hover:text-[#d97706] transition-colors">
                 The Lurkening
               </span>
-              <span className="font-teletype text-[8px] sm:text-[9px] tracking-widest text-[#a39e93] uppercase hidden xs:inline">
-                Gazette & Teleprinter
+              <span className="font-teletype text-[9px] tracking-wider text-[#a39e93] uppercase hidden xs:inline">
+                Telegram Gazette & Archive
               </span>
             </div>
           </Link>
+
+          {/* Desktop Navigation Links */}
+          <nav className="hidden md:flex items-center gap-1 font-teletype text-xs">
+            {navLinks.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`px-3 py-1.5 rounded-md transition-all font-medium ${
+                    isActive
+                      ? 'bg-[#1a1d28] text-[#f4f0e6] border border-[#2e3547]'
+                      : 'text-[#a39e93] hover:text-[#f4f0e6] hover:bg-[#141620]'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
         </div>
 
-        {/* Teletype Stream Indicator */}
-        <div className="hidden md:flex items-center gap-2 font-teletype text-[11px] px-3 py-1 bg-[#171a24] border border-[#262936] text-[#d6d0c2] shrink-0">
-          <span className={`w-2 h-2 ${isConnected ? 'bg-emerald-400' : 'bg-amber-400'}`} />
-          <span>{isConnected ? 'TELETYPE: CONNECTED' : 'TELETYPE: POLLING'}</span>
-        </div>
+        {/* Right: Status & Actions */}
+        <div className="flex items-center gap-3">
+          {/* Live Status Badge */}
+          <div className="hidden lg:flex items-center gap-2 font-teletype text-[10px] px-2.5 py-1 bg-[#12141c] border border-[#1f2330] rounded-full text-[#a39e93]">
+            <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+            <span>{isConnected ? 'LIVE WIRE' : 'POLLING'}</span>
+          </div>
 
-        {/* User Auth & Actions */}
-        <div className="flex items-center gap-2 shrink-0">
+          {/* Bot Callout */}
+          <a
+            href="https://t.me/lurklord_bot"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-teletype font-semibold rounded-full border border-[#785a28] bg-[#241c10] text-[#f6d89b] hover:bg-[#d97706] hover:text-black transition-all"
+          >
+            <Bot className="w-3.5 h-3.5" />
+            <span>@lurklord_bot</span>
+            <ArrowUpRight className="w-3 h-3 opacity-70" />
+          </a>
+
+          {/* User Section */}
           {loading ? (
-            <div className="w-7 h-7 bg-zinc-800 animate-pulse border border-zinc-700" />
+            <div className="w-8 h-8 rounded-full bg-zinc-800 animate-pulse border border-zinc-700" />
           ) : user ? (
             <div className="flex items-center gap-2">
-              {user.role === 'admin' && (
-                <Link
-                  href="/admin/moderation"
-                  className="hidden sm:inline-flex items-center gap-1.5 stamp-badge stamp-badge-gold"
-                >
-                  <Shield className="w-3 h-3" />
-                  <span>COURT SCRIBE</span>
-                </Link>
-              )}
-
               <Link
                 href="/profile"
-                className="flex items-center gap-1.5 sm:gap-2 px-2 py-1 bg-[#171a24] border border-[#262936] hover:border-[#f4f0e6] transition-colors"
+                className="flex items-center gap-2 px-2.5 py-1.5 rounded-full bg-[#151822] border border-[#2e3547] hover:border-[#f4f0e6] transition-all"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={user.photoUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${user.displayName}`}
                   alt={user.displayName}
-                  className="w-4 h-4 rounded-none bg-zinc-800"
+                  className="w-5 h-5 rounded-full bg-zinc-800 object-cover"
                 />
-                <span className="font-teletype text-xs font-semibold text-[#f4f0e6] hidden sm:inline max-w-[100px] truncate">
+                <span className="font-teletype text-xs font-semibold text-[#f4f0e6] hidden sm:inline max-w-[120px] truncate">
                   {user.displayName}
                 </span>
               </Link>
@@ -71,32 +106,32 @@ export function Navbar() {
               <button
                 onClick={logout}
                 title="Sign Out"
-                className="p-1 border border-[#262936] text-[#a39e93] hover:text-[#f4f0e6] hover:bg-[#171a24] transition-colors"
+                className="p-2 rounded-full border border-[#1f2330] text-[#a39e93] hover:text-rose-400 hover:border-rose-500/40 hover:bg-[#151822] transition-colors"
               >
                 <LogOut className="w-3.5 h-3.5" />
               </button>
             </div>
           ) : (
-            <div className="relative flex items-center gap-1.5 sm:gap-2">
+            <div className="relative flex items-center gap-2">
               <Link
                 href="/login"
-                className="stamp-btn !py-1 !px-2.5 !text-[11px]"
+                className="substack-btn-primary"
               >
                 Sign In
               </Link>
 
               <button
                 onClick={() => setShowDemoMenu(!showDemoMenu)}
-                className="stamp-btn !bg-[#12141c] !text-[#a39e93] hover:!text-[#f4f0e6] !py-1 !px-2 !text-[11px] flex items-center gap-1"
+                className="substack-btn-secondary"
               >
                 <span>Demo</span>
-                <ChevronDown className="w-3 h-3" />
+                <ChevronDown className="w-3 h-3 text-[#a39e93]" />
               </button>
 
-              {/* Demo Sign In Dropdown */}
+              {/* Demo Menu */}
               {showDemoMenu && (
-                <div className="absolute right-0 top-9 w-52 p-2 bg-[#12141c] border-2 border-[#3d4257] shadow-[6px_6px_0px_0px_#000000] z-50 font-teletype text-xs">
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-[#a39e93] px-2 py-1 border-b border-[#262936] mb-1">
+                <div className="absolute right-0 top-11 w-52 p-2 bg-[#12141c] border border-[#2e3547] rounded-xl shadow-2xl z-50 font-teletype text-xs animate-in fade-in slide-in-from-top-1">
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-[#a39e93] px-2.5 py-1 border-b border-[#1f2330] mb-1">
                     Select Persona
                   </div>
                   <button
@@ -104,27 +139,30 @@ export function Navbar() {
                       loginDemo('admin');
                       setShowDemoMenu(false);
                     }}
-                    className="w-full text-left px-2.5 py-1.5 text-[#f4f0e6] hover:bg-[#f4f0e6] hover:text-[#0c0d10] transition-colors font-bold"
+                    className="w-full text-left px-2.5 py-1.5 rounded-lg text-[#f4f0e6] hover:bg-[#1f2330] transition-colors font-medium flex items-center gap-2"
                   >
-                    ✦ Royal Editor
+                    <span>👑</span>
+                    <span>Royal Editor (Admin)</span>
                   </button>
                   <button
                     onClick={() => {
                       loginDemo('reader');
                       setShowDemoMenu(false);
                     }}
-                    className="w-full text-left px-2.5 py-1.5 text-[#f4f0e6] hover:bg-[#f4f0e6] hover:text-[#0c0d10] transition-colors font-bold"
+                    className="w-full text-left px-2.5 py-1.5 rounded-lg text-[#f4f0e6] hover:bg-[#1f2330] transition-colors font-medium flex items-center gap-2"
                   >
-                    ✦ Citizen Reader
+                    <span>📜</span>
+                    <span>Citizen Reader</span>
                   </button>
                   <button
                     onClick={() => {
                       loginDemo('vip');
                       setShowDemoMenu(false);
                     }}
-                    className="w-full text-left px-2.5 py-1.5 text-[#f4f0e6] hover:bg-[#f4f0e6] hover:text-[#0c0d10] transition-colors font-bold"
+                    className="w-full text-left px-2.5 py-1.5 rounded-lg text-[#f4f0e6] hover:bg-[#1f2330] transition-colors font-medium flex items-center gap-2"
                   >
-                    ✦ Foreign Envoy
+                    <span>✨</span>
+                    <span>Foreign Envoy</span>
                   </button>
                 </div>
               )}
@@ -134,7 +172,7 @@ export function Navbar() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-1.5 border border-[#262936] text-[#f4f0e6] hover:bg-[#171a24]"
+            className="md:hidden p-2 rounded-lg border border-[#1f2330] text-[#f4f0e6] hover:bg-[#151822]"
           >
             {isMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
           </button>
@@ -143,37 +181,31 @@ export function Navbar() {
 
       {/* Mobile Drawer */}
       {isMenuOpen && (
-        <div className="md:hidden border-t-2 border-[#262936] bg-[#12141c] p-4 flex flex-col gap-2 font-teletype text-xs">
-          <Link
-            href="/"
-            onClick={() => setIsMenuOpen(false)}
-            className="p-2.5 border border-[#262936] hover:bg-[#f4f0e6] hover:text-[#0c0d10] text-[#f4f0e6]"
-          >
-            [01] BROADSHEET FEED
-          </Link>
-          <Link
-            href="/channels"
-            onClick={() => setIsMenuOpen(false)}
-            className="p-2.5 border border-[#262936] hover:bg-[#f4f0e6] hover:text-[#0c0d10] text-[#f4f0e6]"
-          >
-            [02] MONITORED CHANNELS
-          </Link>
-          <Link
-            href="/profile"
-            onClick={() => setIsMenuOpen(false)}
-            className="p-2.5 border border-[#262936] hover:bg-[#f4f0e6] hover:text-[#0c0d10] text-[#f4f0e6]"
-          >
-            [03] SCRIBE CREDENTIALS
-          </Link>
-          {user?.role === 'admin' && (
+        <div className="md:hidden border-t border-[#1f2330] bg-[#0c0d10] p-4 flex flex-col gap-2 font-teletype text-xs">
+          {navLinks.map((item) => (
             <Link
-              href="/admin/moderation"
+              key={item.href}
+              href={item.href}
               onClick={() => setIsMenuOpen(false)}
-              className="p-2.5 border border-[#785a28] bg-[#241c10] text-[#f6d89b]"
+              className={`p-2.5 rounded-lg border transition-colors flex items-center gap-2 ${
+                pathname === item.href
+                  ? 'bg-[#1a1d28] text-[#f4f0e6] border-[#2e3547]'
+                  : 'text-[#a39e93] border-transparent hover:bg-[#151822]'
+              }`}
             >
-              [!] COURT INQUEST PANEL
+              <item.icon className="w-4 h-4 text-[#d97706]" />
+              <span>{item.label}</span>
             </Link>
-          )}
+          ))}
+          <a
+            href="https://t.me/lurklord_bot"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-2.5 rounded-lg border border-[#785a28] bg-[#241c10] text-[#f6d89b] flex items-center justify-between"
+          >
+            <span>Summon @lurklord_bot</span>
+            <ArrowUpRight className="w-3.5 h-3.5" />
+          </a>
         </div>
       )}
     </header>

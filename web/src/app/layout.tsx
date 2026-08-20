@@ -49,19 +49,10 @@ export default function RootLayout({
           <div className="min-h-screen flex flex-col">
             <Navbar />
 
-            <div className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-6 flex gap-8">
-              {/* Desktop Left Sidebar */}
-              <aside className="hidden lg:block w-60 shrink-0">
-                <div className="sticky top-20">
-                  <Sidebar />
-                </div>
-              </aside>
-
-              {/* Main Feed Content Frame */}
-              <main className="flex-1 min-w-0 pb-20 lg:pb-12">
-                {children}
-              </main>
-            </div>
+            {/* Expansive Fullscreen Content Canvas */}
+            <main className="flex-1 w-full pb-20 md:pb-12">
+              {children}
+            </main>
 
             <BottomNav />
             <PwaInstallPrompt />

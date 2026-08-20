@@ -6,7 +6,7 @@ import { PostCard } from '@/components/post-card';
 import { BabiometerWidget } from '@/components/babiometer-widget';
 import { useAuth, useToast } from '@/components/providers';
 import { formatNumber } from '@/lib/utils';
-import { Check, Plus, ArrowLeft, Loader2, ExternalLink } from 'lucide-react';
+import { Check, Plus, ArrowLeft, Loader2, ExternalLink, Radio, Users } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ChannelProfilePage({
@@ -31,7 +31,7 @@ export default function ChannelProfilePage({
 
     Promise.all([
       fetch(`/api/channels?q=${username}`).then((r) => r.json()),
-      fetch(`/api/posts?channel=${username}&limit=25`).then((r) => r.json()),
+      fetch(`/api/posts?channel=${username}&limit=30`).then((r) => r.json()),
     ])
       .then(([chanData, postData]) => {
         const found = chanData.channels?.find(
@@ -45,7 +45,7 @@ export default function ChannelProfilePage({
           setChannelInfo({
             id: username,
             name: `@${username}`,
-            description: 'Telegram channel broadcast transmission',
+            description: 'Public Telegram channel broadcast feed indexed for autonomous intelligence.',
             avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${username}`,
             subscriberCount: 0,
             isVerified: false,
@@ -84,26 +84,26 @@ export default function ChannelProfilePage({
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-20 text-[#a39e93] font-teletype">
-        <Loader2 className="w-6 h-6 animate-spin text-[#d97706]" />
+      <div className="flex justify-center items-center py-28 text-[#a39e93] font-teletype">
+        <Loader2 className="w-7 h-7 animate-spin text-[#d97706]" />
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-6 max-w-4xl mx-auto font-teletype">
+    <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 flex flex-col gap-8">
       {/* Back Button */}
       <Link
         href="/channels"
-        className="inline-flex items-center gap-1.5 text-xs text-[#a39e93] hover:text-[#f4f0e6] transition-colors self-start uppercase font-bold"
+        className="inline-flex items-center gap-2 text-xs font-teletype font-semibold text-[#a39e93] hover:text-[#f4f0e6] transition-colors self-start uppercase"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
-        <span>← RETURN TO CHANNEL REGISTRY</span>
+        <span>Return to Publication Directory</span>
       </Link>
 
-      {/* Hero Broadsheet Card */}
-      <div className="broadsheet-card p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
-        <div className="flex items-center gap-4">
+      {/* Substack Publication Hero Banner */}
+      <div className="p-6 sm:p-8 rounded-2xl bg-gradient-to-b from-[#141722] to-[#0f1118] border border-[#1f2330] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 shadow-sm">
+        <div className="flex items-center gap-4 sm:gap-5 min-w-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={
@@ -111,45 +111,47 @@ export default function ChannelProfilePage({
               `https://api.dicebear.com/7.x/bottts/svg?seed=${username}`
             }
             alt={channelInfo?.name || username}
-            className="w-14 h-14 border-2 border-[#3d4257] bg-[#12141c] object-cover"
+            className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-[#2e3547] bg-[#161822] object-cover shrink-0 shadow-md"
           />
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <h1 className="font-broadsheet font-black text-xl sm:text-2xl text-[#f4f0e6] uppercase">
+          <div className="flex flex-col min-w-0 gap-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="font-broadsheet font-black text-2xl sm:text-3xl text-[#f4f0e6] tracking-tight">
                 {channelInfo?.name || `@${username}`}
               </h1>
               {channelInfo?.isVerified && (
-                <span className="text-[#d97706] text-xs font-bold">
-                  [VERIFIED]
+                <span className="w-4 h-4 rounded-full bg-[#d97706]/20 text-[#d97706] text-[10px] font-bold inline-flex items-center justify-center">
+                  ✓
                 </span>
               )}
             </div>
-            <span className="text-xs text-[#a39e93]">@{username}</span>
-            <div className="flex items-center gap-2 text-[11px] text-[#a39e93] mt-1 uppercase">
-              <span>{formatNumber(subCount)} SUBSCRIBERS</span>
-              <span>·</span>
-              <span>{posts.length} DISPATCHES IN ARCHIVE</span>
+            <span className="font-teletype text-xs text-[#a39e93]">@{username}</span>
+            <div className="flex items-center gap-3 text-xs font-teletype text-[#a39e93] mt-1">
+              <span>{formatNumber(subCount)} Followers</span>
+              <span>•</span>
+              <span>{posts.length} Dispatches</span>
             </div>
           </div>
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+        <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
           <button
             onClick={handleToggleSubscribe}
-            className={`stamp-btn flex-1 sm:flex-initial !text-xs ${
-              isSubscribed ? '!bg-[#d97706] !text-black !border-[#d97706]' : ''
+            className={`flex-1 sm:flex-initial px-5 py-2 rounded-full font-teletype font-semibold text-xs transition-all flex items-center justify-center gap-1.5 ${
+              isSubscribed
+                ? 'bg-[#d97706] text-black shadow-sm'
+                : 'substack-btn-primary'
             }`}
           >
             {isSubscribed ? (
               <>
-                <Check className="w-3.5 h-3.5 inline mr-1" />
-                <span>FOLLOWING</span>
+                <Check className="w-3.5 h-3.5" />
+                <span>Following</span>
               </>
             ) : (
               <>
-                <Plus className="w-3.5 h-3.5 inline mr-1" />
-                <span>FOLLOW CHANNEL</span>
+                <Plus className="w-3.5 h-3.5" />
+                <span>Follow Channel</span>
               </>
             )}
           </button>
@@ -158,25 +160,33 @@ export default function ChannelProfilePage({
             href={`https://t.me/${username}`}
             target="_blank"
             rel="noopener noreferrer"
-            title="Open Telegram Wire"
-            className="p-2 border border-[#262936] hover:border-[#f4f0e6] text-[#a39e93] hover:text-[#f4f0e6] transition-colors"
+            title="Open in Telegram"
+            className="p-2.5 rounded-full border border-[#1f2330] hover:border-[#2e3547] bg-[#151822] text-[#a39e93] hover:text-[#f4f0e6] transition-colors"
           >
             <ExternalLink className="w-4 h-4" />
           </a>
         </div>
       </div>
 
-      {/* Teletype Chronometer */}
+      {/* Description */}
+      {channelInfo?.description && (
+        <p className="text-sm sm:text-base text-[#d6d0c2] leading-relaxed -mt-2">
+          {channelInfo.description}
+        </p>
+      )}
+
+      {/* Activity Gauge */}
       <BabiometerWidget channel={username} />
 
-      {/* Posts Feed */}
-      <div className="flex flex-col gap-3">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-[#a39e93] border-b border-[#262936] pb-1">
-          § DISPATCH ARCHIVE: @{username}
-        </h2>
+      {/* Posts Feed Header */}
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between border-b border-[#1f2330] pb-2 font-teletype text-xs uppercase tracking-wider text-[#a39e93]">
+          <span>Dispatch Ledger Archive</span>
+          <span>{posts.length} Transmissions</span>
+        </div>
 
         {posts.length === 0 ? (
-          <div className="broadsheet-card p-10 text-center text-[#a39e93] text-xs">
+          <div className="substack-card p-12 rounded-2xl text-center text-[#a39e93] text-xs font-teletype">
             [ NO TRANSMISSIONS RECORDED FOR THIS CHANNEL ]
           </div>
         ) : (

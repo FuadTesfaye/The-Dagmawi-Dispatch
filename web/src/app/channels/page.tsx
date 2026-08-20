@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { TrackedChannel } from '@/lib/types';
 import { ChannelCard } from '@/components/channel-card';
-import { Search, Loader2 } from 'lucide-react';
+import { Search, Loader2, Radio, Plus } from 'lucide-react';
+import Link from 'next/link';
 
 export default function ChannelsPage() {
   const [channels, setChannels] = useState<(TrackedChannel & { postCount?: number })[]>([]);
@@ -26,46 +27,48 @@ export default function ChannelsPage() {
   }, [search]);
 
   return (
-    <div className="flex flex-col gap-6 max-w-4xl mx-auto font-teletype">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b-2 border-[#262936] pb-4">
-        <div>
-          <span className="text-[10px] font-bold uppercase tracking-widest text-[#d97706] mb-1 block">
-            § SECTION II: CHANNEL LEDGER
-          </span>
-          <h1 className="font-broadsheet font-black text-2xl sm:text-3xl text-[#f4f0e6] uppercase">
-            Monitored Publication Registry
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 flex flex-col gap-8">
+      {/* Header Banner */}
+      <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 pb-6 border-b border-[#1f2330]">
+        <div className="flex flex-col gap-2 max-w-2xl">
+          <div className="flex items-center gap-2 font-teletype text-xs text-[#d97706] uppercase tracking-wider font-semibold">
+            <Radio className="w-4 h-4" />
+            <span>Publication Registry & Channel Ledger</span>
+          </div>
+          <h1 className="font-broadsheet font-black text-3xl sm:text-4xl text-[#f4f0e6] tracking-tight uppercase">
+            Monitored Publications
           </h1>
-          <p className="text-xs text-[#a39e93] mt-0.5">
-            Verified channels indexed for automatic teletype summarization.
+          <p className="text-sm text-[#a39e93] leading-relaxed">
+            Explore verified and community-indexed Telegram channels ingested into the autonomous archive for real-time AI summarization.
           </p>
         </div>
 
         {/* Search */}
-        <div className="relative w-full sm:w-64">
+        <div className="relative w-full md:w-80 font-teletype">
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="FILTER REGISTRY..."
-            className="w-full py-1.5 pl-8 pr-3 bg-[#12141c] border border-[#262936] text-xs text-[#f4f0e6] placeholder-[#6b665c] font-teletype uppercase focus:outline-none focus:border-[#f4f0e6]"
+            placeholder="Search channels & handles..."
+            className="w-full py-2 pl-9 pr-4 bg-[#12141c] border border-[#1f2330] rounded-full text-xs text-[#f4f0e6] placeholder-[#6b665c] focus:outline-none focus:border-[#d97706] transition-colors"
           />
-          <Search className="w-3.5 h-3.5 text-[#a39e93] absolute left-2.5 top-2.5" />
+          <Search className="w-4 h-4 text-[#a39e93] absolute left-3 top-2.5" />
         </div>
       </div>
 
-      {/* Grid */}
+      {/* Channels Grid */}
       {loading ? (
-        <div className="flex items-center justify-center py-20 text-[#a39e93]">
-          <Loader2 className="w-6 h-6 animate-spin text-[#d97706]" />
+        <div className="flex flex-col items-center justify-center py-28 gap-3 text-[#a39e93] font-teletype">
+          <Loader2 className="w-7 h-7 animate-spin text-[#d97706]" />
+          <span className="text-xs uppercase tracking-wider">[ Loading Publication Directory... ]</span>
         </div>
       ) : channels.length === 0 ? (
-        <div className="broadsheet-card p-12 text-center flex flex-col items-center justify-center gap-2">
-          <h3 className="font-bold text-sm text-[#f4f0e6] uppercase">[ NO CHANNELS REGISTERED ]</h3>
-          <p className="text-xs text-[#a39e93]">No registry records matched your query.</p>
+        <div className="substack-card p-14 text-center rounded-2xl flex flex-col items-center justify-center gap-2 font-teletype">
+          <h3 className="font-bold text-sm text-[#f4f0e6] uppercase">[ No Channels Found ]</h3>
+          <p className="text-xs text-[#a39e93]">No registry records matched your search query.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {channels.map((ch) => (
             <ChannelCard key={ch.id} channel={ch} />
           ))}
