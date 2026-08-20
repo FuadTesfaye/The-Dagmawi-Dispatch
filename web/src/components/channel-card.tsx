@@ -48,7 +48,7 @@ export function ChannelCard({ channel }: ChannelCardProps) {
   };
 
   return (
-    <div className="substack-card p-5 sm:p-6 rounded-2xl flex flex-col justify-between gap-4 transition-all group">
+    <div className="broadsheet-card p-5 sm:p-6 flex flex-col justify-between gap-4 font-teletype group">
       <div className="flex items-start justify-between gap-3">
         <Link href={`/channel/${channel.id}`} className="flex items-center gap-3 min-w-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -58,61 +58,59 @@ export function ChannelCard({ channel }: ChannelCardProps) {
               `https://api.dicebear.com/7.x/bottts/svg?seed=${channel.id}`
             }
             alt={channel.name}
-            className="w-12 h-12 rounded-full border border-[#2e3547] bg-[#161822] object-cover shrink-0"
+            className="w-12 h-12 border-2 border-[#262936] bg-[#12141c] object-cover shrink-0"
           />
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-1.5">
-              <h3 className="font-bold text-sm text-[#f4f0e6] group-hover:text-[#d97706] transition-colors truncate">
+              <h3 className="font-bold text-sm text-[#f4f0e6] uppercase group-hover:text-[#d97706] transition-colors truncate">
                 {channel.name}
               </h3>
               {channel.isVerified && (
-                <span className="w-3.5 h-3.5 rounded-full bg-[#d97706]/20 text-[#d97706] text-[9px] font-bold inline-flex items-center justify-center">
-                  ✓
+                <span className="text-[#d97706] text-xs font-bold">
+                  [V]
                 </span>
               )}
             </div>
-            <span className="font-teletype text-xs text-[#a39e93]">@{channel.id}</span>
+            <span className="text-xs text-[#a39e93]">@{channel.id}</span>
           </div>
         </Link>
 
-        {/* Subscribe / Follow Button */}
+        {/* Follow Button */}
         <button
           onClick={handleToggleSubscribe}
           disabled={loading}
-          className={`px-3.5 py-1.5 rounded-full text-xs font-teletype font-semibold transition-all flex items-center gap-1 shrink-0 ${
-            isSubscribed
-              ? 'bg-[#d97706] text-black shadow-sm'
-              : 'border border-[#1f2330] bg-[#151822] text-[#f4f0e6] hover:border-[#2e3547]'
+          className={`stamp-btn !py-1 !px-2.5 !text-xs flex items-center gap-1 shrink-0 ${
+            isSubscribed ? '!bg-[#d97706] !text-black !border-[#d97706]' : ''
           }`}
         >
           {isSubscribed ? (
             <>
               <Check className="w-3 h-3" />
-              <span>Following</span>
+              <span>FOLLOWING</span>
             </>
           ) : (
             <>
               <Plus className="w-3 h-3" />
-              <span>Follow</span>
+              <span>FOLLOW</span>
             </>
           )}
         </button>
       </div>
 
       {/* Description */}
-      <p className="text-xs sm:text-sm text-[#d6d0c2] leading-relaxed line-clamp-2 font-sans">
+      <p className="text-xs text-[#d6d0c2] leading-relaxed line-clamp-2 font-sans">
         {channel.description || 'Public Telegram broadcast feed indexed for autonomous intelligence.'}
       </p>
 
       {/* Footer Metrics */}
-      <div className="flex items-center justify-between font-teletype text-[11px] text-[#a39e93] pt-3 border-t border-[#1f2330]">
+      <div className="flex items-center justify-between text-[10px] text-[#a39e93] pt-3 border-t border-[#262936] uppercase">
         <div className="flex items-center gap-1.5">
           <Users className="w-3.5 h-3.5 text-[#d97706]" />
-          <span>{formatNumber(subCount)} Subscribers</span>
+          <span>{formatNumber(subCount)} SUBSCRIBERS</span>
         </div>
 
         {channel.postCount !== undefined && (
-          <span>{formatNumber(channel.postCount)} Dispatches</span>
+          <span>{formatNumber(channel.postCount)} DISPATCHES</span>
         )}
       </div>
     </div>

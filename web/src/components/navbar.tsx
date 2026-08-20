@@ -24,20 +24,20 @@ export function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-[#0c0d10]/90 backdrop-blur-md border-b border-[#1f2330]">
+    <header className="sticky top-0 z-40 w-full bg-[#12141c] border-b-2 border-[#262936] double-rule-b font-teletype">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         {/* Left: Brand / Masthead */}
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-8 h-8 rounded-lg border border-[#3d4257] bg-[#161822] text-[#f4f0e6] flex items-center justify-center font-bold font-broadsheet text-lg shadow-sm group-hover:border-[#d97706] transition-colors">
+            <div className="w-9 h-9 border-2 border-[#f4f0e6] bg-[#f4f0e6] text-[#0c0d10] flex items-center justify-center font-black font-broadsheet text-lg shadow-[2px_2px_0px_0px_#262936] shrink-0">
               §
             </div>
             <div className="flex flex-col">
               <span className="font-broadsheet font-black text-base sm:text-lg tracking-tight text-[#f4f0e6] uppercase group-hover:text-[#d97706] transition-colors">
                 The Lurkening
               </span>
-              <span className="font-teletype text-[9px] tracking-wider text-[#a39e93] uppercase hidden xs:inline">
-                Telegram Gazette & Archive
+              <span className="font-teletype text-[9px] tracking-widest text-[#a39e93] uppercase hidden xs:inline">
+                Gazette & Teleprinter
               </span>
             </div>
           </Link>
@@ -50,10 +50,10 @@ export function Navbar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`px-3 py-1.5 rounded-md transition-all font-medium ${
+                  className={`px-3 py-1.5 border transition-all uppercase font-bold text-xs ${
                     isActive
-                      ? 'bg-[#1a1d28] text-[#f4f0e6] border border-[#2e3547]'
-                      : 'text-[#a39e93] hover:text-[#f4f0e6] hover:bg-[#141620]'
+                      ? 'bg-[#f4f0e6] text-[#0c0d10] border-[#f4f0e6] shadow-[2px_2px_0px_0px_#000000]'
+                      : 'bg-[#12141c] text-[#a39e93] border-[#262936] hover:border-[#f4f0e6] hover:text-[#f4f0e6]'
                   }`}
                 >
                   {item.label}
@@ -66,9 +66,9 @@ export function Navbar() {
         {/* Right: Status & Actions */}
         <div className="flex items-center gap-3">
           {/* Live Status Badge */}
-          <div className="hidden lg:flex items-center gap-2 font-teletype text-[10px] px-2.5 py-1 bg-[#12141c] border border-[#1f2330] rounded-full text-[#a39e93]">
-            <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
-            <span>{isConnected ? 'LIVE WIRE' : 'POLLING'}</span>
+          <div className="hidden lg:flex items-center gap-2 font-teletype text-[10px] px-2.5 py-1 bg-[#171a24] border border-[#262936] text-[#d6d0c2]">
+            <span className={`w-2 h-2 ${isConnected ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+            <span>{isConnected ? 'TELETYPE: CONNECTED' : 'TELETYPE: POLLING'}</span>
           </div>
 
           {/* Bot Callout */}
@@ -76,27 +76,27 @@ export function Navbar() {
             href="https://t.me/lurklord_bot"
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-teletype font-semibold rounded-full border border-[#785a28] bg-[#241c10] text-[#f6d89b] hover:bg-[#d97706] hover:text-black transition-all"
+            className="hidden sm:inline-flex items-center gap-1.5 stamp-btn !bg-[#241c10] !border-[#785a28] !text-[#f6d89b] hover:!bg-[#d97706] hover:!text-black !py-1.5 !px-3"
           >
-            <Bot className="w-3.5 h-3.5" />
+            <Bot className="w-3.5 h-3.5 text-[#d97706]" />
             <span>@lurklord_bot</span>
             <ArrowUpRight className="w-3 h-3 opacity-70" />
           </a>
 
           {/* User Section */}
           {loading ? (
-            <div className="w-8 h-8 rounded-full bg-zinc-800 animate-pulse border border-zinc-700" />
+            <div className="w-8 h-8 bg-zinc-800 animate-pulse border border-zinc-700" />
           ) : user ? (
             <div className="flex items-center gap-2">
               <Link
                 href="/profile"
-                className="flex items-center gap-2 px-2.5 py-1.5 rounded-full bg-[#151822] border border-[#2e3547] hover:border-[#f4f0e6] transition-all"
+                className="flex items-center gap-2 px-2.5 py-1.5 bg-[#171a24] border border-[#262936] hover:border-[#f4f0e6] transition-all"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={user.photoUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${user.displayName}`}
                   alt={user.displayName}
-                  className="w-5 h-5 rounded-full bg-zinc-800 object-cover"
+                  className="w-4 h-4 bg-zinc-800 object-cover"
                 />
                 <span className="font-teletype text-xs font-semibold text-[#f4f0e6] hidden sm:inline max-w-[120px] truncate">
                   {user.displayName}
@@ -106,7 +106,7 @@ export function Navbar() {
               <button
                 onClick={logout}
                 title="Sign Out"
-                className="p-2 rounded-full border border-[#1f2330] text-[#a39e93] hover:text-rose-400 hover:border-rose-500/40 hover:bg-[#151822] transition-colors"
+                className="p-1.5 border border-[#262936] text-[#a39e93] hover:text-rose-400 hover:border-rose-500 hover:bg-[#171a24] transition-colors"
               >
                 <LogOut className="w-3.5 h-3.5" />
               </button>
@@ -115,14 +115,14 @@ export function Navbar() {
             <div className="relative flex items-center gap-2">
               <Link
                 href="/login"
-                className="substack-btn-primary"
+                className="stamp-btn !py-1.5 !px-3.5"
               >
                 Sign In
               </Link>
 
               <button
                 onClick={() => setShowDemoMenu(!showDemoMenu)}
-                className="substack-btn-secondary"
+                className="stamp-btn !bg-[#12141c] !text-[#a39e93] hover:!text-[#f4f0e6] !py-1.5 !px-2.5 flex items-center gap-1"
               >
                 <span>Demo</span>
                 <ChevronDown className="w-3 h-3 text-[#a39e93]" />
@@ -130,8 +130,8 @@ export function Navbar() {
 
               {/* Demo Menu */}
               {showDemoMenu && (
-                <div className="absolute right-0 top-11 w-52 p-2 bg-[#12141c] border border-[#2e3547] rounded-xl shadow-2xl z-50 font-teletype text-xs animate-in fade-in slide-in-from-top-1">
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-[#a39e93] px-2.5 py-1 border-b border-[#1f2330] mb-1">
+                <div className="absolute right-0 top-11 w-52 p-2 bg-[#12141c] border-2 border-[#3d4257] shadow-[6px_6px_0px_0px_#000000] z-50 font-teletype text-xs">
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-[#a39e93] px-2 py-1 border-b border-[#262936] mb-1">
                     Select Persona
                   </div>
                   <button
@@ -139,30 +139,27 @@ export function Navbar() {
                       loginDemo('admin');
                       setShowDemoMenu(false);
                     }}
-                    className="w-full text-left px-2.5 py-1.5 rounded-lg text-[#f4f0e6] hover:bg-[#1f2330] transition-colors font-medium flex items-center gap-2"
+                    className="w-full text-left px-2.5 py-1.5 text-[#f4f0e6] hover:bg-[#f4f0e6] hover:text-[#0c0d10] transition-colors font-bold flex items-center gap-2"
                   >
-                    <span>👑</span>
-                    <span>Royal Editor (Admin)</span>
+                    <span>✦ Royal Editor</span>
                   </button>
                   <button
                     onClick={() => {
                       loginDemo('reader');
                       setShowDemoMenu(false);
                     }}
-                    className="w-full text-left px-2.5 py-1.5 rounded-lg text-[#f4f0e6] hover:bg-[#1f2330] transition-colors font-medium flex items-center gap-2"
+                    className="w-full text-left px-2.5 py-1.5 text-[#f4f0e6] hover:bg-[#f4f0e6] hover:text-[#0c0d10] transition-colors font-bold flex items-center gap-2"
                   >
-                    <span>📜</span>
-                    <span>Citizen Reader</span>
+                    <span>✦ Citizen Reader</span>
                   </button>
                   <button
                     onClick={() => {
                       loginDemo('vip');
                       setShowDemoMenu(false);
                     }}
-                    className="w-full text-left px-2.5 py-1.5 rounded-lg text-[#f4f0e6] hover:bg-[#1f2330] transition-colors font-medium flex items-center gap-2"
+                    className="w-full text-left px-2.5 py-1.5 text-[#f4f0e6] hover:bg-[#f4f0e6] hover:text-[#0c0d10] transition-colors font-bold flex items-center gap-2"
                   >
-                    <span>✨</span>
-                    <span>Foreign Envoy</span>
+                    <span>✦ Foreign Envoy</span>
                   </button>
                 </div>
               )}
@@ -172,7 +169,7 @@ export function Navbar() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 rounded-lg border border-[#1f2330] text-[#f4f0e6] hover:bg-[#151822]"
+            className="md:hidden p-2 border border-[#262936] text-[#f4f0e6] hover:bg-[#171a24]"
           >
             {isMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
           </button>
@@ -181,29 +178,29 @@ export function Navbar() {
 
       {/* Mobile Drawer */}
       {isMenuOpen && (
-        <div className="md:hidden border-t border-[#1f2330] bg-[#0c0d10] p-4 flex flex-col gap-2 font-teletype text-xs">
+        <div className="md:hidden border-t-2 border-[#262936] bg-[#12141c] p-4 flex flex-col gap-2 font-teletype text-xs">
           {navLinks.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               onClick={() => setIsMenuOpen(false)}
-              className={`p-2.5 rounded-lg border transition-colors flex items-center gap-2 ${
+              className={`p-2.5 border transition-colors flex items-center gap-2 ${
                 pathname === item.href
-                  ? 'bg-[#1a1d28] text-[#f4f0e6] border-[#2e3547]'
-                  : 'text-[#a39e93] border-transparent hover:bg-[#151822]'
+                  ? 'bg-[#f4f0e6] text-[#0c0d10] border-[#f4f0e6]'
+                  : 'text-[#f4f0e6] border-[#262936] hover:bg-[#171a24]'
               }`}
             >
               <item.icon className="w-4 h-4 text-[#d97706]" />
-              <span>{item.label}</span>
+              <span className="font-bold uppercase">{item.label}</span>
             </Link>
           ))}
           <a
             href="https://t.me/lurklord_bot"
             target="_blank"
             rel="noopener noreferrer"
-            className="p-2.5 rounded-lg border border-[#785a28] bg-[#241c10] text-[#f6d89b] flex items-center justify-between"
+            className="p-2.5 border border-[#785a28] bg-[#241c10] text-[#f6d89b] flex items-center justify-between"
           >
-            <span>Summon @lurklord_bot</span>
+            <span>SUMMON @lurklord_bot</span>
             <ArrowUpRight className="w-3.5 h-3.5" />
           </a>
         </div>

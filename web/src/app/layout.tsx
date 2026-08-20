@@ -40,10 +40,10 @@ export default function RootLayout({
       <body className="min-h-full bg-[#0c0d10] text-[#f4f0e6] font-sans antialiased selection:bg-[#d97706] selection:text-black">
         <Providers>
           {/* Broadsheet Top Bulletin Banner */}
-          <div className="w-full bg-[#161822] border-b border-[#262936] py-1 px-4 text-center font-teletype text-[10px] tracking-widest text-[#a39e93] uppercase flex items-center justify-between">
+          <div className="w-full bg-[#161822] border-b border-[#262936] py-1.5 px-4 text-center font-teletype text-[10px] tracking-widest text-[#a39e93] uppercase flex items-center justify-between">
             <span className="hidden sm:inline">✦ VOL. 2026 · NO. 88</span>
-            <span>THE LURKENING · ROYAL ARCHIVE & INGESTION ENGINE ACTIVE</span>
-            <span className="hidden sm:inline">GROQ LLM POOL ONLINE ✦</span>
+            <span>THE LURKENING · ROYAL ARCHIVE & TELEGRAM INDEX</span>
+            <span className="hidden sm:inline">REAL-TIME INGESTION ✦</span>
           </div>
 
           <div className="min-h-screen flex flex-col">

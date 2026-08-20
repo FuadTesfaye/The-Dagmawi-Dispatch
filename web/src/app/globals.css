@@ -7,8 +7,8 @@
   --paper-cream: #f4f0e6;
   --paper-muted: #a39e93;
   --paper-faint: #6b665c;
-  --ink-border: #1f2330;
-  --ink-border-heavy: #2e3547;
+  --ink-border: #262936;
+  --ink-border-heavy: #3d4257;
   --royal-ochre: #d97706;
   --royal-crimson: #be123c;
 }
@@ -17,9 +17,9 @@
   --color-ink-950: #08080a;
   --color-ink-900: #0c0d10;
   --color-ink-850: #101217;
-  --color-ink-800: #14161d;
-  --color-ink-700: #1c202a;
-  --color-ink-600: #262b3a;
+  --color-ink-800: #12141c;
+  --color-ink-700: #171a24;
+  --color-ink-600: #262936;
   --color-paper-50: #faf8f5;
   --color-paper-100: #f4f0e6;
   --color-paper-200: #e5dfd0;
@@ -38,7 +38,7 @@ body {
 
 /* Serif Masthead Utility */
 .font-broadsheet {
-  font-family: "Playfair Display", "Georgia", "Newsreader", "Times New Roman", serif;
+  font-family: "Playfair Display", "Times New Roman", "Georgia", "Newsreader", serif;
 }
 
 /* Monospace Teletype Utility */
@@ -46,29 +46,17 @@ body {
   font-family: "SF Mono", "Menlo", "Courier New", Courier, monospace;
 }
 
-/* Substack-style Clean Article & Card */
-.substack-card {
-  background-color: #11131a;
-  border: 1px solid var(--ink-border);
-  transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
-}
-
-.substack-card:hover {
-  border-color: var(--ink-border-heavy);
-  background-color: #141720;
-}
-
-/* Broadsheet Borders & Dividers */
+/* Broadsheet Tactile Card */
 .broadsheet-card {
-  background-color: #11131a;
+  background-color: #12141c;
   border: 1px solid var(--ink-border);
-  box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 0.6);
+  box-shadow: 3px 3px 0px 0px rgba(0, 0, 0, 0.9);
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
 .broadsheet-card:hover {
   border-color: var(--ink-border-heavy);
-  box-shadow: 3px 3px 0px 0px rgba(0, 0, 0, 0.8);
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
 }
 
 .double-rule-b {
@@ -79,6 +67,7 @@ body {
   border-top: 3px double var(--ink-border);
 }
 
+/* Stamp Badge */
 .stamp-badge {
   font-family: "SF Mono", "Menlo", monospace;
   font-size: 11px;
@@ -86,7 +75,7 @@ body {
   letter-spacing: 0.05em;
   padding: 2px 8px;
   border: 1px solid var(--ink-border);
-  background-color: #151822;
+  background-color: #171a24;
   color: #d6d0c2;
 }
 
@@ -103,10 +92,10 @@ body {
   text-transform: uppercase;
   font-weight: 700;
   border: 1px solid var(--ink-border-heavy);
-  background-color: #151822;
+  background-color: #171a24;
   color: #ece7db;
   padding: 6px 14px;
-  box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 0.7);
+  box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 0.8);
   transition: all 0.12s ease;
   display: inline-flex;
   align-items: center;
@@ -120,52 +109,12 @@ body {
   color: #0c0d10;
   border-color: #f4f0e6;
   transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0px 0px rgba(0, 0, 0, 0.9);
+  box-shadow: 3px 3px 0px 0px rgba(0, 0, 0, 1);
 }
 
 .stamp-btn:active {
   transform: translate(1px, 1px);
-  box-shadow: 0px 0px 0px 0px rgba(0, 0, 0, 0.9);
-}
-
-/* Substack Action Button (Pill/Modern) */
-.substack-btn-primary {
-  background-color: #f4f0e6;
-  color: #0c0d10;
-  font-weight: 600;
-  font-size: 12px;
-  padding: 6px 16px;
-  border-radius: 9999px;
-  transition: all 0.15s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.substack-btn-primary:hover {
-  background-color: #ffffff;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(244, 240, 230, 0.15);
-}
-
-.substack-btn-secondary {
-  background-color: #151822;
-  color: #f4f0e6;
-  border: 1px solid var(--ink-border-heavy);
-  font-weight: 500;
-  font-size: 12px;
-  padding: 6px 16px;
-  border-radius: 9999px;
-  transition: all 0.15s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.substack-btn-secondary:hover {
-  background-color: #1f2330;
-  border-color: #f4f0e6;
-  color: #ffffff;
+  box-shadow: 0px 0px 0px 0px rgba(0, 0, 0, 1);
 }
 
 /* Custom Scrollbar */
@@ -179,12 +128,11 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #232736;
-  border-radius: 3px;
+  background: #262936;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #383f56;
+  background: #3d4257;
 }
 
 .no-scrollbar::-webkit-scrollbar {

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Post } from '@/lib/types';
 import { formatTimeAgo, formatNumber } from '@/lib/utils';
 import { useAuth, useToast } from './providers';
-import { Sparkles, MessageSquare, Share2, Flag, Image as ImageIcon, Video, FileText, ArrowUpRight, Heart } from 'lucide-react';
+import { Sparkles, MessageSquare, Share2, Flag, Image as ImageIcon, Video, FileText, ArrowUpRight } from 'lucide-react';
 import { AIReviewModal } from './ai-review-modal';
 import { CommentDrawer } from './comment-drawer';
 import { ReportModal } from './report-modal';
@@ -37,7 +37,7 @@ function RenderFormattedText({ text }: { text: string }) {
               href={part}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#f4f0e6] font-semibold underline decoration-[#d97706] hover:text-[#d97706] underline-offset-4 break-all inline-flex items-center gap-0.5 transition-colors"
+              className="text-[#f4f0e6] font-bold underline decoration-[#d97706] hover:text-[#d97706] underline-offset-4 break-all inline-flex items-center gap-0.5 transition-colors"
             >
               <span>{part}</span>
               <ArrowUpRight className="w-3.5 h-3.5 inline text-[#d97706] opacity-80" />
@@ -50,7 +50,7 @@ function RenderFormattedText({ text }: { text: string }) {
             <Link
               key={index}
               href={`/channel/${username}`}
-              className="font-teletype font-semibold text-[#d97706] bg-[#241c10] px-1.5 py-0.5 rounded border border-[#785a28]/60 hover:bg-[#d97706] hover:text-black transition-colors text-xs inline-block my-0.5"
+              className="font-teletype font-bold text-[#d97706] bg-[#241c10] px-1.5 py-0.5 border border-[#785a28] hover:bg-[#d97706] hover:text-black transition-colors text-xs inline-block my-0.5"
             >
               {part}
             </Link>
@@ -58,7 +58,7 @@ function RenderFormattedText({ text }: { text: string }) {
         }
         if (part.match(/^#[a-zA-Z0-9_]+/)) {
           return (
-            <span key={index} className="font-teletype text-[#a39e93] bg-[#161822] px-1.5 py-0.5 rounded border border-[#262936] text-xs inline-block my-0.5">
+            <span key={index} className="font-teletype text-[#a39e93] bg-[#171a24] px-1.5 py-0.5 border border-[#262936] text-xs inline-block my-0.5">
               {part}
             </span>
           );
@@ -121,15 +121,15 @@ export function PostCard({ post }: PostCardProps) {
     showToast('Dispatch reference copied to clipboard', 'success');
   };
 
-  // Substack text segmentation: Title vs Body
+  // Text segmentation: Title vs Body
   const lines = post.text ? post.text.trim().split('\n') : [];
   const firstLine = lines[0] || '';
   const remainingText = lines.slice(1).join('\n').trim();
 
   return (
-    <article className="substack-card p-5 sm:p-7 rounded-2xl flex flex-col gap-4">
-      {/* Substack Author / Meta Header */}
-      <div className="flex items-center justify-between gap-3 border-b border-[#1f2330] pb-3.5">
+    <article className="broadsheet-card p-5 sm:p-7 flex flex-col gap-4 font-teletype">
+      {/* Broadsheet Author / Meta Header */}
+      <div className="flex items-center justify-between gap-3 border-b-2 border-[#262936] pb-3">
         <Link
           href={`/channel/${post.channel}`}
           className="flex items-center gap-3 group/author min-w-0"
@@ -141,20 +141,20 @@ export function PostCard({ post }: PostCardProps) {
               `https://api.dicebear.com/7.x/bottts/svg?seed=${post.channel}`
             }
             alt={post.channel}
-            className="w-10 h-10 rounded-full border border-[#2e3547] bg-[#161822] object-cover shrink-0"
+            className="w-10 h-10 border-2 border-[#262936] bg-[#12141c] object-cover shrink-0"
           />
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="font-semibold text-sm text-[#f4f0e6] group-hover/author:text-[#d97706] transition-colors truncate max-w-[150px] sm:max-w-[240px]">
+              <span className="font-bold text-sm text-[#f4f0e6] group-hover/author:text-[#d97706] transition-colors truncate uppercase max-w-[150px] sm:max-w-[240px]">
                 {post.channelInfo?.name || `@${post.channel}`}
               </span>
               {post.channelInfo?.isVerified && (
-                <span className="w-4 h-4 rounded-full bg-[#d97706]/20 text-[#d97706] text-[10px] font-bold inline-flex items-center justify-center">
-                  ✓
+                <span className="text-[#d97706] text-xs font-bold">
+                  [V]
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-2 font-teletype text-[11px] text-[#a39e93]">
+            <div className="flex items-center gap-2 text-[10px] text-[#a39e93] uppercase">
               <span>@{post.channel}</span>
               <span>·</span>
               <span>{formatTimeAgo(post.date)}</span>
@@ -169,24 +169,24 @@ export function PostCard({ post }: PostCardProps) {
             target="_blank"
             rel="noopener noreferrer"
             title="Examine on Telegram Wire"
-            className="font-teletype text-[11px] text-[#a39e93] hover:text-[#f4f0e6] border border-[#1f2330] hover:border-[#2e3547] px-2.5 py-1 rounded-lg transition-colors inline-flex items-center gap-1 shrink-0"
+            className="stamp-btn !py-1 !px-2.5 !text-[10px] flex items-center gap-1 shrink-0"
           >
-            <span>Wire</span>
+            <span>WIRE</span>
             <ArrowUpRight className="w-3 h-3 text-[#d97706]" />
           </a>
         )}
       </div>
 
-      {/* Post Body: Substack Typography */}
+      {/* Post Body */}
       <div className="flex flex-col gap-2">
         {firstLine && (
-          <h2 className="font-broadsheet font-bold text-lg sm:text-xl text-[#f4f0e6] leading-snug tracking-tight">
+          <h2 className="font-broadsheet font-bold text-xl sm:text-2xl text-[#f4f0e6] leading-tight tracking-tight">
             {firstLine}
           </h2>
         )}
 
         {remainingText && (
-          <div className="text-[#d6d0c2] text-sm sm:text-base leading-relaxed whitespace-pre-wrap font-sans break-words pt-1">
+          <div className="text-[#d6d0c2] text-sm leading-relaxed whitespace-pre-wrap font-sans break-words pt-1">
             <RenderFormattedText text={remainingText} />
           </div>
         )}
@@ -194,16 +194,16 @@ export function PostCard({ post }: PostCardProps) {
 
       {/* Media Attachment Badge */}
       {post.mediaType && post.mediaType !== 'none' && (
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg font-teletype text-xs font-medium bg-[#161822] border border-[#1f2330] text-[#d6d0c2] self-start">
+        <div className="inline-flex items-center gap-2 px-2.5 py-1 text-xs font-bold bg-[#171a24] border border-[#262936] text-[#d6d0c2] self-start uppercase">
           {post.mediaType === 'photo' && <ImageIcon className="w-3.5 h-3.5 text-[#d97706]" />}
           {post.mediaType === 'video' && <Video className="w-3.5 h-3.5 text-[#d97706]" />}
           {post.mediaType === 'document' && <FileText className="w-3.5 h-3.5 text-[#d97706]" />}
-          <span className="uppercase tracking-wider">{post.mediaType} Attachment</span>
+          <span>{post.mediaType} ATTACHMENT</span>
         </div>
       )}
 
-      {/* Substack Engagement & Action Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pt-3.5 border-t border-[#1f2330]">
+      {/* Engagement & Action Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-3.5 border-t border-[#262936]">
         {/* Reactions */}
         <div className="flex items-center gap-1.5 flex-wrap">
           {AVAILABLE_REACTIONS.map(({ emoji }) => {
@@ -213,14 +213,12 @@ export function PostCard({ post }: PostCardProps) {
               <button
                 key={emoji}
                 onClick={() => handleToggleReaction(emoji)}
-                className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-teletype font-semibold rounded-full border transition-all ${
-                  isSelected
-                    ? 'bg-[#d97706] text-black border-[#d97706] shadow-sm'
-                    : 'bg-[#151822] text-[#d6d0c2] border-[#1f2330] hover:border-[#2e3547] hover:text-[#f4f0e6]'
+                className={`stamp-btn !py-1 !px-2.5 !text-xs ${
+                  isSelected ? '!bg-[#d97706] !text-black !border-[#d97706]' : ''
                 }`}
               >
                 <span>{emoji}</span>
-                {count > 0 && <span className="text-[11px]">{formatNumber(count)}</span>}
+                {count > 0 && <span>{formatNumber(count)}</span>}
               </button>
             );
           })}
@@ -231,16 +229,16 @@ export function PostCard({ post }: PostCardProps) {
           {/* AI Review */}
           <button
             onClick={() => setIsAIModalOpen(true)}
-            className="px-3 py-1 text-xs font-teletype font-semibold rounded-full border border-[#785a28]/60 bg-[#241c10] text-[#f6d89b] hover:bg-[#d97706] hover:text-black transition-all flex items-center gap-1.5"
+            className="stamp-btn !bg-[#241c10] !border-[#785a28] !text-[#f6d89b] hover:!bg-[#d97706] hover:!text-black !py-1 !px-2.5 flex items-center gap-1.5"
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>AI Brief</span>
+            <Sparkles className="w-3.5 h-3.5 text-[#d97706]" />
+            <span>AI BRIEF</span>
           </button>
 
           {/* Comment Drawer */}
           <button
             onClick={() => setIsCommentDrawerOpen(true)}
-            className="px-3 py-1 text-xs font-teletype font-medium rounded-full border border-[#1f2330] bg-[#151822] text-[#a39e93] hover:text-[#f4f0e6] hover:border-[#2e3547] transition-all flex items-center gap-1.5"
+            className="stamp-btn !py-1 !px-2.5 flex items-center gap-1.5"
           >
             <MessageSquare className="w-3.5 h-3.5" />
             <span>{commentCount}</span>
@@ -250,7 +248,7 @@ export function PostCard({ post }: PostCardProps) {
           <button
             onClick={handleCopyLink}
             title="Copy Reference"
-            className="p-1.5 rounded-full border border-[#1f2330] hover:border-[#2e3547] text-[#a39e93] hover:text-[#f4f0e6] hover:bg-[#151822] transition-colors"
+            className="stamp-btn !p-1.5"
           >
             <Share2 className="w-3.5 h-3.5" />
           </button>
@@ -259,7 +257,7 @@ export function PostCard({ post }: PostCardProps) {
           <button
             onClick={() => setIsReportModalOpen(true)}
             title="File Inquest"
-            className="p-1.5 rounded-full border border-[#1f2330] hover:border-rose-500/50 text-[#a39e93] hover:text-rose-400 hover:bg-[#151822] transition-colors"
+            className="stamp-btn !p-1.5 hover:!bg-rose-950/40 hover:!text-rose-400"
           >
             <Flag className="w-3.5 h-3.5" />
           </button>
