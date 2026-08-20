@@ -1,4 +1,4 @@
-import { Bot, Context } from "grammy";
+import { Bot, Context, InlineKeyboard } from "grammy";
 import { writeDb, withReadDb } from "@/db";
 import { subscribers, posts, guesses, userChannels } from "@/db/schema";
 import { eq, and, sql } from "drizzle-orm";
@@ -13,38 +13,27 @@ import { TtlCache } from "@/lib/ttl-cache";
 const userChannelCache = new TtlCache<string>();
 const USER_CHANNEL_TTL_MS = 60_000;
 
-async function replyError(ctx: { reply: (text: string) => Promise<unknown> }, err: unknown) {
-  await ctx.reply(toHumanError(err, "command"));
-}
-
-async function withTyping<T>(ctx: { replyWithChatAction: (action: "typing") => Promise<unknown> }, fn: () => Promise<T>): Promise<T> {
-  await ctx.replyWithChatAction("typing");
-  return fn();
-}
-
-function formatSummaryReply(channel: string, date: string, summary: string): string {
-  if (isErrorLikeContent(summary)) {
-    return summary;
-  }
-  return `@${channel} — ${date}\n\n${summary}`;
-}
-
 const token = process.env.TELEGRAM_BOT_TOKEN;
 if (!token) throw new Error("TELEGRAM_BOT_TOKEN is missing");
 
 export const bot = new Bot(token);
 
+// ─── RATE LIMITING & CONCURRENCY ─────────────────────────────────
 bot.use(async (ctx, next) => {
   if (!ctx.from) return next();
 
   const text = ctx.message?.text || "";
   const command = text.startsWith("/")
     ? (text.split(/\s/)[0].slice(1).split("@")[0] || "default")
-    : "default";
+    : ctx.callbackQuery ? "callback" : "default";
   const userId = String(ctx.from.id);
 
   if (!checkRateLimit(userId, command)) {
     const wait = retryAfterSeconds(userId, command);
+    if (ctx.callbackQuery) {
+      await ctx.answerCallbackQuery({ text: `⏳ Please wait ${wait}s (Rate limit)`, show_alert: true });
+      return;
+    }
     await ctx.reply(`High demand right now — please wait ${wait}s before trying again.`);
     return;
   }
@@ -79,60 +68,162 @@ async function getUserChannel(userId: string): Promise<string> {
   return channel;
 }
 
-// Global error handler — ensures the webhook ALWAYS returns 200
+// Helper: check subscription
+async function isUserSubscribed(userId: string): Promise<boolean> {
+  const result = await withReadDb((db) =>
+    db.select().from(subscribers).where(and(eq(subscribers.telegram_user_id, userId), eq(subscribers.active, true))).execute()
+  );
+  return result.length > 0;
+}
+
+async function replyError(ctx: { reply: (text: string, options?: any) => Promise<unknown> }, err: unknown) {
+  await ctx.reply(toHumanError(err, "command"), { parse_mode: "Markdown" });
+}
+
+async function withTyping<T>(ctx: { replyWithChatAction: (action: "typing") => Promise<unknown> }, fn: () => Promise<T>): Promise<T> {
+  await ctx.replyWithChatAction("typing");
+  return fn();
+}
+
+function formatSummaryReply(channel: string, date: string, summary: string): string {
+  if (isErrorLikeContent(summary)) {
+    return summary;
+  }
+  return `📰 *@${channel.toUpperCase()} DISPATCH* · ${date}\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n${summary}`;
+}
+
+// ─── BROADSHEET INLINE KEYBOARD BUILDERS ─────────────────────────
+
+function buildMainMenuKeyboard(channel: string, isSubscribed: boolean) {
+  return new InlineKeyboard()
+    .text("📖 Today's Digest", "menu_today")
+    .text("📜 Yesterday", "menu_yesterday")
+    .row()
+    .text("📊 Lurk-O-Meter", "menu_lurkometer")
+    .text("🔥 Channel Roast", "menu_roast")
+    .row()
+    .text("🛡️ Royal Excuse", "menu_excuse")
+    .text("🎲 Betting Pool", "menu_guess")
+    .row()
+    .text(`📡 Channel: @${channel}`, "menu_channels")
+    .text(isSubscribed ? "🔔 Subscribed [✓]" : "🔕 Subscribe", "menu_subscribe_toggle")
+    .row()
+    .url("🌐 Open Broadsheet Gazette", "https://t.me/lurkening_bot");
+}
+
+function buildChannelPickerKeyboard(currentChannel: string) {
+  const popular = ["dagmawi_babi", "tikvahethiopia", "fuad_dispatches", "ethio_tech"];
+  const kb = new InlineKeyboard();
+
+  popular.forEach((ch, idx) => {
+    const isCur = ch.toLowerCase() === currentChannel.toLowerCase();
+    kb.text(`${isCur ? "▶ " : ""}@${ch}`, `set_channel:${ch}`);
+    if (idx % 2 === 1) kb.row();
+  });
+
+  if (popular.length % 2 !== 0) kb.row();
+
+  return kb
+    .text("🎯 Channel Recommendations", "menu_recommend")
+    .row()
+    .text("« Return to Menu", "menu_main");
+}
+
+function buildGuessKeyboard(currentCount: number) {
+  return new InlineKeyboard()
+    .text("🎲 5 Posts", "make_guess:5")
+    .text("🎲 12 Posts", "make_guess:12")
+    .text("🎲 20 Posts", "make_guess:20")
+    .row()
+    .text("🎲 35 Posts", "make_guess:35")
+    .text("🎲 50+ Posts", "make_guess:50")
+    .row()
+    .text("🏆 View Leaderboard", "menu_guess_board")
+    .row()
+    .text("« Return to Menu", "menu_main");
+}
+
+function buildDigestKeyboard(channel: string) {
+  return new InlineKeyboard()
+    .text("🔄 Re-Summarize", "menu_today")
+    .text("🔥 Roast This Channel", "menu_roast")
+    .row()
+    .text("📊 Lurkometer", "menu_lurkometer")
+    .text("« Menu", "menu_main");
+}
+
+// Global error handler
 bot.catch(async (err) => {
   const ctx = err.ctx;
   if (ctx) {
     try {
       await ctx.reply(toHumanError(err.error, "command"));
-    } catch {
-      // ignore reply failures
-    }
+    } catch {}
   }
 });
 
-// ─── /start ─────────────────────────────────────────────────────
+// ─── /start & Web Auth Handshake ─────────────────────────────────
 bot.command("start", async (ctx) => {
-  const name = ctx.from?.first_name || "stranger";
+  const name = ctx.from?.first_name || "Citizen Scribe";
   const userId = String(ctx.from?.id || "0");
+  const payload = ctx.match?.trim();
+
+  // 1. Check if user came from a web login handshake (start=lurk_xxxx)
+  if (payload && payload.startsWith("lurk_")) {
+    await ctx.replyWithChatAction("typing");
+    await ctx.reply(
+      `👑 *ROYAL SCRIBE AUTHENTICATED!*\n` +
+      `━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+      `Welcome, *${name}*! Your Telegram identity has been confirmed for the Broadsheet Gazette.\n\n` +
+      `Your browser session has been authorized. You can now return to the web dispatch to stamp reactions, request AI briefs, and browse the archives.`,
+      {
+        parse_mode: "Markdown",
+        reply_markup: new InlineKeyboard()
+          .url("🌐 Return to Broadsheet Gazette", "https://t.me/lurkening_bot")
+          .row()
+          .text("🎛️ Open Bot Dashboard", "menu_main"),
+      }
+    );
+    return;
+  }
+
   const channel = await getUserChannel(userId);
-  const isBabi = channel.toLowerCase() === "dagmawi_babi";
-  
-  const targetName = isBabi ? "Babi's" : `@${channel}'s`;
-  const footerName = isBabi ? "Babi's" : `@${channel}'s`;
+  const subscribed = await isUserSubscribed(userId);
 
   await ctx.reply(
-    `📜 *Selam (peace), ${name}!*\n` +
-    `━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-    `Welcome to *The Lurkening* — the only bot brave enough to read ALL of ${targetName} posts so you don't have to.\n\n` +
-    `We know you love them. We know you follow them. We also know you opened Telegram, saw 47 unread messages from one channel, and quietly closed the app.\n\n` +
-    `*No judgment. That's why I exist.*\n\n` +
-    `I scrape the channel, feed it to an AI, and hand you a clean summary every day. Your friendships are saved. Your FOMO is cured. Chigger yellem (no problem).\n\n` +
-    `━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-    `📖  *THE SCROLLS*\n` +
-    `━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-    `/today — What they said today (so far)\n` +
-    `/yesterday — Yesterday's royal recap\n` +
-    `/date — Dig up any date's archive\n\n` +
-    `🕊️  *SERVICES*\n` +
-    `━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-    `/channel — Select any Telegram channel to track\n` +
-    `/subscribe — Auto-deliver the daily digest\n` +
-    `/unsubscribe — Stop daily delivery\n` +
-    `/lurkometer — How loud are they today? (alias: /babiometer)\n` +
-    `/recommend — Popular channels others are tracking\n\n` +
-    `🎭  *ENTERTAINMENT*\n` +
-    `━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-    `/roast — Savage, unhinged roast of their posting habits\n` +
-    `/excuse — Dark, unhinged excuses for dodging the spam\n` +
-    `/guess — Bet on their daily post count\n\n` +
-    `━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-    `_Powered by caffeine, Groq, and ${footerName} relentless output._`,
-    { parse_mode: "Markdown" }
+    `📜 *✦ THE LURKENING · ROYAL GAZETTE & TELEPRINTER ✦*\n` +
+    `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+    `Greetings, *${name}*!\n\n` +
+    `The kingdom's AI dispatch engine monitors Telegram channels, delivers on-demand executive summaries, satyrical roasts, and real-time activity metrics.\n\n` +
+    `📡 *Active Channel:* *@${channel}*\n` +
+    `🕊️ *Pigeon Delivery:* ${subscribed ? "Active (Every Morning)" : "Disabled"}\n\n` +
+    `Select a royal decree below:`,
+    {
+      parse_mode: "Markdown",
+      reply_markup: buildMainMenuKeyboard(channel, subscribed),
+    }
   );
 });
 
-// ─── /channel ───────────────────────────────────────────────────
+// ─── /menu ───────────────────────────────────────────────────────
+bot.command("menu", async (ctx) => {
+  if (!ctx.from) return;
+  const userId = String(ctx.from.id);
+  const channel = await getUserChannel(userId);
+  const subscribed = await isUserSubscribed(userId);
+
+  await ctx.reply(
+    `🎛️ *COMMAND DASHBOARD · @${channel.toUpperCase()}*\n` +
+    `━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+    `Choose an operation from the teleprinter:`,
+    {
+      parse_mode: "Markdown",
+      reply_markup: buildMainMenuKeyboard(channel, subscribed),
+    }
+  );
+});
+
+// ─── /channel ────────────────────────────────────────────────────
 bot.command("channel", async (ctx) => {
   try {
     if (!ctx.from) return;
@@ -142,17 +233,19 @@ bot.command("channel", async (ctx) => {
     if (!input) {
       const currentChannel = await getUserChannel(userId);
       await ctx.reply(
-        `📡 *Royal Courier Service*\n\n` +
-        `You are currently tracking: *@${currentChannel}*\n\n` +
-        `To switch channels, type:\n\n` +
-        `\`/channel @some_username\`\n\n` +
-        `_The scribes will start fetching scrolls from the new channel automatically._`,
-        { parse_mode: "Markdown" }
+        `📡 *CHANNEL REGISTRY LEDGER*\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `Current monitored channel: *@${currentChannel}*\n\n` +
+        `To switch channels, select a quick preset below or type:\n` +
+        `\`/channel @username\``,
+        {
+          parse_mode: "Markdown",
+          reply_markup: buildChannelPickerKeyboard(currentChannel),
+        }
       );
       return;
     }
 
-    // Clean username
     const cleanUsername = input.replace(/^@/, "").replace(/[^a-zA-Z0-9_]/g, "");
 
     await writeDb.insert(userChannels).values({
@@ -164,81 +257,34 @@ bot.command("channel", async (ctx) => {
     });
 
     userChannelCache.set(userId, cleanUsername, USER_CHANNEL_TTL_MS);
-
     await ensureChannelScraped(cleanUsername, { force: true });
 
     let onboardingRoast = "";
     try {
       onboardingRoast = await generateOnboardingRoast(cleanUsername);
-    } catch {
-      // onboarding roast is optional
-    }
+    } catch {}
 
-    const roastLine = onboardingRoast
-      ? `\n\n🔥 _First impression:_ ${onboardingRoast}`
-      : "";
+    const roastLine = onboardingRoast ? `\n\n🔥 _First Impression:_ ${onboardingRoast}` : "";
 
     await ctx.reply(
-      `✅ *Channel Updated!*\n\n` +
-      `You are now tracking *@${cleanUsername}*.${roastLine}\n\n` +
-      `_Note: Our scribes fetch scrolls every few hours. If this is a new channel, it may take a little while for the archives to populate._`,
-      { parse_mode: "Markdown" }
+      `✅ *Channel Switched to @${cleanUsername}!*\n` +
+      `━━━━━━━━━━━━━━━━━━━━━━━━${roastLine}\n\n` +
+      `The scribes are now scraping telegraph wires for @${cleanUsername}.`,
+      {
+        parse_mode: "Markdown",
+        reply_markup: new InlineKeyboard()
+          .text("📖 Read Today's Digest", "menu_today")
+          .text("📊 Lurk-O-Meter", "menu_lurkometer")
+          .row()
+          .text("« Return to Menu", "menu_main"),
+      }
     );
   } catch (err) {
     await replyError(ctx, err);
   }
 });
 
-// ─── /subscribe ─────────────────────────────────────────────────
-bot.command("subscribe", async (ctx) => {
-  try {
-    if (!ctx.from) return;
-    const userId = String(ctx.from.id);
-    const chatId = String(ctx.chat.id);
-    const channel = await getUserChannel(userId);
-    
-    await writeDb.insert(subscribers)
-      .values({ telegram_user_id: userId, chat_id: chatId, active: true })
-      .onConflictDoUpdate({
-        target: subscribers.telegram_user_id,
-        set: { active: true, chat_id: chatId },
-      });
-      
-    await ctx.reply(
-      "🕊️ *The royal pigeon has been dispatched!*\n\n" +
-      `Every morning, a freshly summarized scroll of @${channel}'s daily output will arrive at your doorstep.\n\n` +
-      "No more drowning in posts. No more FOMO. Just vibes and a clean summary.\n\n" +
-      "_Selam (peace) be with you, loyal subject._",
-      { parse_mode: "Markdown" }
-    );
-  } catch (err) {
-    await replyError(ctx, err);
-  }
-});
-
-// ─── /unsubscribe ───────────────────────────────────────────────
-bot.command("unsubscribe", async (ctx) => {
-  try {
-    if (!ctx.from) return;
-    const userId = String(ctx.from.id);
-    
-    await writeDb.update(subscribers)
-      .set({ active: false })
-      .where(eq(subscribers.telegram_user_id, userId));
-      
-    await ctx.reply(
-      "❌ *You have been banished from the pigeon route.*\n\n" +
-      "The royal pigeon will no longer visit your dwelling. " +
-      "You are now on your own in the wilderness. " +
-      "Ayzosh (take courage). You will need it.",
-      { parse_mode: "Markdown" }
-    );
-  } catch (err) {
-    await replyError(ctx, err);
-  }
-});
-
-// ─── /today ─────────────────────────────────────────────────────
+// ─── /today ──────────────────────────────────────────────────────
 bot.command("today", async (ctx) => {
   try {
     if (!ctx.from) return;
@@ -251,18 +297,25 @@ bot.command("today", async (ctx) => {
 
     if (summary.includes("No posts found")) {
       await ctx.reply(
-        `@${channel} — ${localDateStr}\n\n` +
-        "No posts yet for this date. Check back later."
+        `📰 *@${channel.toUpperCase()} DISPATCH* · ${localDateStr}\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `Silence across the telegraph wires. No transmissions detected yet today.`,
+        {
+          parse_mode: "Markdown",
+          reply_markup: buildDigestKeyboard(channel),
+        }
       );
     } else {
-      await ctx.reply(formatSummaryReply(channel, localDateStr, summary));
+      await ctx.reply(formatSummaryReply(channel, localDateStr, summary), {
+        parse_mode: "Markdown",
+        reply_markup: buildDigestKeyboard(channel),
+      });
     }
   } catch (err) {
     await replyError(ctx, err);
   }
 });
 
-// ─── /yesterday ─────────────────────────────────────────────────
+// ─── /yesterday ──────────────────────────────────────────────────
 bot.command("yesterday", async (ctx) => {
   try {
     if (!ctx.from) return;
@@ -275,37 +328,25 @@ bot.command("yesterday", async (ctx) => {
 
     if (summary.includes("No posts found")) {
       await ctx.reply(
-        `@${channel} — ${localDateStr}\n\n` +
-        "No posts on this date."
+        `📰 *@${channel.toUpperCase()} DISPATCH* · ${localDateStr}\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `No archived transmissions found for yesterday.`,
+        {
+          parse_mode: "Markdown",
+          reply_markup: buildDigestKeyboard(channel),
+        }
       );
     } else {
-      await ctx.reply(formatSummaryReply(channel, localDateStr, summary));
+      await ctx.reply(formatSummaryReply(channel, localDateStr, summary), {
+        parse_mode: "Markdown",
+        reply_markup: buildDigestKeyboard(channel),
+      });
     }
   } catch (err) {
     await replyError(ctx, err);
   }
 });
 
-// ─── /date ──────────────────────────────────────────────────────
-bot.command("date", async (ctx) => {
-  try {
-    if (!ctx.from) return;
-    const channel = await getUserChannel(String(ctx.from.id));
-    const dateStr = ctx.match;
-    if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-      return ctx.reply("📅 Usage: /date 2026-08-12");
-    }
-
-    const summary = await withTyping(ctx, () =>
-      summarizeDay(channel, dateStr, SUMMARY_LANGUAGE, false),
-    );
-    await ctx.reply(formatSummaryReply(channel, dateStr, summary));
-  } catch (err) {
-    await replyError(ctx, err);
-  }
-});
-
-// ─── /lurkometer & /babiometer ──────────────────────────────────
+// ─── /lurkometer ─────────────────────────────────────────────────
 const handleLurkometer = async (ctx: Context) => {
   try {
     if (!ctx.from) return;
@@ -322,67 +363,53 @@ const handleLurkometer = async (ctx: Context) => {
         .execute()
     );
     const count = countRow[0]?.count ?? 0;
-    
+
     let blasts: string;
     let verdict: string;
-    let emoji: string;
+    let gaugeBar: string;
 
-    const isBabi = channel.toLowerCase() === "dagmawi_babi";
-    
     if (count === 0) {
-      blasts = "🔇";
-      verdict = isBabi
-        ? "Eerie deafening silence. Either Babi's phone disintegrated, he is in witness protection, or he is charging up a 50-post storm for midnight."
-        : "Suspicious calm. Zero posts today. Either the admin lost their phone or they are plotting digital warfare.";
-      emoji = "💤";
+      gaugeBar = "[ ░░░░░░░░░░░░░░░░ ] 0%";
+      blasts = "🔇 QUIET";
+      verdict = "Deafening silence across the wires. Zero broadcasts detected today.";
     } else if (count <= 3) {
-      blasts = "🎺";
-      verdict = isBabi
-        ? "A deceptive whisper from the throne. He is calibrating the chaos. Do not let your guard down."
-        : "Micro-dosing content. Just enough to let you know they are alive and lurking.";
-      emoji = "😌";
+      gaugeBar = "[ ██░░░░░░░░░░░░░░ ] 15%";
+      blasts = "🎺 LOW ACTIVITY";
+      verdict = "A light whisper from the channel. Micro-dosing content.";
     } else if (count <= 8) {
-      blasts = "🎺🎺";
-      verdict = isBabi
-        ? "A casual morning warm-up for Babi. For any normal human, this is an entire week of frantic oversharing."
-        : "Moderate broadcast volume. The notifications are starting to gather at your doorstep.";
-      emoji = "📝";
-    } else if (count <= 15) {
-      blasts = "🎺🎺🎺";
-      verdict = isBabi
-        ? "Babi has entered the chat. Keyboards are rattling, thumbs are blistering, productivity is plummeting."
-        : "Elevated flurry. They are on a posting spree. Prepare your lock screen.";
-      emoji = "⚡";
-    } else if (count <= 25) {
-      blasts = "🎺🎺🎺🎺";
-      verdict = isBabi
-        ? "CODE CRIMSON. He has entered the unmedicated zone. The 'mark as read' button has surrendered and fled the chat."
-        : "Heavy deluge. Notifications are landing like artillery shells on your lock screen.";
-      emoji = "🔥";
-    } else if (count <= 40) {
-      blasts = "🎺🎺🎺🎺🎺";
-      verdict = isBabi
-        ? "DEFCON 2. Lithium-ion homicide in progress. Phone battery is in digital hospice. Put your device in an ice bath."
-        : "EXTREME VOLUME. Telegram engineers are receiving distress signals from your phone.";
-      emoji = "🚨";
+      gaugeBar = "[ ████░░░░░░░░░░░░ ] 35%";
+      blasts = "🎺🎺 MODERATE BROADCAST";
+      verdict = "Steady stream of dispatches. Notifications are gathering.";
+    } else if (count <= 18) {
+      gaugeBar = "[ ████████░░░░░░░░ ] 60%";
+      blasts = "🎺🎺🎺 ELEVATED DELUGE";
+      verdict = "Keyboards rattling, thumbs blistering, heavy broadcast volume.";
+    } else if (count <= 35) {
+      gaugeBar = "[ ████████████░░░░ ] 85%";
+      blasts = "🎺🎺🎺🎺 CODE CRIMSON";
+      verdict = "Unrelenting flurry. The 'mark as read' button has surrendered.";
     } else {
-      blasts = "🎺🎺🎺🎺🎺🎺 🚨🚨🚨";
-      verdict = isBabi
-        ? "DEFCON 1: APOCALYPTIC BROADCAST EVENT. He has dropped an entire encyclopedia. Abandon your phone. Touch grass. Save yourself."
-        : "ABSOLUTE CHAOS. A full digital siege. Your notifications are taking catastrophic casualties.";
-      emoji = "☠️";
+      gaugeBar = "[ ████████████████ ] 100% MAXIMUM";
+      blasts = "🎺🎺🎺🎺🎺 DEFCON 1 DELUGE";
+      verdict = "Apocalyptic broadcast event. An entire encyclopedia has dropped.";
     }
-    
-    const title = isBabi ? "*THE BABI-O-METER*" : `*THE @${channel.toUpperCase()} METER*`;
 
     await ctx.reply(
-      `${emoji} ${title} ${emoji}\n` +
-      `━━━━━━━━━━━━━━━━━━━━\n\n` +
-      `${blasts}\n\n` +
-      `*Posts today:* ${count}\n` +
+      `📊 *THE LURK-O-METER // @${channel.toUpperCase()}*\n` +
+      `━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+      `*Activity Level:* ${blasts}\n` +
+      `\`${gaugeBar}\`\n\n` +
+      `*Transmissions Today:* *${count}*\n` +
       `*Date:* ${localDateStr}\n\n` +
       `_${verdict}_`,
-      { parse_mode: "Markdown" }
+      {
+        parse_mode: "Markdown",
+        reply_markup: new InlineKeyboard()
+          .text("📖 Read Today's Digest", "menu_today")
+          .text("🎲 Place Bet", "menu_guess")
+          .row()
+          .text("« Return to Menu", "menu_main"),
+      }
     );
   } catch (err) {
     await replyError(ctx, err);
@@ -392,35 +419,58 @@ const handleLurkometer = async (ctx: Context) => {
 bot.command("lurkometer", handleLurkometer);
 bot.command("babiometer", handleLurkometer);
 
-// ─── /roast ─────────────────────────────────────────────────────
+// ─── /roast ──────────────────────────────────────────────────────
 bot.command("roast", async (ctx) => {
   try {
     if (!ctx.from) return;
     const channel = await getUserChannel(String(ctx.from.id));
-
     const roast = await withTyping(ctx, () => generateDailyRoast(channel));
-    await ctx.reply(`🔥 ${roast}`);
-  } catch (err) {
-    await replyError(ctx, err);
-  }
-});
 
-// ─── /excuse ────────────────────────────────────────────────────
-bot.command("excuse", async (ctx) => {
-  try {
-    if (!ctx.from) return;
-    const channel = await getUserChannel(String(ctx.from.id));
-    const excuse = generateExcuse(channel);
     await ctx.reply(
-      `🛡️ *Your Royal Excuse for missing @${channel}'s posts:*\n\n${excuse}\n\n_Use responsibly. The Herald takes no legal responsibility._`,
-      { parse_mode: "Markdown" }
+      `🔥 *EDITORIAL SATIRICAL ROAST · @${channel.toUpperCase()}*\n` +
+      `━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+      `${roast}\n\n` +
+      `_Delivered by Groq Llama-3.3 Editorial Satire Engine._`,
+      {
+        parse_mode: "Markdown",
+        reply_markup: new InlineKeyboard()
+          .text("🔥 Another Roast", "menu_roast")
+          .text("📖 Read Digest", "menu_today")
+          .row()
+          .text("« Return to Menu", "menu_main"),
+      }
     );
   } catch (err) {
     await replyError(ctx, err);
   }
 });
 
-// ─── /guess ─────────────────────────────────────────────────────
+// ─── /excuse ─────────────────────────────────────────────────────
+bot.command("excuse", async (ctx) => {
+  try {
+    if (!ctx.from) return;
+    const channel = await getUserChannel(String(ctx.from.id));
+    const excuse = generateExcuse(channel);
+
+    await ctx.reply(
+      `🛡️ *ROYAL EXCUSE DISPATCH*\n` +
+      `━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+      `*Excuse for missing @${channel}'s dispatches:*\n\n` +
+      `"${excuse}"\n\n` +
+      `_Use responsibly. The Court takes zero liability._`,
+      {
+        parse_mode: "Markdown",
+        reply_markup: new InlineKeyboard()
+          .text("🛡️ Generate Another", "menu_excuse")
+          .text("« Menu", "menu_main"),
+      }
+    );
+  } catch (err) {
+    await replyError(ctx, err);
+  }
+});
+
+// ─── /guess (Betting Pool) ───────────────────────────────────────
 bot.command("guess", async (ctx) => {
   try {
     if (!ctx.from) return;
@@ -430,64 +480,56 @@ bot.command("guess", async (ctx) => {
     const displayName = getDisplayName(ctx);
     const channel = await getUserChannel(userId);
 
-    // No argument — show today's guesses and results
-    if (!input) {
-      await ensureChannelScraped(channel);
+    await ensureChannelScraped(channel);
 
+    const countRow = await withReadDb((db) =>
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(posts)
+        .where(and(eq(posts.local_date, localDateStr), eq(posts.channel, channel)))
+        .execute()
+    );
+    const actualCount = countRow[0]?.count ?? 0;
+
+    // If no argument, show betting menu & board
+    if (!input) {
       const todayGuesses = await withReadDb((db) =>
         db.select().from(guesses)
           .where(and(eq(guesses.local_date, localDateStr), eq(guesses.channel, channel))).execute()
       );
-      
-      const countRow = await withReadDb((db) =>
-        db
-          .select({ count: sql<number>`count(*)::int` })
-          .from(posts)
-          .where(and(eq(posts.local_date, localDateStr), eq(posts.channel, channel)))
-          .execute()
-      );
-      const actualCount = countRow[0]?.count ?? 0;
 
-      if (todayGuesses.length === 0) {
-        await ctx.reply(
-          `🎲 *The Betting Pool for @${channel}*\n\n` +
-          "No one has placed a bet yet today!\n\n" +
-          `Current post count: *${actualCount}* (and counting...)\n\n` +
-          "Place your bet: `/guess 25`\n" +
-          `_How many posts will @${channel} make today?_`,
-          { parse_mode: "Markdown" }
-        );
-        return;
+      let boardText = "No bets placed yet today. Be the first to wager!";
+      if (todayGuesses.length > 0) {
+        const sorted = todayGuesses
+          .map(g => ({ ...g, diff: Math.abs(g.guess - actualCount) }))
+          .sort((a, b) => a.diff - b.diff);
+
+        boardText = sorted.map((g, i) => {
+          const medal = i === 0 ? "👑" : i === 1 ? "🥈" : i === 2 ? "🥉" : "  ";
+          return `${medal} ${g.display_name}: *${g.guess} posts* (diff: ${g.diff})`;
+        }).join("\n");
       }
 
-      // Build the leaderboard
-      const sorted = todayGuesses
-        .map(g => ({ ...g, diff: Math.abs(g.guess - actualCount) }))
-        .sort((a, b) => a.diff - b.diff);
-
-      const board = sorted.map((g, i) => {
-        const medal = i === 0 ? "👑" : i === 1 ? "🥈" : i === 2 ? "🥉" : "  ";
-        return `${medal} ${g.display_name}: *${g.guess}* (off by ${g.diff})`;
-      }).join("\n");
-
       await ctx.reply(
-        `🎲 *The Betting Pool for @${channel} — ${localDateStr}*\n\n` +
-        `📊 Actual post count so far: *${actualCount}*\n\n` +
-        `${board}\n\n` +
-        `_${sorted[0].diff === 0 ? `${sorted[0].display_name} nailed it! Betam (very) impressive!` : `${sorted[0].display_name} is closest! The day isn't over yet...`}_`,
-        { parse_mode: "Markdown" }
+        `🎲 *THE ROYAL BETTING POOL · @${channel.toUpperCase()}*\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `📊 *Actual count so far today:* *${actualCount}*\n\n` +
+        `*Leaderboard:* \n${boardText}\n\n` +
+        `Tap a quick bet below or type \`/guess 25\`:`,
+        {
+          parse_mode: "Markdown",
+          reply_markup: buildGuessKeyboard(actualCount),
+        }
       );
       return;
     }
 
-    // Parse the guess number
     const guessNum = parseInt(input, 10);
     if (isNaN(guessNum) || guessNum < 0 || guessNum > 200) {
-      await ctx.reply("🎲 Please enter a reasonable number: `/guess 25`\n_Range: 0–200_", { parse_mode: "Markdown" });
+      await ctx.reply("🎲 Please enter a reasonable number: `/guess 25` (Range: 0–200)", { parse_mode: "Markdown" });
       return;
     }
 
-    // Save the guess (upsert)
     const guessId = `${channel}:${localDateStr}:${userId}`;
     await writeDb.insert(guesses).values({
       id: guessId,
@@ -501,49 +543,77 @@ bot.command("guess", async (ctx) => {
       set: { guess: guessNum, display_name: displayName },
     });
 
-    const dayPosts = await withReadDb((db) =>
-      db.select().from(posts)
-        .where(and(eq(posts.local_date, localDateStr), eq(posts.channel, channel))).execute()
-    );
-
-    const reactions = [
-      `Bold move. ${guessNum} posts. The court awaits.`,
-      `${guessNum}? Either you have inside information or you're delusional. Either way, respect.`,
-      `A bet of ${guessNum}. The royal bookkeeper has noted it in ink that cannot be erased.`,
-      `${guessNum} posts? That's ${guessNum > 30 ? "ambitious" : guessNum < 5 ? "dangerously optimistic" : "a reasonable wager"}.`,
-    ];
-    const reaction = reactions[Math.floor(Math.random() * reactions.length)];
-
     await ctx.reply(
-      `🎲 *Bet Placed for @${channel}!*\n\n` +
-      `${displayName} bets *${guessNum}* posts today.\n` +
-      `_${reaction}_\n\n` +
-      `📊 Current count: *${dayPosts.length}* (and counting...)\n\n` +
-      `Use /guess with no number to see the leaderboard.`,
-      { parse_mode: "Markdown" }
+      `🎲 *Bet Confirmed for @${channel}!* \n\n` +
+      `*${displayName}* wagered *${guessNum}* posts today.\n` +
+      `📊 Current transmissions count: *${actualCount}*`,
+      {
+        parse_mode: "Markdown",
+        reply_markup: new InlineKeyboard()
+          .text("🏆 View Pool", "menu_guess_board")
+          .text("« Menu", "menu_main"),
+      }
     );
   } catch (err) {
     await replyError(ctx, err);
   }
 });
 
-// ─── /streak ────────────────────────────────────────────────────
-bot.command("streak", async (ctx) => {
-  await ctx.reply(
-    "🔥 *Royal Streak:*\n\n" +
-    "The bookkeeper is currently on a pilgrimage to Mount Entoto. " +
-    "Streak tracking will be available upon his return.\n\n" +
-    "_In the meantime, we assume your dedication is legendary._",
-    { parse_mode: "Markdown" }
-  );
+// ─── /subscribe & /unsubscribe ───────────────────────────────────
+bot.command("subscribe", async (ctx) => {
+  try {
+    if (!ctx.from) return;
+    const userId = String(ctx.from.id);
+    const chatId = String(ctx.chat.id);
+    const channel = await getUserChannel(userId);
+
+    await writeDb.insert(subscribers)
+      .values({ telegram_user_id: userId, chat_id: chatId, active: true })
+      .onConflictDoUpdate({
+        target: subscribers.telegram_user_id,
+        set: { active: true, chat_id: chatId },
+      });
+
+    await ctx.reply(
+      `🕊️ *Royal Pigeon Dispatched!*\n\n` +
+      `Every morning, a freshly synthesized scroll of @${channel}'s output will arrive automatically.`,
+      {
+        parse_mode: "Markdown",
+        reply_markup: new InlineKeyboard().text("« Menu", "menu_main"),
+      }
+    );
+  } catch (err) {
+    await replyError(ctx, err);
+  }
 });
 
-// ─── /recommend ───────────────────────────────────────────────────
+bot.command("unsubscribe", async (ctx) => {
+  try {
+    if (!ctx.from) return;
+    const userId = String(ctx.from.id);
+
+    await writeDb.update(subscribers)
+      .set({ active: false })
+      .where(eq(subscribers.telegram_user_id, userId));
+
+    await ctx.reply(
+      `❌ *Unsubscribed from Daily Delivery.*\n\n` +
+      `The royal pigeon will no longer visit your dwelling.`,
+      {
+        parse_mode: "Markdown",
+        reply_markup: new InlineKeyboard().text("« Menu", "menu_main"),
+      }
+    );
+  } catch (err) {
+    await replyError(ctx, err);
+  }
+});
+
+// ─── /recommend ──────────────────────────────────────────────────
 bot.command("recommend", async (ctx) => {
   try {
     if (!ctx.from) return;
     const channel = await getUserChannel(String(ctx.from.id));
-
     await ctx.replyWithChatAction("typing");
 
     const recs = await withReadDb((db) =>
@@ -553,60 +623,360 @@ bot.command("recommend", async (ctx) => {
         WHERE lower(channel) <> lower(${channel})
         GROUP BY channel
         ORDER BY trackers DESC, channel ASC
-        LIMIT 3
+        LIMIT 4
       `),
     );
 
     if (recs.length === 0) {
-      await ctx.reply(
-        `🤷‍♂️ No other tracked channels in the kingdom yet. Try \`/channel @some_username\` and check back later!`,
-        { parse_mode: "Markdown" },
-      );
+      await ctx.reply(`🤷‍♂️ No other channels tracked in the kingdom yet. Type \`/channel @username\` to track one!`, { parse_mode: "Markdown" });
       return;
     }
 
-    const lines = recs.map((r, i) => {
-      const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉";
-      const label = r.trackers === 1 ? "1 subject tracking" : `${r.trackers} subjects tracking`;
-      return `${medal} *@${r.channel}* (${label})`;
-    }).join("\n\n");
+    const kb = new InlineKeyboard();
+    recs.forEach((r, idx) => {
+      kb.text(`▶ @${r.channel} (${r.trackers} lurkers)`, `set_channel:${r.channel}`);
+      kb.row();
+    });
+    kb.text("« Return to Menu", "menu_main");
 
     await ctx.reply(
-      `🎯 *Channel Recommendations*\n\n` +
-      `Other channels tracked in the kingdom besides *@${channel}*:\n\n` +
-      `${lines}\n\n` +
-      `_Type \`/channel @username\` to start tracking one!_`,
-      { parse_mode: "Markdown" },
+      `🎯 *DISCOVERY: POPULAR CHANNELS*\n` +
+      `━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+      `Tap any channel below to track it immediately:`,
+      {
+        parse_mode: "Markdown",
+        reply_markup: kb,
+      }
     );
   } catch (err) {
     await replyError(ctx, err);
   }
 });
 
-// ─── FALLBACK HANDLER ───────────────────────────────────────────
-bot.on("message", async (ctx) => {
-  // If the user sent a valid command that wasn't matched above,
-  // or if they just typed random text, we gently mock them and show the menu.
-  
-  const text = ctx.message.text || "";
-  
-  let opening = "The herald squints at your message. He has no idea what you are trying to say.";
-  
-  if (text.startsWith("/")) {
-    opening = `The herald squints at your scrolls. "${text}" is not a known royal decree.`;
-  }
-  
+// ─── CALLBACK QUERY HANDLERS (Interactive Tactile UI) ────────────
+
+bot.callbackQuery("menu_main", async (ctx) => {
+  const userId = String(ctx.from.id);
+  const channel = await getUserChannel(userId);
+  const subscribed = await isUserSubscribed(userId);
+  const name = ctx.from.first_name || "Citizen";
+
+  await ctx.answerCallbackQuery();
+  await ctx.editMessageText(
+    `📜 *✦ THE LURKENING · ROYAL GAZETTE ✦*\n` +
+    `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+    `Greetings, *${name}*!\n\n` +
+    `📡 *Active Channel:* *@${channel}*\n` +
+    `🕊️ *Pigeon Delivery:* ${subscribed ? "Active [✓]" : "Disabled"}\n\n` +
+    `Select a decree below:`,
+    {
+      parse_mode: "Markdown",
+      reply_markup: buildMainMenuKeyboard(channel, subscribed),
+    }
+  );
+});
+
+bot.callbackQuery("menu_today", async (ctx) => {
+  await ctx.answerCallbackQuery({ text: "Fetching today's digest..." });
+  const localDateStr = getEATDateStr(0);
+  const channel = await getUserChannel(String(ctx.from.id));
+
+  const summary = await withTyping(ctx, () =>
+    summarizeDay(channel, localDateStr, SUMMARY_LANGUAGE, false),
+  );
+
+  const text = summary.includes("No posts found")
+    ? `📰 *@${channel.toUpperCase()} DISPATCH* · ${localDateStr}\n━━━━━━━━━━━━━━━━━━━━━━━━\n\nSilence across the wires. No transmissions detected yet today.`
+    : formatSummaryReply(channel, localDateStr, summary);
+
+  await ctx.reply(text, {
+    parse_mode: "Markdown",
+    reply_markup: buildDigestKeyboard(channel),
+  });
+});
+
+bot.callbackQuery("menu_yesterday", async (ctx) => {
+  await ctx.answerCallbackQuery({ text: "Fetching yesterday's recap..." });
+  const localDateStr = getEATDateStr(-1);
+  const channel = await getUserChannel(String(ctx.from.id));
+
+  const summary = await withTyping(ctx, () =>
+    summarizeDay(channel, localDateStr, SUMMARY_LANGUAGE, false),
+  );
+
+  const text = summary.includes("No posts found")
+    ? `📰 *@${channel.toUpperCase()} DISPATCH* · ${localDateStr}\n━━━━━━━━━━━━━━━━━━━━━━━━\n\nNo transmissions found for yesterday.`
+    : formatSummaryReply(channel, localDateStr, summary);
+
+  await ctx.reply(text, {
+    parse_mode: "Markdown",
+    reply_markup: buildDigestKeyboard(channel),
+  });
+});
+
+bot.callbackQuery("menu_lurkometer", async (ctx) => {
+  await ctx.answerCallbackQuery();
+  await handleLurkometer(ctx);
+});
+
+bot.callbackQuery("menu_roast", async (ctx) => {
+  await ctx.answerCallbackQuery({ text: "Cooking a fresh roast..." });
+  const channel = await getUserChannel(String(ctx.from.id));
+  const roast = await withTyping(ctx, () => generateDailyRoast(channel));
+
   await ctx.reply(
-    `🤨 *Confusion in the Court*\n\n` +
+    `🔥 *EDITORIAL SATIRICAL ROAST · @${channel.toUpperCase()}*\n` +
+    `━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+    `${roast}`,
+    {
+      parse_mode: "Markdown",
+      reply_markup: new InlineKeyboard()
+        .text("🔥 Another Roast", "menu_roast")
+        .text("« Menu", "menu_main"),
+    }
+  );
+});
+
+bot.callbackQuery("menu_excuse", async (ctx) => {
+  await ctx.answerCallbackQuery();
+  const channel = await getUserChannel(String(ctx.from.id));
+  const excuse = generateExcuse(channel);
+
+  await ctx.reply(
+    `🛡️ *ROYAL EXCUSE DISPATCH*\n` +
+    `━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+    `"${excuse}"`,
+    {
+      parse_mode: "Markdown",
+      reply_markup: new InlineKeyboard()
+        .text("🛡️ Another Excuse", "menu_excuse")
+        .text("« Menu", "menu_main"),
+    }
+  );
+});
+
+bot.callbackQuery("menu_channels", async (ctx) => {
+  await ctx.answerCallbackQuery();
+  const current = await getUserChannel(String(ctx.from.id));
+
+  await ctx.editMessageText(
+    `📡 *CHANNEL SWITCHER LEDGER*\n` +
+    `━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+    `Current: *@${current}*\n\n` +
+    `Tap a quick preset below or type \`/channel @username\`:`,
+    {
+      parse_mode: "Markdown",
+      reply_markup: buildChannelPickerKeyboard(current),
+    }
+  );
+});
+
+bot.callbackQuery(/^set_channel:(.+)$/, async (ctx) => {
+  const newChannel = ctx.match[1].replace(/^@/, "").trim();
+  const userId = String(ctx.from.id);
+
+  await ctx.answerCallbackQuery({ text: `Switched to @${newChannel}!` });
+
+  await writeDb.insert(userChannels).values({
+    telegram_user_id: userId,
+    channel: newChannel,
+  }).onConflictDoUpdate({
+    target: userChannels.telegram_user_id,
+    set: { channel: newChannel, updated_at: new Date() },
+  });
+
+  userChannelCache.set(userId, newChannel, USER_CHANNEL_TTL_MS);
+  ensureChannelScraped(newChannel).catch(() => {});
+
+  const subscribed = await isUserSubscribed(userId);
+
+  await ctx.editMessageText(
+    `✅ *Active Channel Updated to @${newChannel}*\n` +
+    `━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+    `Scraping telegraph wires and preparing intelligence.`,
+    {
+      parse_mode: "Markdown",
+      reply_markup: buildMainMenuKeyboard(newChannel, subscribed),
+    }
+  );
+});
+
+bot.callbackQuery("menu_guess", async (ctx) => {
+  await ctx.answerCallbackQuery();
+  const channel = await getUserChannel(String(ctx.from.id));
+  const localDateStr = getEATDateStr(0);
+
+  const countRow = await withReadDb((db) =>
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(posts)
+      .where(and(eq(posts.local_date, localDateStr), eq(posts.channel, channel)))
+      .execute()
+  );
+  const actualCount = countRow[0]?.count ?? 0;
+
+  await ctx.reply(
+    `🎲 *BETTING POOL // @${channel.toUpperCase()}*\n` +
+    `━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+    `Current transmissions: *${actualCount}*\n\n` +
+    `Tap a wager below:`,
+    {
+      parse_mode: "Markdown",
+      reply_markup: buildGuessKeyboard(actualCount),
+    }
+  );
+});
+
+bot.callbackQuery(/^make_guess:(\d+)$/, async (ctx) => {
+  const guessNum = parseInt(ctx.match[1], 10);
+  const userId = String(ctx.from.id);
+  const displayName = getDisplayName(ctx);
+  const channel = await getUserChannel(userId);
+  const localDateStr = getEATDateStr(0);
+
+  await ctx.answerCallbackQuery({ text: `Bet placed: ${guessNum} posts!` });
+
+  const guessId = `${channel}:${localDateStr}:${userId}`;
+  await writeDb.insert(guesses).values({
+    id: guessId,
+    channel: channel,
+    local_date: localDateStr,
+    telegram_user_id: userId,
+    display_name: displayName,
+    guess: guessNum,
+  }).onConflictDoUpdate({
+    target: guesses.id,
+    set: { guess: guessNum, display_name: displayName },
+  });
+
+  await ctx.reply(
+    `🎲 *Bet Confirmed!* \n\n` +
+    `*${displayName}* bets *${guessNum}* posts today on @${channel}.`,
+    {
+      parse_mode: "Markdown",
+      reply_markup: new InlineKeyboard()
+        .text("🏆 Leaderboard", "menu_guess_board")
+        .text("« Menu", "menu_main"),
+    }
+  );
+});
+
+bot.callbackQuery("menu_guess_board", async (ctx) => {
+  await ctx.answerCallbackQuery();
+  const channel = await getUserChannel(String(ctx.from.id));
+  const localDateStr = getEATDateStr(0);
+
+  const countRow = await withReadDb((db) =>
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(posts)
+      .where(and(eq(posts.local_date, localDateStr), eq(posts.channel, channel)))
+      .execute()
+  );
+  const actualCount = countRow[0]?.count ?? 0;
+
+  const todayGuesses = await withReadDb((db) =>
+    db.select().from(guesses)
+      .where(and(eq(guesses.local_date, localDateStr), eq(guesses.channel, channel))).execute()
+  );
+
+  let boardText = "No bets placed yet today.";
+  if (todayGuesses.length > 0) {
+    const sorted = todayGuesses
+      .map(g => ({ ...g, diff: Math.abs(g.guess - actualCount) }))
+      .sort((a, b) => a.diff - b.diff);
+
+    boardText = sorted.map((g, i) => {
+      const medal = i === 0 ? "👑" : i === 1 ? "🥈" : i === 2 ? "🥉" : "  ";
+      return `${medal} ${g.display_name}: *${g.guess}* (diff: ${g.diff})`;
+    }).join("\n");
+  }
+
+  await ctx.reply(
+    `🏆 *BETTING LEADERBOARD · @${channel.toUpperCase()}*\n` +
+    `━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+    `📊 Actual count so far: *${actualCount}*\n\n` +
+    `${boardText}`,
+    {
+      parse_mode: "Markdown",
+      reply_markup: new InlineKeyboard()
+        .text("🎲 Place Bet", "menu_guess")
+        .text("« Menu", "menu_main"),
+    }
+  );
+});
+
+bot.callbackQuery("menu_subscribe_toggle", async (ctx) => {
+  const userId = String(ctx.from.id);
+  const chatId = String(ctx.chat?.id || ctx.from.id);
+  const channel = await getUserChannel(userId);
+  const currentSub = await isUserSubscribed(userId);
+
+  if (currentSub) {
+    await writeDb.update(subscribers).set({ active: false }).where(eq(subscribers.telegram_user_id, userId));
+    await ctx.answerCallbackQuery({ text: "Unsubscribed from daily delivery." });
+  } else {
+    await writeDb.insert(subscribers).values({ telegram_user_id: userId, chat_id: chatId, active: true })
+      .onConflictDoUpdate({ target: subscribers.telegram_user_id, set: { active: true, chat_id: chatId } });
+    await ctx.answerCallbackQuery({ text: "Subscribed to daily delivery!" });
+  }
+
+  await ctx.editMessageReplyMarkup({
+    reply_markup: buildMainMenuKeyboard(channel, !currentSub),
+  });
+});
+
+bot.callbackQuery("menu_recommend", async (ctx) => {
+  await ctx.answerCallbackQuery();
+  const channel = await getUserChannel(String(ctx.from.id));
+
+  const recs = await withReadDb((db) =>
+    db.execute<{ channel: string; trackers: number }>(sql`
+      SELECT channel, count(*)::int AS trackers
+      FROM user_channels
+      WHERE lower(channel) <> lower(${channel})
+      GROUP BY channel
+      ORDER BY trackers DESC, channel ASC
+      LIMIT 4
+    `),
+  );
+
+  const kb = new InlineKeyboard();
+  recs.forEach((r) => {
+    kb.text(`▶ @${r.channel} (${r.trackers} lurkers)`, `set_channel:${r.channel}`).row();
+  });
+  kb.text("« Return to Menu", "menu_main");
+
+  await ctx.editMessageText(
+    `🎯 *RECOMMENDED TELEGRAM CHANNELS*\n` +
+    `━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+    `Tap any channel to switch your active tracking:`,
+    {
+      parse_mode: "Markdown",
+      reply_markup: kb,
+    }
+  );
+});
+
+// ─── FALLBACK HANDLER ────────────────────────────────────────────
+bot.on("message", async (ctx) => {
+  const text = ctx.message.text || "";
+  const opening = text.startsWith("/")
+    ? `The herald squints at your decree: "${text}" is not recognized.`
+    : `The herald received your message.`;
+
+  const userId = String(ctx.from.id);
+  const channel = await getUserChannel(userId);
+  const subscribed = await isUserSubscribed(userId);
+
+  await ctx.reply(
+    `🤨 *COURT TELEPRINTER*\n` +
+    `━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
     `${opening}\n\n` +
-    `Please speak in a language the royal scribes understand:\n\n` +
-    `📖 /today — Today's summary\n` +
-    `🐴 /yesterday — Yesterday's summary\n` +
-    `🎲 /guess — Bet on the post count\n` +
-    `📡 /channel — Switch the channel you track\n` +
-    `🎺 /lurkometer — Check the activity level\n` +
-    `🎯 /recommend — See what others track\n\n` +
-    `_Hit the / menu button to see all commands._`,
-    { parse_mode: "Markdown" }
+    `Select a command decree below:`,
+    {
+      parse_mode: "Markdown",
+      reply_markup: buildMainMenuKeyboard(channel, subscribed),
+    }
   );
 });
