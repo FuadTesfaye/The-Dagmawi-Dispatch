@@ -653,6 +653,87 @@ bot.command("recommend", async (ctx) => {
   }
 });
 
+// ─── /dispatch & /read ───────────────────────────────────────────
+bot.command(["dispatch", "read", "post"], async (ctx) => {
+  try {
+    if (!ctx.from) return;
+    const userId = String(ctx.from.id);
+    const channel = await getUserChannel(userId);
+    const input = ctx.match?.trim();
+
+    if (!input) {
+      await ctx.reply(
+        `📜 *EXAMINE DISPATCH BY ID*\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `Please specify a dispatch number:\n` +
+        `\`/dispatch 123\` or \`/read 456\``,
+        { parse_mode: "Markdown" }
+      );
+      return;
+    }
+
+    const postId = parseInt(input, 10);
+    if (isNaN(postId)) {
+      await ctx.reply(`❌ Invalid dispatch ID. Please enter a valid number, e.g. \`/dispatch 100\``, { parse_mode: "Markdown" });
+      return;
+    }
+
+    await ctx.replyWithChatAction("typing");
+
+    const postRows = await withReadDb((db) =>
+      db.select().from(posts).where(and(eq(posts.channel, channel), eq(posts.id, postId))).limit(1)
+    );
+
+    if (postRows.length === 0) {
+      await ctx.reply(
+        `🔍 *Dispatch #${postId} Not Found in @${channel} Archives*\n\n` +
+        `The dispatch may not be ingested yet or does not exist.`,
+        {
+          parse_mode: "Markdown",
+          reply_markup: new InlineKeyboard()
+            .text("📖 Today's Digest", "menu_today")
+            .text("« Menu", "menu_main"),
+        }
+      );
+      return;
+    }
+
+    const p = postRows[0];
+    const raw = p.raw_json as any;
+    const forwardFrom = raw?.forwardFrom || raw?.fwdFrom;
+    const replyTo = raw?.replyTo || (raw?.replyToMsgId ? { id: raw.replyToMsgId } : undefined);
+
+    let metaLines = "";
+    if (forwardFrom) {
+      metaLines += `\n↪️ *Forwarded Wire:* ${forwardFrom.name || forwardFrom.fromName || "External Source"}`;
+    }
+    if (replyTo) {
+      metaLines += `\n↳ *In Reply to Dispatch:* #${replyTo.id}`;
+    }
+
+    const snippet = p.text ? p.text : `[Attachment: ${p.media_type}]`;
+    const webUrl = `https://t.me/lurkening_bot`;
+
+    await ctx.reply(
+      `✦ *DISPATCH NO. ${p.id} · @${channel.toUpperCase()}*\n` +
+      `━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+      `📅 *Date:* ${p.local_date}${metaLines}\n\n` +
+      `${snippet}`,
+      {
+        parse_mode: "Markdown",
+        reply_markup: new InlineKeyboard()
+          .url("🔗 Examine on Web Gazette", p.permalink || `https://t.me/${channel}/${p.id}`)
+          .row()
+          .text("🤖 Groq AI Roast", `roast_single:${p.id}`)
+          .text("« Menu", "menu_main"),
+      }
+    );
+  } catch (err) {
+    await replyError(ctx, err);
+  }
+});
+
+
 // ─── CALLBACK QUERY HANDLERS (Interactive Tactile UI) ────────────
 
 bot.callbackQuery("menu_main", async (ctx) => {

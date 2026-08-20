@@ -20,6 +20,21 @@ export interface TrackedChannel {
   createdAt: string;
 }
 
+export interface ForwardFrom {
+  name: string;
+  channel?: string;
+  postId?: number;
+  url?: string;
+}
+
+export interface ReplyTo {
+  id?: number;
+  channel?: string;
+  authorName?: string;
+  text?: string;
+  url?: string;
+}
+
 export interface Post {
   channel: string;
   id: number;
@@ -33,6 +48,8 @@ export interface Post {
   viewsCount?: number;
   createdAt?: string;
   channelInfo?: TrackedChannel;
+  forwardFrom?: ForwardFrom;
+  replyTo?: ReplyTo;
   reactions?: Record<string, number>;
   userReactions?: string[];
   commentCount?: number;

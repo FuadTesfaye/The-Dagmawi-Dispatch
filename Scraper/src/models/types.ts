@@ -57,7 +57,20 @@ export interface LocationMedia extends BaseMedia {
   longitude: number;
 }
 
-export type Media = PhotoMedia | VideoMedia | StickerMedia | PollMedia | LocationMedia;
+export interface ForwardFrom {
+  name: string;
+  channel?: string;
+  postId?: number;
+  url?: string;
+}
+
+export interface ReplyTo {
+  id?: number;
+  channel?: string;
+  authorName?: string;
+  text?: string;
+  url?: string;
+}
 
 export interface Message {
   id: number;
@@ -66,6 +79,8 @@ export interface Message {
   text: string;
   views?: string;
   media: Media[];
+  forwardFrom?: ForwardFrom;
+  replyTo?: ReplyTo;
   /** Original markup for this message, preserved for the Raw HTML Fallback strategy. */
   rawHtml: string;
 }

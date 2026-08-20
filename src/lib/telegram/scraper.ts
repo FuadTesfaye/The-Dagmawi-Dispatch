@@ -94,8 +94,73 @@ async function scrapePublicChannelFastImpl(cleanChannel: string): Promise<number
       else if ($el.find(".tgme_widget_message_video").length > 0) mediaType = "video";
       else if ($el.find(".tgme_widget_message_document").length > 0) mediaType = "document";
 
-      const hasCaptionOnly = !!mediaType && !!text;
-      const permalink = `https://t.me/${cleanChannel}/${msgId}`;
+      // Forwarded from detection
+      const $fwd = $el.find(".tgme_widget_message_forwarded_from");
+      let forwardFrom: {
+        name: string;
+        channel?: string;
+        postId?: number;
+        url?: string;
+      } | undefined = undefined;
+
+      if ($fwd.length > 0) {
+        const $fwdName = $fwd.find(".tgme_widget_message_forwarded_from_name");
+        const name = $fwdName.text().trim() || $fwd.text().replace(/Forwarded from/i, "").trim();
+        const href = $fwdName.attr("href") || $fwd.find("a").attr("href");
+        let fwdChannel: string | undefined;
+        let fwdPostId: number | undefined;
+
+        if (href) {
+          const match = href.match(/t\.me\/([^/]+)(?:\/(\d+))?/);
+          if (match) {
+            fwdChannel = match[1];
+            if (match[2]) fwdPostId = parseInt(match[2], 10);
+          }
+        }
+
+        if (name || fwdChannel) {
+          forwardFrom = {
+            name: name || (fwdChannel ? `@${fwdChannel}` : "Forwarded Source"),
+            channel: fwdChannel,
+            postId: fwdPostId,
+            url: href || (fwdChannel ? `https://t.me/${fwdChannel}` : undefined),
+          };
+        }
+      }
+
+      // Reply-to detection
+      const $reply = $el.find(".tgme_widget_message_reply");
+      let replyTo: {
+        id?: number;
+        channel?: string;
+        authorName?: string;
+        text?: string;
+        url?: string;
+      } | undefined = undefined;
+
+      if ($reply.length > 0) {
+        const replyHref = $reply.attr("href");
+        const replyAuthor = $reply.find(".tgme_widget_message_author_name").text().trim();
+        const replyText = $reply.find(".tgme_widget_message_text").text().trim();
+        let replyId: number | undefined;
+        let replyChannel: string | undefined;
+
+        if (replyHref) {
+          const match = replyHref.match(/t\.me\/([^/]+)\/(\d+)/);
+          if (match) {
+            replyChannel = match[1];
+            replyId = parseInt(match[2], 10);
+          }
+        }
+
+        replyTo = {
+          id: replyId,
+          channel: replyChannel || cleanChannel,
+          authorName: replyAuthor || undefined,
+          text: replyText || undefined,
+          url: replyHref || (replyId ? `https://t.me/${cleanChannel}/${replyId}` : undefined),
+        };
+      }
 
       newPosts.push({
         channel: cleanChannel,
@@ -106,7 +171,11 @@ async function scrapePublicChannelFastImpl(cleanChannel: string): Promise<number
         media_type: mediaType,
         has_caption_only: hasCaptionOnly,
         permalink,
-        raw_json: { source: "web_preview" },
+        raw_json: {
+          source: "web_preview",
+          forwardFrom,
+          replyTo,
+        },
       });
     });
 

@@ -5,10 +5,11 @@ import Link from 'next/link';
 import { Post } from '@/lib/types';
 import { formatTimeAgo, formatNumber } from '@/lib/utils';
 import { useAuth, useToast } from './providers';
-import { Sparkles, MessageSquare, Share2, Flag, Image as ImageIcon, Video, FileText, ArrowUpRight } from 'lucide-react';
+import { Sparkles, MessageSquare, Share2, Flag, Image as ImageIcon, Video, FileText, ArrowUpRight, Forward, CornerDownRight, Link2, Copy, Check } from 'lucide-react';
 import { AIReviewModal } from './ai-review-modal';
 import { CommentDrawer } from './comment-drawer';
 import { ReportModal } from './report-modal';
+import { ShareModal } from './share-modal';
 
 interface PostCardProps {
   post: Post;
@@ -80,10 +81,38 @@ export function PostCard({ post }: PostCardProps) {
   const [lastTappedEmoji, setLastTappedEmoji] = useState<string | null>(null);
   const [commentCount, setCommentCount] = useState<number>(post.commentCount || 0);
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const [copiedId, setCopiedId] = useState(false);
 
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [isCommentDrawerOpen, setIsCommentDrawerOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+
+  // Extract Forward Information (top-level or rawJson fallback)
+  const forwardFrom = post.forwardFrom || (post.rawJson as any)?.forwardFrom || ((post.rawJson as any)?.fwdFrom ? {
+    name: (post.rawJson as any).fwdFrom.fromName || (post.rawJson as any).fwdFrom.postAuthor || 'Forwarded Channel',
+    channel: (post.rawJson as any).fwdFrom.channelPost ? String((post.rawJson as any).fwdFrom.channelPost) : undefined,
+    postId: typeof (post.rawJson as any).fwdFrom.channelPost === 'number' ? (post.rawJson as any).fwdFrom.channelPost : undefined,
+  } : ((post.rawJson as any)?.forward_from_chat ? {
+    name: (post.rawJson as any).forward_from_chat.title || `@${(post.rawJson as any).forward_from_chat.username}`,
+    channel: (post.rawJson as any).forward_from_chat.username,
+    postId: (post.rawJson as any).forward_from_message_id,
+    url: (post.rawJson as any).forward_from_chat.username ? `https://t.me/${(post.rawJson as any).forward_from_chat.username}` : undefined,
+  } : ((post.rawJson as any)?.forward_from ? {
+    name: (post.rawJson as any).forward_from.first_name || 'Forwarded Author',
+    channel: (post.rawJson as any).forward_from.username,
+  } : undefined)));
+
+  // Extract Reply Information (top-level or rawJson fallback)
+  const replyTo = post.replyTo || (post.rawJson as any)?.replyTo || ((post.rawJson as any)?.replyToMsgId ? {
+    id: (post.rawJson as any).replyToMsgId,
+    channel: post.channel,
+  } : ((post.rawJson as any)?.reply_to_message ? {
+    id: (post.rawJson as any).reply_to_message.message_id,
+    channel: (post.rawJson as any).reply_to_message.chat?.username || post.channel,
+    authorName: (post.rawJson as any).reply_to_message.from?.first_name || (post.rawJson as any).reply_to_message.chat?.title,
+    text: (post.rawJson as any).reply_to_message.text,
+  } : undefined));
 
   const handleToggleReaction = async (emoji: string) => {
     if (!user) {
@@ -127,30 +156,15 @@ export function PostCard({ post }: PostCardProps) {
     }
   };
 
-  const handleShare = async () => {
+  const handleCopyIdPermalink = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     const url = `${window.location.origin}/post/${post.id}?channel=${post.channel}`;
-    const shareData = {
-      title: `Dispatch #${post.id} from @${post.channel} — The Lurkening`,
-      text: post.text ? post.text.slice(0, 120) + '...' : `Dispatch #${post.id} from @${post.channel}`,
-      url: url,
-    };
-
-    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-      try {
-        await navigator.share(shareData);
-        return;
-      } catch (err: any) {
-        if (err.name !== 'AbortError') {
-          // Fall through to clipboard
-        } else {
-          return;
-        }
-      }
-    }
-
     try {
       await navigator.clipboard.writeText(url);
-      showToast('Dispatch reference link copied to clipboard!', 'success');
+      setCopiedId(true);
+      showToast(`Copied permalink for Dispatch #${post.id}!`, 'success');
+      setTimeout(() => setCopiedId(false), 2000);
     } catch {
       showToast('Failed to copy link', 'error');
     }
@@ -166,7 +180,7 @@ export function PostCard({ post }: PostCardProps) {
 
   return (
     <article className="broadsheet-card p-4 sm:p-6 flex flex-col gap-3.5 sm:gap-4 font-teletype relative group">
-      {/* Broadsheet Author / Meta Header */}
+      {/* Broadsheet Author & Dispatch ID Masthead Header */}
       <div className="flex items-center justify-between gap-2.5 border-b-2 border-[var(--ink-border)] pb-3">
         <Link
           href={`/channel/${post.channel}`}
@@ -200,20 +214,103 @@ export function PostCard({ post }: PostCardProps) {
           </div>
         </Link>
 
-        {/* Telegram Direct Reference */}
-        {post.permalink && (
-          <a
-            href={post.permalink}
-            target="_blank"
-            rel="noopener noreferrer"
-            title="Examine original on Telegram"
-            className="stamp-btn !py-1 !px-2 text-[10px] flex items-center gap-1 shrink-0 active:scale-95"
+        {/* Dispatch ID Stamp & External Wire Actions */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {/* Distinct Dispatch ID Stamp */}
+          <button
+            onClick={handleCopyIdPermalink}
+            title={`Dispatch #${post.id} (Click to copy direct permalink)`}
+            className="stamp-btn !py-1 !px-2 text-[10px] flex items-center gap-1 active:scale-95 font-bold !bg-[var(--subtle-bg)] hover:!bg-[#d97706] hover:!text-black"
           >
-            <span>WIRE</span>
-            <ArrowUpRight className="w-3 h-3 text-[#d97706]" />
-          </a>
-        )}
+            {copiedId ? (
+              <>
+                <Check className="w-3 h-3 text-emerald-500" />
+                <span>COPIED</span>
+              </>
+            ) : (
+              <>
+                <span className="text-[#d97706] font-bold">#</span>
+                <span>{post.id}</span>
+              </>
+            )}
+          </button>
+
+          {/* Telegram Direct Reference */}
+          {post.permalink && (
+            <a
+              href={post.permalink}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Examine original on Telegram"
+              className="stamp-btn !py-1 !px-2 text-[10px] flex items-center gap-1 shrink-0 active:scale-95"
+            >
+              <span>WIRE</span>
+              <ArrowUpRight className="w-3 h-3 text-[#d97706]" />
+            </a>
+          )}
+        </div>
       </div>
+
+      {/* Forwarded Wire Origin Callout (When Post is Forwarded) */}
+      {forwardFrom && (
+        <div className="flex items-center gap-2 px-3 py-2 bg-[var(--subtle-bg)] border-l-4 border-[#d97706] border-y border-r border-[var(--ink-border)] text-xs font-teletype rounded-sm">
+          <Forward className="w-3.5 h-3.5 text-[#d97706] shrink-0" />
+          <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+            <span className="text-[10px] font-bold text-[var(--paper-muted)] uppercase tracking-wider">
+              FORWARDED WIRE FROM:
+            </span>
+            {forwardFrom.channel ? (
+              <Link
+                href={`/channel/${forwardFrom.channel}`}
+                className="font-bold text-[var(--paper-cream)] hover:text-[#d97706] underline decoration-dotted transition-colors truncate"
+              >
+                {forwardFrom.name} (@{forwardFrom.channel})
+              </Link>
+            ) : forwardFrom.url ? (
+              <a
+                href={forwardFrom.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-bold text-[var(--paper-cream)] hover:text-[#d97706] underline decoration-dotted transition-colors truncate inline-flex items-center gap-1"
+              >
+                <span>{forwardFrom.name}</span>
+                <ArrowUpRight className="w-3 h-3 text-[#d97706]" />
+              </a>
+            ) : (
+              <span className="font-bold text-[var(--paper-cream)] truncate">{forwardFrom.name}</span>
+            )}
+            {forwardFrom.postId && (
+              <span className="text-[10px] text-[var(--paper-faint)]">
+                [REF #{forwardFrom.postId}]
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Replied-To Dispatch Quote Box (When Post is a Reply) */}
+      {replyTo && (
+        <Link
+          href={`/post/${replyTo.id}?channel=${replyTo.channel || post.channel}`}
+          className="flex flex-col gap-1 p-2.5 bg-[var(--subtle-bg)]/80 hover:bg-[var(--subtle-bg)] border-l-4 border-[var(--ink-border-heavy)] border-y border-r border-[var(--ink-border)] text-xs transition-all group/reply rounded-sm"
+        >
+          <div className="flex items-center justify-between text-[10px] text-[var(--paper-muted)] font-bold uppercase tracking-wider">
+            <span className="inline-flex items-center gap-1 text-[#d97706]">
+              <CornerDownRight className="w-3 h-3 shrink-0" />
+              <span>IN REPLY TO DISPATCH #{replyTo.id}</span>
+              {replyTo.authorName && <span>· {replyTo.authorName}</span>}
+            </span>
+            <span className="text-[9px] text-[var(--paper-faint)] group-hover/reply:text-[#d97706] transition-colors">
+              VIEW PARENT DISPATCH →
+            </span>
+          </div>
+          {replyTo.text && (
+            <p className="text-xs text-[var(--paper-muted)] font-sans italic line-clamp-2 pl-3 border-l-2 border-[var(--ink-border)]">
+              &ldquo;{replyTo.text}&rdquo;
+            </p>
+          )}
+        </Link>
+      )}
 
       {/* Post Body with Responsive Typography */}
       <div className="flex flex-col gap-2">
@@ -319,8 +416,8 @@ export function PostCard({ post }: PostCardProps) {
 
           {/* Social Share Link */}
           <button
-            onClick={handleShare}
-            title="Share Dispatch"
+            onClick={() => setIsShareModalOpen(true)}
+            title="Disseminate Dispatch (Share / Copy)"
             aria-label="Share Dispatch"
             className="stamp-btn !p-1.5 active:scale-95"
           >
@@ -340,6 +437,14 @@ export function PostCard({ post }: PostCardProps) {
       </div>
 
       {/* Modals & Drawers */}
+      {isShareModalOpen && (
+        <ShareModal
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+          post={post}
+        />
+      )}
+
       {isAIModalOpen && (
         <AIReviewModal
           isOpen={isAIModalOpen}

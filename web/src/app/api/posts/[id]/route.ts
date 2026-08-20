@@ -30,6 +30,7 @@ export async function GET(
           mediaType: posts.mediaType,
           hasCaptionOnly: posts.hasCaptionOnly,
           permalink: posts.permalink,
+          rawJson: posts.rawJson,
           viewsCount: posts.viewsCount,
           createdAt: posts.createdAt,
           channelName: trackedChannels.name,
@@ -82,8 +83,35 @@ export async function GET(
         .where(and(eq(aiReviews.channel, channel), eq(aiReviews.postId, postId)))
         .orderBy(aiReviews.createdAt);
 
+      const raw = p.rawJson as any;
+      const forwardFrom = raw?.forwardFrom || (raw?.fwdFrom ? {
+        name: raw.fwdFrom.fromName || raw.fwdFrom.postAuthor || 'Forwarded Channel',
+        channel: raw.fwdFrom.channelPost ? String(raw.fwdFrom.channelPost) : undefined,
+        postId: typeof raw.fwdFrom.channelPost === 'number' ? raw.fwdFrom.channelPost : undefined,
+      } : (raw?.forward_from_chat ? {
+        name: raw.forward_from_chat.title || `@${raw.forward_from_chat.username}`,
+        channel: raw.forward_from_chat.username,
+        postId: raw.forward_from_message_id,
+        url: raw.forward_from_chat.username ? `https://t.me/${raw.forward_from_chat.username}` : undefined,
+      } : (raw?.forward_from ? {
+        name: raw.forward_from.first_name || 'Forwarded Author',
+        channel: raw.forward_from.username,
+      } : undefined)));
+
+      const replyTo = raw?.replyTo || (raw?.replyToMsgId ? {
+        id: raw.replyToMsgId,
+        channel: p.channel,
+      } : (raw?.reply_to_message ? {
+        id: raw.reply_to_message.message_id,
+        channel: raw.reply_to_message.chat?.username || p.channel,
+        authorName: raw.reply_to_message.from?.first_name || raw.reply_to_message.chat?.title,
+        text: raw.reply_to_message.text,
+      } : undefined));
+
       return {
         ...p,
+        forwardFrom,
+        replyTo,
         channelInfo: {
           id: p.channel,
           name: p.channelName || p.channel,

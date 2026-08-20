@@ -69,7 +69,72 @@ export class ParserRegistry {
         if (match?.[1]) media.push({ type: "photo", url: match[1] });
       });
 
-      messages.push({ id, channel: username, date, text, views: viewsText || undefined, media, rawHtml: $.html(el) });
+      // Forwarded from detection
+      const $fwd = $(el).find(".tgme_widget_message_forwarded_from");
+      let forwardFrom = undefined;
+      if ($fwd.length > 0) {
+        const $fwdName = $fwd.find(".tgme_widget_message_forwarded_from_name");
+        const name = $fwdName.text().trim() || $fwd.text().replace(/Forwarded from/i, "").trim();
+        const href = $fwdName.attr("href") || $fwd.find("a").attr("href");
+        let fwdChannel: string | undefined;
+        let fwdPostId: number | undefined;
+
+        if (href) {
+          const match = href.match(/t\.me\/([^/]+)(?:\/(\d+))?/);
+          if (match) {
+            fwdChannel = match[1];
+            if (match[2]) fwdPostId = parseInt(match[2], 10);
+          }
+        }
+
+        if (name || fwdChannel) {
+          forwardFrom = {
+            name: name || (fwdChannel ? `@${fwdChannel}` : "Forwarded Source"),
+            channel: fwdChannel,
+            postId: fwdPostId,
+            url: href || (fwdChannel ? `https://t.me/${fwdChannel}` : undefined),
+          };
+        }
+      }
+
+      // Reply-to detection
+      const $reply = $(el).find(".tgme_widget_message_reply");
+      let replyTo = undefined;
+      if ($reply.length > 0) {
+        const replyHref = $reply.attr("href");
+        const replyAuthor = $reply.find(".tgme_widget_message_author_name").text().trim();
+        const replyText = $reply.find(".tgme_widget_message_text").text().trim();
+        let replyId: number | undefined;
+        let replyChannel: string | undefined;
+
+        if (replyHref) {
+          const match = replyHref.match(/t\.me\/([^/]+)\/(\d+)/);
+          if (match) {
+            replyChannel = match[1];
+            replyId = parseInt(match[2], 10);
+          }
+        }
+
+        replyTo = {
+          id: replyId,
+          channel: replyChannel || username,
+          authorName: replyAuthor || undefined,
+          text: replyText || undefined,
+          url: replyHref || (replyId ? `https://t.me/${username}/${replyId}` : undefined),
+        };
+      }
+
+      messages.push({
+        id,
+        channel: username,
+        date,
+        text,
+        views: viewsText || undefined,
+        media,
+        forwardFrom,
+        replyTo,
+        rawHtml: $.html(el),
+      });
     });
     return messages;
   }
