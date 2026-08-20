@@ -22,7 +22,8 @@
     "postgres": "^3.4.9",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "tailwind-merge": "^3.0.2"
+    "tailwind-merge": "^3.0.2",
+    "telegram": "^2.26.22"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
