@@ -27,6 +27,14 @@ function getDatabaseUrls(): { primary: string; readPool: string[] } {
 
 const maxConnections = Number(process.env.DB_POOL_MAX) || 5;
 
+const clientConfig = {
+  prepare: false as const,
+  ssl: 'require' as const,
+  max: maxConnections,
+  idle_timeout: 20,
+  connect_timeout: 10,
+};
+
 // Lazy client caches
 let writeClient: ReturnType<typeof postgres> | null = null;
 let writeDbInstance: ReturnType<typeof drizzle<typeof schema>> | null = null;
@@ -37,7 +45,7 @@ let readIndex = 0;
 function getWriteDb() {
   if (!writeDbInstance) {
     const { primary } = getDatabaseUrls();
-    writeClient = postgres(primary, { max: maxConnections, idle_timeout: 20 });
+    writeClient = postgres(primary, clientConfig);
     writeDbInstance = drizzle(writeClient, { schema });
   }
   return writeDbInstance;
@@ -47,7 +55,7 @@ function initReadDbs() {
   if (readDbInstances.length === 0) {
     const { readPool } = getDatabaseUrls();
     for (const url of readPool) {
-      const client = postgres(url, { max: maxConnections, idle_timeout: 20 });
+      const client = postgres(url, clientConfig);
       readClients.push(client);
       readDbInstances.push(drizzle(client, { schema }));
     }
