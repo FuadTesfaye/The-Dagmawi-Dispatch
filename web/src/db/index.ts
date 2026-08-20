@@ -11,21 +11,18 @@ if (!process.env.DATABASE_URL && !process.env.DB_URL_1) {
 }
 
 function getDatabaseUrls(): { primary: string; readPool: string[] } {
-  const primary = process.env.DB_URL_1 || process.env.DATABASE_URL;
+  const primary = process.env.DATABASE_URL || process.env.DB_URL_1 || process.env.DB_URL_2;
   if (!primary) {
     throw new Error('DATABASE_URL or DB_URL_1 must be set in .env.local or environment variables');
   }
 
   const readPool: string[] = [];
-  if (process.env.DB_URL_1) readPool.push(process.env.DB_URL_1);
+  if (process.env.DATABASE_URL) readPool.push(process.env.DATABASE_URL);
   if (process.env.DB_URL_2) readPool.push(process.env.DB_URL_2);
-  if (process.env.DB_URL_3) readPool.push(process.env.DB_URL_3);
+  if (process.env.DB_URL_1) readPool.push(process.env.DB_URL_1);
 
-  if (readPool.length === 0) {
-    readPool.push(primary);
-  }
-
-  return { primary, readPool };
+  const uniquePool = [...new Set(readPool.length > 0 ? readPool : [primary])];
+  return { primary, readPool: uniquePool };
 }
 
 const maxConnections = Number(process.env.DB_POOL_MAX) || 5;
