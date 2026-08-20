@@ -10,11 +10,10 @@ import { TELEGRAM_BOT_USERNAME, TELEGRAM_BOT_URL } from '@/lib/constants';
 
 export function Navbar() {
   const pathname = usePathname();
-  const { user, loading, logout, loginDemo } = useAuth();
+  const { user, loading, logout } = useAuth();
   const { isConnected } = useRealtime();
   const { theme, toggleTheme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [showDemoMenu, setShowDemoMenu] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
   const botUsername = TELEGRAM_BOT_USERNAME;
@@ -29,7 +28,6 @@ export function Navbar() {
         e.preventDefault();
         setIsSearchModalOpen(true);
       } else if (e.key === 'Escape') {
-        setShowDemoMenu(false);
         setIsMenuOpen(false);
       }
     };
@@ -40,7 +38,6 @@ export function Navbar() {
   // Close mobile menu on route change
   useEffect(() => {
     setIsMenuOpen(false);
-    setShowDemoMenu(false);
   }, [pathname]);
 
   const navLinks = [
@@ -177,65 +174,12 @@ export function Navbar() {
                 </button>
               </div>
             ) : (
-              <div className="relative flex items-center gap-1.5">
-                <Link
-                  href="/login"
-                  className="stamp-btn !py-1 !px-2.5 sm:!py-1.5 sm:!px-3.5 text-xs font-bold"
-                >
-                  Sign In
-                </Link>
-
-                <button
-                  onClick={() => setShowDemoMenu(!showDemoMenu)}
-                  className="stamp-btn !bg-[var(--subtle-bg)] !text-[var(--paper-muted)] hover:!text-[var(--paper-cream)] !py-1 !px-1.5 sm:!py-1.5 sm:!px-2.5 flex items-center gap-1"
-                  title="Quick Demo Persona"
-                >
-                  <span className="hidden xs:inline">Demo</span>
-                  <ChevronDown className="w-3 h-3 text-[var(--paper-muted)]" />
-                </button>
-
-                {/* Demo Menu Dropdown */}
-                {showDemoMenu && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-40"
-                      onClick={() => setShowDemoMenu(false)}
-                    />
-                    <div className="absolute right-0 top-11 w-52 p-2 bg-[var(--card-bg)] border-2 border-[var(--ink-border-heavy)] shadow-[6px_6px_0px_0px_var(--shadow-color)] z-50 font-teletype text-xs animate-in fade-in zoom-in-95 duration-100">
-                      <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--paper-muted)] px-2 py-1 border-b border-[var(--ink-border)] mb-1">
-                        Select Persona
-                      </div>
-                      <button
-                        onClick={() => {
-                          loginDemo('admin');
-                          setShowDemoMenu(false);
-                        }}
-                        className="w-full text-left px-2.5 py-1.5 text-[var(--paper-cream)] hover:bg-[var(--paper-cream)] hover:text-[var(--ink-bg)] transition-colors font-bold flex items-center gap-2"
-                      >
-                        <span>✦ Royal Editor (Admin)</span>
-                      </button>
-                      <button
-                        onClick={() => {
-                          loginDemo('reader');
-                          setShowDemoMenu(false);
-                        }}
-                        className="w-full text-left px-2.5 py-1.5 text-[var(--paper-cream)] hover:bg-[var(--paper-cream)] hover:text-[var(--ink-bg)] transition-colors font-bold flex items-center gap-2"
-                      >
-                        <span>✦ Citizen Reader</span>
-                      </button>
-                      <button
-                        onClick={() => {
-                          loginDemo('vip');
-                          setShowDemoMenu(false);
-                        }}
-                        className="w-full text-left px-2.5 py-1.5 text-[var(--paper-cream)] hover:bg-[var(--paper-cream)] hover:text-[var(--ink-bg)] transition-colors font-bold flex items-center gap-2"
-                      >
-                        <span>✦ Foreign Envoy</span>
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
+              <Link
+                href="/login"
+                className="stamp-btn !py-1 !px-2.5 sm:!py-1.5 sm:!px-3.5 text-xs font-bold active:scale-95"
+              >
+                Sign In
+              </Link>
             )}
 
             {/* Mobile Menu Hamburger */}

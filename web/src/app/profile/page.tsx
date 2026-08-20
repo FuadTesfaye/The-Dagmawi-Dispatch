@@ -12,7 +12,7 @@ import { formatNumber } from '@/lib/utils';
 import { fetchWithCache, getCached } from '@/lib/cache';
 
 export default function ProfilePage() {
-  const { user, loading, logout, loginDemo } = useAuth();
+  const { user, loading, logout } = useAuth();
   const { showToast } = useToast();
 
   const initialChannels = getCached<{ channels: TrackedChannel[] }>('/api/channels').data?.channels || [];
@@ -68,18 +68,12 @@ export default function ProfilePage() {
               Court Scribe Profile
             </h1>
             <p className="text-xs sm:text-sm text-[var(--paper-muted)] leading-relaxed max-w-md font-sans">
-              Sign in via Telegram to follow publications, customize your personal ledger, and receive AI-synthesized channel briefs.
+              Sign in via your Telegram account to follow publications, customize your personal ledger, and receive AI-synthesized channel briefs.
             </p>
             <div className="flex flex-wrap items-center gap-2.5 pt-2">
-              <Link href="/login" className="stamp-btn active:scale-95 text-xs font-bold">
+              <Link href="/login" className="stamp-btn active:scale-95 text-xs font-bold !bg-[#d97706] !text-black !border-[#d97706] hover:!bg-[var(--paper-cream)]">
                 AUTHENTICATE WITH TELEGRAM
               </Link>
-              <button
-                onClick={() => loginDemo('admin')}
-                className="stamp-btn !bg-[var(--card-bg)] !text-[var(--paper-muted)] hover:!text-[var(--paper-cream)] active:scale-95 text-xs"
-              >
-                DEMO AS ROYAL SCRIBE
-              </button>
             </div>
           </div>
           <div className="w-16 h-16 sm:w-20 sm:h-20 border-2 border-[var(--ink-border-heavy)] bg-[var(--subtle-bg)] flex items-center justify-center text-[#d97706] shrink-0">
