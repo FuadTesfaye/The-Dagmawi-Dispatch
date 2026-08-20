@@ -1,0 +1,63 @@
+{
+  "name": "teleglance-ts",
+  "version": "0.1.0",
+  "description": "Async TypeScript client for public Telegram channels, built on t.me web previews. No API keys, no MTProto.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "teleglance": "./dist/cli/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "bun": ">=1.1"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "bun --watch src/cli/index.ts",
+    "scrape": "npx tsx scrape-to-db.ts",
+    "scrape:channel": "npx tsx scrape-to-db.ts",
+    "scrape:all": "npx tsx scrape-to-db.ts --all",
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "coverage": "bun test --coverage",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "telegram",
+    "t.me",
+    "scraper",
+    "async",
+    "typescript"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "commander": "^12.1.0",
+    "dotenv": "^17.4.2",
+    "drizzle-orm": "^0.45.2",
+    "postgres": "^3.4.9"
+  },
+  "optionalDependencies": {
+    "socks-proxy-agent": "^8.0.4"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.13.0",
+    "@types/bun": "latest",
+    "eslint": "^9.13.0",
+    "prettier": "^3.3.3",
+    "tsx": "^4.23.12",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.11.0"
+  }
+}

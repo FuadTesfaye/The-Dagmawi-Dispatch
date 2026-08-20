@@ -3,6 +3,7 @@
 # dependencies
 /node_modules
 /web/node_modules/
+/Scraper/node_modules/
 /.pnp
 .pnp.*
 .yarn/*
