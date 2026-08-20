@@ -35,6 +35,7 @@ export const trackedChannels = pgTable('tracked_channels', {
 export const subscriptions = pgTable('subscriptions', {
   userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   channelId: varchar('channel_id', { length: 100 }).references(() => trackedChannels.id, { onDelete: 'cascade' }).notNull(),
+  isMuted: boolean('is_muted').default(false).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
   pk: primaryKey({ columns: [table.userId, table.channelId] }),

@@ -17,6 +17,8 @@ export interface TrackedChannel {
   subscriberCount: number;
   isVerified: boolean;
   isSubscribed?: boolean;
+  isMuted?: boolean;
+  postCount?: number;
   createdAt: string;
 }
 

@@ -3,8 +3,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { TrackedChannel } from '@/lib/types';
 import { ChannelCard } from '@/components/channel-card';
-import { Search, Loader2, Radio } from 'lucide-react';
+import { Search, Loader2, Radio, BellOff, CheckCircle2, Globe } from 'lucide-react';
 import { fetchWithCache, getCached } from '@/lib/cache';
+import { useAllMutedChannels } from '@/lib/mute-store';
 
 export default function ChannelsPage() {
   // Initialize immediately from memory cache if available (0ms loading!)
@@ -13,7 +14,10 @@ export default function ChannelsPage() {
     initialCache.data?.channels || []
   );
   const [search, setSearch] = useState('');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'following' | 'muted'>('all');
   const [loading, setLoading] = useState(!initialCache.data);
+
+  const mutedChannelSet = useAllMutedChannels();
 
   // Fetch / Revalidate channels in background
   useEffect(() => {
@@ -27,17 +31,36 @@ export default function ChannelsPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Instant 0ms local filter, memoized for high-fps typing
+  // Filter channels based on search query and active tab
   const filteredChannels = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return allChannels;
-    return allChannels.filter(
-      (c) =>
+
+    return allChannels.filter((c) => {
+      const isMuted = mutedChannelSet.has(c.id.toLowerCase()) || !!c.isMuted;
+      const isSubscribed = !!c.isSubscribed;
+
+      // Filter Tab Check
+      if (activeFilter === 'following' && !isSubscribed) return false;
+      if (activeFilter === 'muted' && !isMuted) return false;
+
+      // Search Query Check
+      if (!q) return true;
+      return (
         c.id.toLowerCase().includes(q) ||
         c.name.toLowerCase().includes(q) ||
         (c.description && c.description.toLowerCase().includes(q))
-    );
-  }, [allChannels, search]);
+      );
+    });
+  }, [allChannels, search, activeFilter, mutedChannelSet]);
+
+  const followingCount = useMemo(
+    () => allChannels.filter((c) => c.isSubscribed).length,
+    [allChannels]
+  );
+  const mutedCount = useMemo(
+    () => allChannels.filter((c) => mutedChannelSet.has(c.id.toLowerCase()) || c.isMuted).length,
+    [allChannels, mutedChannelSet]
+  );
 
   return (
     <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 flex flex-col gap-6 sm:gap-8 font-teletype">
@@ -69,6 +92,47 @@ export default function ChannelsPage() {
         </div>
       </div>
 
+      {/* Filter Tabs Bar */}
+      <div className="flex items-center justify-between border-b border-[var(--ink-border)] pb-2 flex-wrap gap-2 text-xs">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <button
+            onClick={() => setActiveFilter('all')}
+            className={`stamp-btn !py-1.5 !px-3 text-xs font-bold flex items-center gap-1.5 active:scale-95 ${
+              activeFilter === 'all' ? '!bg-[var(--paper-cream)] !text-[var(--ink-bg)]' : ''
+            }`}
+          >
+            <Globe className="w-3.5 h-3.5" />
+            <span>ALL WIRES ({allChannels.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveFilter('following')}
+            className={`stamp-btn !py-1.5 !px-3 text-xs font-bold flex items-center gap-1.5 active:scale-95 ${
+              activeFilter === 'following' ? '!bg-[var(--paper-cream)] !text-[var(--ink-bg)]' : ''
+            }`}
+          >
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+            <span>FOLLOWING ({followingCount})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveFilter('muted')}
+            className={`stamp-btn !py-1.5 !px-3 text-xs font-bold flex items-center gap-1.5 active:scale-95 ${
+              activeFilter === 'muted'
+                ? '!bg-red-950/80 !text-red-300 !border-red-500'
+                : '!bg-[var(--card-bg)] !text-[var(--paper-muted)]'
+            }`}
+          >
+            <BellOff className="w-3.5 h-3.5 text-red-400" />
+            <span>MUTED ({mutedCount})</span>
+          </button>
+        </div>
+
+        <span className="text-[10px] text-[var(--paper-muted)] uppercase hidden sm:inline">
+          Showing {filteredChannels.length} publications
+        </span>
+      </div>
+
       {/* Channels Grid */}
       {loading && allChannels.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 gap-2 text-[var(--paper-muted)] font-teletype">
@@ -77,8 +141,20 @@ export default function ChannelsPage() {
         </div>
       ) : filteredChannels.length === 0 ? (
         <div className="broadsheet-card p-10 sm:p-14 text-center flex flex-col items-center justify-center gap-2 font-teletype">
-          <h3 className="font-bold text-sm text-[var(--paper-cream)] uppercase">[ No Channels Found ]</h3>
-          <p className="text-xs text-[var(--paper-muted)] font-sans">No registry records matched your search query.</p>
+          <h3 className="font-bold text-sm text-[var(--paper-cream)] uppercase">
+            {activeFilter === 'muted'
+              ? '[ No Muted Publications ]'
+              : activeFilter === 'following'
+              ? '[ No Followed Publications ]'
+              : '[ No Channels Found ]'}
+          </h3>
+          <p className="text-xs text-[var(--paper-muted)] font-sans">
+            {activeFilter === 'muted'
+              ? 'You have not muted any Telegram channels.'
+              : activeFilter === 'following'
+              ? 'You have not followed any Telegram channels yet.'
+              : 'No registry records matched your search query.'}
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-5">

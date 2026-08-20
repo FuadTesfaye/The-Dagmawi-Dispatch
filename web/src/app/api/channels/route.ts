@@ -30,15 +30,22 @@ export async function GET(req: NextRequest) {
 
     // Check user subscriptions and post counts
     const userSubscribedChannelIds = new Set<string>();
+    const userMutedChannelIds = new Set<string>();
     if (user) {
       const userSubs = await withReadDb((db) =>
         db
-          .select({ channelId: subscriptions.channelId })
+          .select({
+            channelId: subscriptions.channelId,
+            isMuted: subscriptions.isMuted,
+          })
           .from(subscriptions)
           .where(eq(subscriptions.userId, user.id))
       );
       for (const s of userSubs) {
         userSubscribedChannelIds.add(s.channelId);
+        if (s.isMuted) {
+          userMutedChannelIds.add(s.channelId);
+        }
       }
     }
 
@@ -67,6 +74,7 @@ export async function GET(req: NextRequest) {
       isVerified: ch.isVerified,
       createdAt: ch.createdAt?.toISOString() || new Date().toISOString(),
       isSubscribed: userSubscribedChannelIds.has(ch.id),
+      isMuted: userMutedChannelIds.has(ch.id),
       postCount: postCountMap.get(ch.id) || 0,
     }));
 

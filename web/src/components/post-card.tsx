@@ -5,11 +5,12 @@ import Link from 'next/link';
 import { Post } from '@/lib/types';
 import { formatTimeAgo, formatNumber } from '@/lib/utils';
 import { useAuth, useToast } from './providers';
-import { Sparkles, MessageSquare, Share2, Flag, Image as ImageIcon, Video, FileText, ArrowUpRight, Forward, CornerDownRight, Link2, Copy, Check } from 'lucide-react';
+import { Sparkles, MessageSquare, Share2, Flag, Image as ImageIcon, Video, FileText, ArrowUpRight, Forward, CornerDownRight, Link2, Copy, Check, Bell, BellOff } from 'lucide-react';
 import { AIReviewModal } from './ai-review-modal';
 import { CommentDrawer } from './comment-drawer';
 import { ReportModal } from './report-modal';
 import { ShareModal } from './share-modal';
+import { useChannelMute } from '@/lib/mute-store';
 
 interface PostCardProps {
   post: Post;
@@ -82,6 +83,8 @@ export const PostCard = React.memo(function PostCard({ post }: PostCardProps) {
   const [commentCount, setCommentCount] = useState<number>(post.commentCount || 0);
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [copiedId, setCopiedId] = useState(false);
+
+  const { isMuted, toggle: toggleMute } = useChannelMute(post.channel);
 
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [isCommentDrawerOpen, setIsCommentDrawerOpen] = useState(false);
@@ -216,6 +219,25 @@ export const PostCard = React.memo(function PostCard({ post }: PostCardProps) {
 
         {/* Dispatch ID Stamp & External Wire Actions */}
         <div className="flex items-center gap-1.5 shrink-0">
+          {/* Channel Mute/Unmute Quick Action */}
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              toggleMute().then((next) => {
+                showToast(next ? `Muted @${post.channel}` : `Unmuted @${post.channel}`, next ? 'info' : 'success');
+              });
+            }}
+            title={isMuted ? `Unmute @${post.channel}` : `Mute @${post.channel}`}
+            className={`stamp-btn !py-1 !px-1.5 text-[10px] flex items-center gap-1 shrink-0 active:scale-95 transition-colors ${
+              isMuted
+                ? '!bg-red-950/70 !text-red-300 !border-red-600/50 hover:!bg-red-900/60'
+                : '!bg-[var(--subtle-bg)] !text-[var(--paper-muted)] hover:!text-[var(--paper-cream)]'
+            }`}
+          >
+            {isMuted ? <BellOff className="w-3 h-3 text-red-400" /> : <Bell className="w-3 h-3" />}
+          </button>
+
           {/* Distinct Dispatch ID Stamp */}
           <button
             onClick={handleCopyIdPermalink}

@@ -6,10 +6,11 @@ import { PostCard } from '@/components/post-card';
 import { BabiometerWidget } from '@/components/babiometer-widget';
 import { useAuth, useToast } from '@/components/providers';
 import { formatNumber } from '@/lib/utils';
-import { Check, Plus, ArrowLeft, Loader2, ArrowUpRight } from 'lucide-react';
+import { Check, Plus, ArrowLeft, Loader2, ArrowUpRight, Bell, BellOff } from 'lucide-react';
 import Link from 'next/link';
 
 import { fetchWithCache, getCached } from '@/lib/cache';
+import { useChannelMute } from '@/lib/mute-store';
 
 export default function ChannelProfilePage({
   params,
@@ -98,6 +99,16 @@ export default function ChannelProfilePage({
     }
   };
 
+  const { isMuted, toggle: toggleMute } = useChannelMute(username, channelInfo?.isMuted);
+
+  const handleToggleMute = async () => {
+    if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+      navigator.vibrate(20);
+    }
+    const next = await toggleMute();
+    showToast(next ? `Muted @${username} transmissions` : `Unmuted @${username}`, next ? 'info' : 'success');
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-28 text-[#a39e93] font-teletype">
@@ -118,17 +129,24 @@ export default function ChannelProfilePage({
       </Link>
 
       {/* Channel Profile Hero Banner */}
-      <div className="p-4 sm:p-7 bg-[var(--card-bg)] border-2 border-[var(--ink-border-heavy)] shadow-[4px_4px_0px_0px_var(--shadow-color)] sm:shadow-[6px_6px_0px_0px_var(--shadow-color)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
+      <div className={`p-4 sm:p-7 bg-[var(--card-bg)] border-2 border-[var(--ink-border-heavy)] shadow-[4px_4px_0px_0px_var(--shadow-color)] sm:shadow-[6px_6px_0px_0px_var(--shadow-color)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6 ${isMuted ? 'border-dashed' : ''}`}>
         <div className="flex items-center gap-3.5 sm:gap-5 min-w-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={
-              channelInfo?.avatarUrl ||
-              `https://api.dicebear.com/7.x/bottts/svg?seed=${username}`
-            }
-            alt={channelInfo?.name || username}
-            className="w-16 h-16 sm:w-20 sm:h-20 border-2 border-[var(--ink-border)] bg-[var(--ink-bg)] object-cover shrink-0 rounded-sm"
-          />
+          <div className="relative shrink-0">
+            <img
+              src={
+                channelInfo?.avatarUrl ||
+                `https://api.dicebear.com/7.x/bottts/svg?seed=${username}`
+              }
+              alt={channelInfo?.name || username}
+              className="w-16 h-16 sm:w-20 sm:h-20 border-2 border-[var(--ink-border)] bg-[var(--ink-bg)] object-cover rounded-sm"
+            />
+            {isMuted && (
+              <div className="absolute -bottom-1 -right-1 bg-red-600 text-white p-1 rounded-full border border-[var(--ink-bg)]">
+                <BellOff className="w-3 h-3" />
+              </div>
+            )}
+          </div>
           <div className="flex flex-col min-w-0 gap-1">
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="font-broadsheet font-black text-2xl sm:text-3xl text-[var(--paper-cream)] tracking-tight uppercase truncate">
@@ -137,6 +155,11 @@ export default function ChannelProfilePage({
               {channelInfo?.isVerified && (
                 <span className="stamp-badge-gold stamp-badge text-[10px]">
                   VERIFIED
+                </span>
+              )}
+              {isMuted && (
+                <span className="text-[10px] text-red-400 border border-red-500/40 px-1.5 py-0.5 uppercase font-bold">
+                  MUTED WIRE
                 </span>
               )}
             </div>
@@ -151,6 +174,29 @@ export default function ChannelProfilePage({
 
         {/* Action Controls */}
         <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[var(--ink-border)]">
+          {/* Mute/Unmute Action */}
+          <button
+            onClick={handleToggleMute}
+            className={`stamp-btn !py-2 !px-3 text-xs flex items-center gap-1.5 active:scale-95 transition-colors ${
+              isMuted
+                ? '!bg-red-950/60 !text-red-300 !border-red-600/50 hover:!bg-red-900/60'
+                : '!bg-[var(--card-bg)] !text-[var(--paper-muted)] hover:!text-[var(--paper-cream)]'
+            }`}
+            title={isMuted ? 'Unmute Channel' : 'Mute Channel'}
+          >
+            {isMuted ? (
+              <>
+                <BellOff className="w-3.5 h-3.5 text-red-400" />
+                <span>MUTED</span>
+              </>
+            ) : (
+              <>
+                <Bell className="w-3.5 h-3.5" />
+                <span>MUTE</span>
+              </>
+            )}
+          </button>
+
           <button
             onClick={handleToggleSubscribe}
             className={`stamp-btn flex-1 sm:flex-initial !py-2 !px-4 text-xs font-bold active:scale-95 ${
