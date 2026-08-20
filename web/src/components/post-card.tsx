@@ -209,7 +209,7 @@ export function PostCard({ post }: PostCardProps) {
             <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] text-[var(--paper-muted)] uppercase">
               <span className="truncate">@{post.channel}</span>
               <span>·</span>
-              <span className="shrink-0">{formatTimeAgo(post.date)}</span>
+              <span className="shrink-0" suppressHydrationWarning>{formatTimeAgo(post.date)}</span>
             </div>
           </div>
         </Link>

@@ -5,11 +5,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { BookOpen, Radio, UserCheck, ShieldAlert, Bot, ArrowUpRight } from 'lucide-react';
 import { useAuth } from './providers';
+import { TELEGRAM_BOT_USERNAME } from '@/lib/constants';
 
 export function Sidebar() {
   const pathname = usePathname();
   const { user } = useAuth();
-  const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'lurkening_bot';
+  const botUsername = TELEGRAM_BOT_USERNAME;
 
   const navItems = [
     {
@@ -81,16 +82,17 @@ export function Sidebar() {
           </span>
           <Bot className="w-3.5 h-3.5 text-[#d97706]" />
         </div>
-        <p className="text-xs text-[var(--paper-muted)] font-sans leading-relaxed">
+        <p className="text-xs text-[var(--paper-muted)] font-sans leading-relaxed" suppressHydrationWarning>
           Monitor any channel, query daily digests, and command roasts directly via @{botUsername}.
         </p>
         <a
           href={`https://t.me/${botUsername}`}
           target="_blank"
           rel="noopener noreferrer"
+          suppressHydrationWarning
           className="stamp-btn flex items-center justify-between text-xs"
         >
-          <span>@{botUsername}</span>
+          <span suppressHydrationWarning>@{botUsername}</span>
           <ArrowUpRight className="w-3 h-3 text-[#d97706]" />
         </a>
       </div>

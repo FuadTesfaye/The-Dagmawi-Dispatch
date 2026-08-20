@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { createPendingToken } from '@/lib/auth-token-store';
+import { TELEGRAM_BOT_USERNAME } from '@/lib/constants';
 
 export async function POST() {
   try {
     const token = `lurk_${crypto.randomBytes(12).toString('hex')}`;
     createPendingToken(token);
 
-    const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'lurkening_bot';
+    const botUsername = TELEGRAM_BOT_USERNAME;
     const deepLink = `https://t.me/${botUsername}?start=${token}`;
 
     return NextResponse.json({

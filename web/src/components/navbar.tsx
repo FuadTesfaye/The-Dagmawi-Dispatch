@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useAuth, useRealtime, useTheme } from './providers';
 import { LogOut, Shield, Menu, X, ChevronDown, Radio, BookOpen, User, Bot, ArrowUpRight, Search, Sun, Moon } from 'lucide-react';
 import { SearchModal } from './search-modal';
+import { TELEGRAM_BOT_USERNAME, TELEGRAM_BOT_URL } from '@/lib/constants';
 
 export function Navbar() {
   const pathname = usePathname();
@@ -16,7 +17,7 @@ export function Navbar() {
   const [showDemoMenu, setShowDemoMenu] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
-  const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'lurkening_bot';
+  const botUsername = TELEGRAM_BOT_USERNAME;
 
   // Global shortcut: Cmd+K or Ctrl+K or / to open search
   useEffect(() => {
@@ -135,10 +136,11 @@ export function Navbar() {
               href={`https://t.me/${botUsername}`}
               target="_blank"
               rel="noopener noreferrer"
+              suppressHydrationWarning
               className="hidden lg:inline-flex items-center gap-1.5 stamp-btn !bg-[#241c10] !border-[#785a28] !text-[#f6d89b] hover:!bg-[#d97706] hover:!text-black !py-1.5 !px-3"
             >
               <Bot className="w-3.5 h-3.5 text-[#d97706]" />
-              <span>@{botUsername}</span>
+              <span suppressHydrationWarning>@{botUsername}</span>
               <ArrowUpRight className="w-3 h-3 opacity-70" />
             </a>
 
@@ -286,11 +288,12 @@ export function Navbar() {
               href={`https://t.me/${botUsername}`}
               target="_blank"
               rel="noopener noreferrer"
+              suppressHydrationWarning
               className="p-3 border border-[#785a28] bg-[#241c10] text-[#f6d89b] hover:bg-[#d97706] hover:text-black flex items-center justify-between transition-colors font-bold uppercase"
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2" suppressHydrationWarning>
                 <Bot className="w-4 h-4 text-[#d97706]" />
-                <span>SUMMON @{botUsername}</span>
+                <span suppressHydrationWarning>SUMMON @{botUsername}</span>
               </div>
               <ArrowUpRight className="w-3.5 h-3.5" />
             </a>

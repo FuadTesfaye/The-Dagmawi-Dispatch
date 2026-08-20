@@ -9,6 +9,7 @@ import { Search, Radio, Loader2, ArrowUpRight, Bot, Sparkles, Check, Plus, Users
 import Link from 'next/link';
 
 import { SearchModal } from '@/components/search-modal';
+import { TELEGRAM_BOT_USERNAME } from '@/lib/constants';
 
 export default function HomePage() {
   const { subscribe } = useRealtime();
@@ -24,7 +25,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
-  const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'lurkening_bot';
+  const botUsername = TELEGRAM_BOT_USERNAME;
 
   // Fetch Channels
   useEffect(() => {
@@ -447,16 +448,17 @@ export default function HomePage() {
               </div>
               <span className="stamp-badge stamp-badge-gold text-[9px]">ACTIVE</span>
             </div>
-            <p className="text-xs text-[var(--paper-muted)] font-sans leading-relaxed">
+            <p className="text-xs text-[var(--paper-muted)] font-sans leading-relaxed" suppressHydrationWarning>
               Command digests, channel searches, and live summaries directly in Telegram.
             </p>
             <a
               href={`https://t.me/${botUsername}`}
               target="_blank"
               rel="noopener noreferrer"
+              suppressHydrationWarning
               className="stamp-btn !bg-[#d97706] !text-black !border-[#d97706] hover:!bg-[var(--paper-cream)] justify-between !py-2 text-xs active:scale-95"
             >
-              <span>Summon @{botUsername}</span>
+              <span suppressHydrationWarning>Summon @{botUsername}</span>
               <ArrowUpRight className="w-3.5 h-3.5" />
             </a>
           </div>

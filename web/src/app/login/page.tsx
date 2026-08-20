@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, useToast } from '@/components/providers';
 import { Shield, UserCheck, Sparkles, Bot, Loader2, ArrowUpRight, ArrowRight } from 'lucide-react';
+import { TELEGRAM_BOT_USERNAME } from '@/lib/constants';
 
 export default function LoginPage() {
   const { user, loginDemo, loginWithHandle } = useAuth();
@@ -23,7 +24,7 @@ export default function LoginPage() {
   const [isMiniAppLoading, setIsMiniAppLoading] = useState(false);
 
   const error = searchParams.get('error');
-  const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'lurkening_bot';
+  const botUsername = TELEGRAM_BOT_USERNAME;
 
   useEffect(() => {
     if (user) {
