@@ -72,20 +72,20 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const totalResults = posts.length + channels.length;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-4 sm:pt-16 md:pt-20 px-2.5 sm:px-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-4 sm:pt-16 md:pt-20 px-2.5 sm:px-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150">
       <div
-        className="w-full max-w-2xl max-h-[92vh] sm:max-h-[85vh] bg-[#12141c] border-2 border-[#3d4257] shadow-[6px_6px_0px_0px_#000000] sm:shadow-[10px_10px_0px_0px_#000000] flex flex-col font-teletype overflow-hidden animate-in zoom-in-95 duration-150"
+        className="w-full max-w-2xl max-h-[92vh] sm:max-h-[85vh] bg-[var(--card-bg)] border-2 border-[var(--ink-border-heavy)] shadow-[6px_6px_0px_0px_var(--shadow-color)] sm:shadow-[10px_10px_0px_0px_var(--shadow-color)] flex flex-col font-teletype overflow-hidden animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Top Bar */}
-        <div className="flex items-center justify-between px-3 sm:px-4 py-2 sm:py-2.5 bg-[#171a24] border-b border-[#262936] text-[10px] text-[#a39e93] uppercase tracking-wider">
+        <div className="flex items-center justify-between px-3 sm:px-4 py-2 sm:py-2.5 bg-[var(--subtle-bg)] border-b border-[var(--ink-border)] text-[10px] text-[var(--paper-muted)] uppercase tracking-wider">
           <div className="flex items-center gap-2 min-w-0">
             <span className="w-2 h-2 rounded-full bg-[#d97706] shrink-0 animate-pulse" />
-            <span className="truncate">UNIVERSAL ARCHIVE SEARCH & INDEX</span>
+            <span className="truncate font-bold">UNIVERSAL ARCHIVE SEARCH & INDEX</span>
           </div>
           <button
             onClick={onClose}
-            className="p-1 hover:text-[#f4f0e6] transition-colors active:scale-95 shrink-0"
+            className="p-1 hover:text-[var(--paper-cream)] transition-colors active:scale-95 shrink-0"
             title="Close (Esc)"
           >
             [ ESC / ✕ ]
@@ -93,7 +93,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
         </div>
 
         {/* Search Input Box */}
-        <div className="relative flex items-center border-b-2 border-[#262936] bg-[#0c0d10] px-3 sm:px-4 py-2.5 sm:py-3">
+        <div className="relative flex items-center border-b-2 border-[var(--ink-border)] bg-[var(--input-bg)] px-3 sm:px-4 py-2.5 sm:py-3">
           <Search className="w-4 h-4 sm:w-5 sm:h-5 text-[#d97706] shrink-0" />
           <input
             ref={inputRef}
@@ -101,12 +101,12 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search wires, channels, keywords, #tags..."
-            className="w-full pl-2.5 pr-8 py-1 bg-transparent text-sm sm:text-base text-[#f4f0e6] placeholder-[#6b665c] font-teletype uppercase focus:outline-none"
+            className="w-full pl-2.5 pr-8 py-1 bg-transparent text-sm sm:text-base text-[var(--paper-cream)] placeholder-[var(--paper-faint)] font-teletype uppercase focus:outline-none"
           />
           {query && (
             <button
               onClick={() => setQuery('')}
-              className="text-[#a39e93] hover:text-[#f4f0e6] p-1 text-xs active:scale-95"
+              className="text-[var(--paper-muted)] hover:text-[var(--paper-cream)] p-1 text-xs active:scale-95"
             >
               <X className="w-4 h-4" />
             </button>
@@ -115,13 +115,13 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
         {/* Filter Tabs */}
         {query.trim() && (
-          <div className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-[#14161f] border-b border-[#262936] text-[11px] sm:text-xs overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-[var(--subtle-bg)] border-b border-[var(--ink-border)] text-[11px] sm:text-xs overflow-x-auto no-scrollbar">
             <button
               onClick={() => setActiveTab('all')}
               className={`px-2.5 py-1 border transition-colors uppercase shrink-0 active:scale-95 ${
                 activeTab === 'all'
-                  ? 'bg-[#f4f0e6] text-[#0c0d10] border-[#f4f0e6] font-bold'
-                  : 'bg-[#12141c] text-[#a39e93] border-[#262936] hover:text-[#f4f0e6]'
+                  ? 'bg-[var(--paper-cream)] text-[var(--ink-bg)] border-[var(--paper-cream)] font-bold'
+                  : 'bg-[var(--card-bg)] text-[var(--paper-muted)] border-[var(--ink-border)] hover:text-[var(--paper-cream)]'
               }`}
             >
               ALL ({totalResults})
@@ -130,8 +130,8 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
               onClick={() => setActiveTab('posts')}
               className={`px-2.5 py-1 border transition-colors uppercase shrink-0 active:scale-95 ${
                 activeTab === 'posts'
-                  ? 'bg-[#f4f0e6] text-[#0c0d10] border-[#f4f0e6] font-bold'
-                  : 'bg-[#12141c] text-[#a39e93] border-[#262936] hover:text-[#f4f0e6]'
+                  ? 'bg-[var(--paper-cream)] text-[var(--ink-bg)] border-[var(--paper-cream)] font-bold'
+                  : 'bg-[var(--card-bg)] text-[var(--paper-muted)] border-[var(--ink-border)] hover:text-[var(--paper-cream)]'
               }`}
             >
               DISPATCHES ({posts.length})
@@ -140,8 +140,8 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
               onClick={() => setActiveTab('channels')}
               className={`px-2.5 py-1 border transition-colors uppercase shrink-0 active:scale-95 ${
                 activeTab === 'channels'
-                  ? 'bg-[#f4f0e6] text-[#0c0d10] border-[#f4f0e6] font-bold'
-                  : 'bg-[#12141c] text-[#a39e93] border-[#262936] hover:text-[#f4f0e6]'
+                  ? 'bg-[var(--paper-cream)] text-[var(--ink-bg)] border-[var(--paper-cream)] font-bold'
+                  : 'bg-[var(--card-bg)] text-[var(--paper-muted)] border-[var(--ink-border)] hover:text-[var(--paper-cream)]'
               }`}
             >
               CHANNELS ({channels.length})
@@ -152,20 +152,20 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
         {/* Search Results Area */}
         <div className="flex-1 overflow-y-auto p-3 sm:p-4 flex flex-col gap-3 sm:gap-4 no-scrollbar">
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-16 gap-2 text-[#a39e93]">
+            <div className="flex flex-col items-center justify-center py-16 gap-2 text-[var(--paper-muted)]">
               <Loader2 className="w-6 h-6 animate-spin text-[#d97706]" />
               <span className="text-xs uppercase">[ SCANNING DISPATCH ARCHIVES... ]</span>
             </div>
           ) : !query.trim() ? (
-            <div className="flex flex-col gap-3 py-6 text-center text-[#a39e93]">
+            <div className="flex flex-col gap-3 py-6 text-center text-[var(--paper-muted)]">
               <p className="text-xs uppercase">[ TYPE A QUERY TO BEGIN DECODING ARCHIVES ]</p>
               <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 text-[11px] pt-2">
-                <span className="text-[#6b665c]">QUICK SUGGESTIONS:</span>
+                <span className="text-[var(--paper-faint)]">QUICK SUGGESTIONS:</span>
                 {['dagmawi_babi', 'tech', 'ethiopia', 'ai', 'crypto'].map((tag) => (
                   <button
                     key={tag}
                     onClick={() => setQuery(tag)}
-                    className="px-2 py-0.5 border border-[#262936] bg-[#171a24] hover:border-[#d97706] hover:text-[#d97706] transition-colors active:scale-95"
+                    className="px-2 py-0.5 border border-[var(--ink-border)] bg-[var(--subtle-bg)] hover:border-[#d97706] hover:text-[#d97706] transition-colors active:scale-95"
                   >
                     #{tag}
                   </button>
@@ -173,8 +173,8 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
               </div>
             </div>
           ) : totalResults === 0 ? (
-            <div className="py-12 text-center text-[#a39e93] flex flex-col gap-2">
-              <span className="font-bold text-sm text-[#f4f0e6] uppercase">[ NO RECORDS FOUND ]</span>
+            <div className="py-12 text-center text-[var(--paper-muted)] flex flex-col gap-2">
+              <span className="font-bold text-sm text-[var(--paper-cream)] uppercase">[ NO RECORDS FOUND ]</span>
               <p className="text-xs">No dispatches or monitored channels matched &ldquo;{query}&rdquo;.</p>
             </div>
           ) : (
@@ -182,7 +182,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
               {/* Channel Results */}
               {(activeTab === 'all' || activeTab === 'channels') && channels.length > 0 && (
                 <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#d97706] uppercase tracking-wider border-b border-[#262936] pb-1">
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#d97706] uppercase tracking-wider border-b border-[var(--ink-border)] pb-1">
                     <Radio className="w-3 h-3" />
                     <span>CHANNELS ({channels.length})</span>
                   </div>
@@ -193,23 +193,23 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                         key={ch.id}
                         href={`/channel/${ch.id}`}
                         onClick={onClose}
-                        className="p-2.5 bg-[#171a24] border border-[#262936] hover:border-[#d97706] flex items-center justify-between gap-2 group transition-all active:scale-98"
+                        className="p-2.5 bg-[var(--subtle-bg)] border border-[var(--ink-border)] hover:border-[#d97706] flex items-center justify-between gap-2 group transition-all active:scale-98"
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={ch.avatarUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${ch.id}`}
                             alt={ch.name}
-                            className="w-8 h-8 border border-[#262936] bg-[#12141c] object-cover shrink-0 rounded-sm"
+                            className="w-8 h-8 border border-[var(--ink-border)] bg-[var(--ink-bg)] object-cover shrink-0 rounded-sm"
                           />
                           <div className="flex flex-col min-w-0">
-                            <span className="text-xs font-bold text-[#f4f0e6] group-hover:text-[#d97706] transition-colors truncate uppercase">
+                            <span className="text-xs font-bold text-[var(--paper-cream)] group-hover:text-[#d97706] transition-colors truncate uppercase">
                               {ch.name}
                             </span>
-                            <span className="text-[10px] text-[#a39e93] truncate">@{ch.id}</span>
+                            <span className="text-[10px] text-[var(--paper-muted)] truncate">@{ch.id}</span>
                           </div>
                         </div>
-                        <ArrowRight className="w-3.5 h-3.5 text-[#a39e93] group-hover:text-[#d97706] shrink-0" />
+                        <ArrowRight className="w-3.5 h-3.5 text-[var(--paper-muted)] group-hover:text-[#d97706] shrink-0" />
                       </Link>
                     ))}
                   </div>
@@ -219,7 +219,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
               {/* Post Results */}
               {(activeTab === 'all' || activeTab === 'posts') && posts.length > 0 && (
                 <div className="flex flex-col gap-2 pt-1">
-                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#d97706] uppercase tracking-wider border-b border-[#262936] pb-1">
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#d97706] uppercase tracking-wider border-b border-[var(--ink-border)] pb-1">
                     <BookOpen className="w-3 h-3" />
                     <span>DISPATCHES ({posts.length})</span>
                   </div>
@@ -235,20 +235,20 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                           key={`${post.channel}-${post.id}`}
                           href={`/post/${post.id}?channel=${post.channel}`}
                           onClick={onClose}
-                          className="p-3 bg-[#171a24] border border-[#262936] hover:border-[#d97706] flex flex-col gap-1.5 group transition-all active:scale-98"
+                          className="p-3 bg-[var(--subtle-bg)] border border-[var(--ink-border)] hover:border-[#d97706] flex flex-col gap-1.5 group transition-all active:scale-98"
                         >
-                          <div className="flex items-center justify-between text-[10px] text-[#a39e93]">
-                            <span className="font-bold text-[#f4f0e6] uppercase group-hover:text-[#d97706] truncate">
+                          <div className="flex items-center justify-between text-[10px] text-[var(--paper-muted)]">
+                            <span className="font-bold text-[var(--paper-cream)] uppercase group-hover:text-[#d97706] truncate">
                               @{post.channel}
                             </span>
                             <span className="shrink-0">{formatTimeAgo(post.date)}</span>
                           </div>
 
-                          <p className="text-xs text-[#d6d0c2] font-sans line-clamp-2 leading-relaxed">
+                          <p className="text-xs text-[var(--paper-muted)] font-sans line-clamp-2 leading-relaxed">
                             {snippet}
                           </p>
 
-                          <div className="flex items-center justify-between text-[9px] text-[#6b665c] uppercase pt-1 border-t border-[#262936]/60">
+                          <div className="flex items-center justify-between text-[9px] text-[var(--paper-faint)] uppercase pt-1 border-t border-[var(--ink-border)]">
                             <span>DISPATCH #{post.id}</span>
                             <span className="group-hover:text-[#d97706] transition-colors inline-flex items-center gap-0.5 font-bold">
                               READ DISPATCH <ArrowUpRight className="w-2.5 h-2.5" />
@@ -265,7 +265,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
         </div>
 
         {/* Modal Footer */}
-        <div className="px-3 sm:px-4 py-2 bg-[#171a24] border-t border-[#262936] flex items-center justify-between text-[10px] text-[#a39e93] uppercase pb-safe">
+        <div className="px-3 sm:px-4 py-2 bg-[var(--subtle-bg)] border-t border-[var(--ink-border)] flex items-center justify-between text-[10px] text-[var(--paper-muted)] uppercase pb-safe">
           <span>UNIVERSAL WIRE INDEX</span>
           <span>PRESS [ ESC ] TO DISMISS</span>
         </div>

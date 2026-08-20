@@ -8,10 +8,10 @@ export default function NotFound() {
         <div className="stamp-badge-gold stamp-badge">
           404: ARCHIVE MISSING
         </div>
-        <h1 className="font-broadsheet font-black text-3xl text-[#f4f0e6] uppercase">
+        <h1 className="font-broadsheet font-black text-3xl text-[var(--paper-cream)] uppercase">
           Lost Parchment
         </h1>
-        <p className="text-xs text-[#a39e93] font-sans leading-relaxed">
+        <p className="text-xs text-[var(--paper-muted)] font-sans leading-relaxed">
           The dispatch or ledger record you requested has either been struck from court archives or never existed.
         </p>
         <Link

@@ -136,7 +136,7 @@ export default function SinglePostPage({
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-24 text-[#a39e93] font-teletype">
+      <div className="flex justify-center items-center py-24 text-[var(--paper-muted)] font-teletype">
         <Loader2 className="w-7 h-7 animate-spin text-[#d97706]" />
       </div>
     );
@@ -145,7 +145,7 @@ export default function SinglePostPage({
   if (error || !post) {
     return (
       <div className="max-w-xl mx-auto py-12 px-4 text-center broadsheet-card p-8 flex flex-col items-center gap-4 font-teletype">
-        <h2 className="text-sm font-bold text-[#f4f0e6] uppercase">[ {error || 'DISPATCH NOT FOUND'} ]</h2>
+        <h2 className="text-sm font-bold text-[var(--paper-cream)] uppercase">[ {error || 'DISPATCH NOT FOUND'} ]</h2>
         <Link
           href="/"
           className="stamp-btn"
@@ -161,7 +161,7 @@ export default function SinglePostPage({
       {/* Back Button */}
       <Link
         href="/"
-        className="inline-flex items-center gap-1.5 text-xs text-[#a39e93] hover:text-[#f4f0e6] transition-colors self-start font-bold uppercase active:scale-95"
+        className="inline-flex items-center gap-1.5 text-xs text-[var(--paper-muted)] hover:text-[var(--paper-cream)] transition-colors self-start font-bold uppercase active:scale-95"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
         <span>← RETURN TO BROADSHEET FEED</span>
@@ -172,27 +172,27 @@ export default function SinglePostPage({
 
       {/* Inline Real-time Discussion Section */}
       <div className="broadsheet-card p-4 sm:p-6 flex flex-col gap-4">
-        <div className="flex items-center justify-between border-b border-[#262936] pb-2.5">
+        <div className="flex items-center justify-between border-b border-[var(--ink-border)] pb-2.5">
           <div className="flex items-center gap-2">
             <MessageSquare className="w-4 h-4 text-[#d97706]" />
-            <h3 className="font-bold text-xs sm:text-sm text-[#f4f0e6] uppercase">
+            <h3 className="font-bold text-xs sm:text-sm text-[var(--paper-cream)] uppercase">
               Court Testimony ({comments.length})
             </h3>
           </div>
-          <span className="text-[10px] text-[#a39e93]">DISPATCH #{post.id}</span>
+          <span className="text-[10px] text-[var(--paper-muted)]">DISPATCH #{post.id}</span>
         </div>
 
         {/* Comment Composer */}
         <form onSubmit={handleSubmitComment} className="flex flex-col gap-2">
           {replyTo && (
-            <div className="flex items-center justify-between px-2.5 py-1 bg-[#171a24] border border-[#262936] text-[10px] text-[#d6d0c2]">
+            <div className="flex items-center justify-between px-2.5 py-1 bg-[var(--subtle-bg)] border border-[var(--ink-border)] text-[10px] text-[var(--paper-muted)]">
               <span className="truncate">
                 REPLYING TO {replyTo.user?.displayName?.toUpperCase() || 'SCRIBE'}
               </span>
               <button
                 type="button"
                 onClick={() => setReplyTo(null)}
-                className="text-[#d97706] hover:text-white px-1"
+                className="text-[#d97706] hover:text-[var(--paper-cream)] px-1"
               >
                 ✕
               </button>
@@ -207,7 +207,7 @@ export default function SinglePostPage({
               onChange={(e) => setNewContent(e.target.value)}
               placeholder={user ? 'ENTER COURT TESTIMONY...' : 'SIGN IN TO TESTIFY...'}
               disabled={!user || submitting}
-              className="w-full py-2.5 pl-3 pr-11 bg-[#0c0d10] border border-[#262936] text-xs sm:text-sm text-[#f4f0e6] placeholder-[#6b665c] font-teletype uppercase focus:outline-none focus:border-[#d97706] disabled:opacity-50"
+              className="w-full py-2.5 pl-3 pr-11 bg-[var(--input-bg)] border border-[var(--ink-border)] text-xs sm:text-sm text-[var(--paper-cream)] placeholder-[var(--paper-faint)] font-teletype uppercase focus:outline-none focus:border-[#d97706] disabled:opacity-50"
             />
             <button
               type="submit"
@@ -227,18 +227,18 @@ export default function SinglePostPage({
         {/* Comments Thread List */}
         <div className="flex flex-col gap-2.5 pt-2">
           {commentsLoading ? (
-            <div className="flex items-center justify-center py-8 text-[#a39e93]">
+            <div className="flex items-center justify-center py-8 text-[var(--paper-muted)]">
               <Loader2 className="w-5 h-5 animate-spin text-[#d97706]" />
             </div>
           ) : comments.length === 0 ? (
-            <div className="p-6 text-center text-[#a39e93] text-xs bg-[#0c0d10] border border-[#262936]">
+            <div className="p-6 text-center text-[var(--paper-muted)] text-xs bg-[var(--subtle-bg)] border border-[var(--ink-border)]">
               [ NO COURT TESTIMONY FILED YET. BE THE FIRST SCRIBE TO TESTIFY. ]
             </div>
           ) : (
             comments.map((c) => (
               <div
                 key={c.id}
-                className="p-3.5 bg-[#0c0d10] border border-[#262936] flex flex-col gap-1.5 transition-colors hover:border-[#3d4257]"
+                className="p-3.5 bg-[var(--subtle-bg)] border border-[var(--ink-border)] flex flex-col gap-1.5 transition-colors hover:border-[var(--paper-cream)]"
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5 min-w-0">
@@ -251,7 +251,7 @@ export default function SinglePostPage({
                       alt={c.user?.displayName || 'User'}
                       className="w-4 h-4 rounded-none bg-zinc-800 shrink-0"
                     />
-                    <span className="text-xs font-bold text-[#f4f0e6] truncate">
+                    <span className="text-xs font-bold text-[var(--paper-cream)] truncate">
                       {c.user?.displayName || 'CITIZEN SCRIBE'}
                     </span>
                     {c.user?.role === 'admin' && (
@@ -260,12 +260,12 @@ export default function SinglePostPage({
                       </span>
                     )}
                   </div>
-                  <span className="text-[9px] sm:text-[10px] text-[#a39e93] shrink-0 uppercase">
+                  <span className="text-[9px] sm:text-[10px] text-[var(--paper-muted)] shrink-0 uppercase">
                     {formatTimeAgo(c.createdAt)}
                   </span>
                 </div>
 
-                <p className="text-xs sm:text-sm text-[#f4f0e6] font-sans whitespace-pre-wrap leading-relaxed break-words">
+                <p className="text-xs sm:text-sm text-[var(--paper-cream)] font-sans whitespace-pre-wrap leading-relaxed break-words">
                   {c.content}
                 </p>
 

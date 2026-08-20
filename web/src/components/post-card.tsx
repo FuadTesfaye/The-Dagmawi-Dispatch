@@ -24,7 +24,7 @@ const AVAILABLE_REACTIONS = [
 /** Rich text renderer with URLs, channel mentions, and hashtags */
 function RenderFormattedText({ text }: { text: string }) {
   if (!text) {
-    return <span className="italic text-[#a39e93] font-teletype text-xs">[ WIRE: NO TEXT PAYLOAD IN THIS DISPATCH ]</span>;
+    return <span className="italic text-[var(--paper-faint)] font-teletype text-xs">[ WIRE: NO TEXT PAYLOAD IN THIS DISPATCH ]</span>;
   }
 
   const parts = text.split(/(https?:\/\/[^\s]+|@[a-zA-Z0-9_]+|#[a-zA-Z0-9_]+)/g);
@@ -39,7 +39,7 @@ function RenderFormattedText({ text }: { text: string }) {
               href={part}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#f4f0e6] font-semibold underline decoration-[#d97706] hover:text-[#d97706] underline-offset-4 break-all inline-flex items-center gap-0.5 transition-colors"
+              className="text-[var(--paper-cream)] font-semibold underline decoration-[#d97706] hover:text-[#d97706] underline-offset-4 break-all inline-flex items-center gap-0.5 transition-colors"
             >
               <span>{part}</span>
               <ArrowUpRight className="w-3 h-3 inline text-[#d97706] opacity-80 shrink-0" />
@@ -52,7 +52,7 @@ function RenderFormattedText({ text }: { text: string }) {
             <Link
               key={index}
               href={`/channel/${username}`}
-              className="font-teletype font-bold text-[#d97706] bg-[#241c10] px-1.5 py-0.5 border border-[#785a28] hover:bg-[#d97706] hover:text-black transition-colors text-[11px] sm:text-xs inline-block my-0.5 active:scale-95 rounded-sm"
+              className="font-teletype font-bold text-[#d97706] bg-[#241c10]/10 px-1.5 py-0.5 border border-[#785a28]/40 hover:bg-[#d97706] hover:text-black transition-colors text-[11px] sm:text-xs inline-block my-0.5 active:scale-95 rounded-sm"
             >
               {part}
             </Link>
@@ -60,7 +60,7 @@ function RenderFormattedText({ text }: { text: string }) {
         }
         if (part.match(/^#[a-zA-Z0-9_]+/)) {
           return (
-            <span key={index} className="font-teletype text-[#a39e93] bg-[#171a24] px-1.5 py-0.5 border border-[#262936] text-[11px] sm:text-xs inline-block my-0.5 rounded-sm">
+            <span key={index} className="font-teletype text-[var(--paper-muted)] bg-[var(--subtle-bg)] px-1.5 py-0.5 border border-[var(--ink-border)] text-[11px] sm:text-xs inline-block my-0.5 rounded-sm">
               {part}
             </span>
           );
@@ -167,7 +167,7 @@ export function PostCard({ post }: PostCardProps) {
   return (
     <article className="broadsheet-card p-4 sm:p-6 flex flex-col gap-3.5 sm:gap-4 font-teletype relative group">
       {/* Broadsheet Author / Meta Header */}
-      <div className="flex items-center justify-between gap-2.5 border-b-2 border-[#262936] pb-3">
+      <div className="flex items-center justify-between gap-2.5 border-b-2 border-[var(--ink-border)] pb-3">
         <Link
           href={`/channel/${post.channel}`}
           className="flex items-center gap-2.5 sm:gap-3 group/author min-w-0"
@@ -179,11 +179,11 @@ export function PostCard({ post }: PostCardProps) {
               `https://api.dicebear.com/7.x/bottts/svg?seed=${post.channel}`
             }
             alt={post.channel}
-            className="w-9 h-9 sm:w-10 sm:h-10 border-2 border-[#262936] bg-[#12141c] object-cover shrink-0 rounded-sm"
+            className="w-9 h-9 sm:w-10 sm:h-10 border-2 border-[var(--ink-border)] bg-[var(--ink-bg)] object-cover shrink-0 rounded-sm"
           />
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="font-bold text-xs sm:text-sm text-[#f4f0e6] group-hover/author:text-[#d97706] transition-colors truncate uppercase max-w-[130px] xs:max-w-[180px] sm:max-w-[280px]">
+              <span className="font-bold text-xs sm:text-sm text-[var(--paper-cream)] group-hover/author:text-[#d97706] transition-colors truncate uppercase max-w-[130px] xs:max-w-[180px] sm:max-w-[280px]">
                 {post.channelInfo?.name || `@${post.channel}`}
               </span>
               {post.channelInfo?.isVerified && (
@@ -192,7 +192,7 @@ export function PostCard({ post }: PostCardProps) {
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] text-[#a39e93] uppercase">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] text-[var(--paper-muted)] uppercase">
               <span className="truncate">@{post.channel}</span>
               <span>·</span>
               <span className="shrink-0">{formatTimeAgo(post.date)}</span>
@@ -218,7 +218,7 @@ export function PostCard({ post }: PostCardProps) {
       {/* Post Body with Responsive Typography */}
       <div className="flex flex-col gap-2">
         {firstLine && (
-          <h2 className="font-broadsheet font-bold text-lg sm:text-2xl text-[#f4f0e6] leading-tight tracking-tight break-words">
+          <h2 className="font-broadsheet font-bold text-lg sm:text-2xl text-[var(--paper-cream)] leading-tight tracking-tight break-words">
             {firstLine}
           </h2>
         )}
@@ -226,7 +226,7 @@ export function PostCard({ post }: PostCardProps) {
         {remainingText && (
           <div className="relative">
             <div
-              className={`text-[#d6d0c2] text-xs sm:text-sm leading-relaxed whitespace-pre-wrap font-sans break-words pt-1 transition-all duration-200 ${
+              className={`text-[var(--paper-muted)] text-xs sm:text-sm leading-relaxed whitespace-pre-wrap font-sans break-words pt-1 transition-all duration-200 ${
                 !isExpanded && isLongPost ? 'max-h-36 overflow-hidden' : ''
               }`}
             >
@@ -235,10 +235,10 @@ export function PostCard({ post }: PostCardProps) {
 
             {/* Gradient Fade & Expand Button when Collapsed */}
             {!isExpanded && isLongPost && (
-              <div className="absolute inset-x-0 bottom-0 pt-14 bg-gradient-to-t from-[#12141c] via-[#12141c]/90 to-transparent flex items-end justify-center pb-0.5">
+              <div className="absolute inset-x-0 bottom-0 pt-14 bg-gradient-to-t from-[var(--card-bg)] via-[var(--card-bg)]/90 to-transparent flex items-end justify-center pb-0.5">
                 <button
                   onClick={() => setIsExpanded(true)}
-                  className="stamp-btn !bg-[#171a24] !text-[#d97706] hover:!bg-[#d97706] hover:!text-black !py-1.5 !px-3.5 !text-[11px] font-bold shadow-[2px_2px_0px_0px_#000000] active:scale-95"
+                  className="stamp-btn !bg-[var(--subtle-bg)] !text-[#d97706] hover:!bg-[#d97706] hover:!text-black !py-1.5 !px-3.5 !text-[11px] font-bold shadow-[2px_2px_0px_0px_var(--shadow-color)] active:scale-95"
                 >
                   <span>↓ READ FULL DISPATCH ({lines.length} LINES)</span>
                 </button>
@@ -252,7 +252,7 @@ export function PostCard({ post }: PostCardProps) {
           <div className="pt-2 flex justify-start">
             <button
               onClick={() => setIsExpanded(false)}
-              className="stamp-btn !bg-[#12141c] !text-[#a39e93] hover:!text-[#f4f0e6] !py-1 !px-3 !text-[10px] font-bold active:scale-95"
+              className="stamp-btn !bg-[var(--card-bg)] !text-[var(--paper-muted)] hover:!text-[var(--paper-cream)] !py-1 !px-3 !text-[10px] font-bold active:scale-95"
             >
               <span>↑ COLLAPSE DISPATCH</span>
             </button>
@@ -262,7 +262,7 @@ export function PostCard({ post }: PostCardProps) {
 
       {/* Media Attachment Badge */}
       {post.mediaType && post.mediaType !== 'none' && (
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold bg-[#171a24] border border-[#262936] text-[#d6d0c2] self-start uppercase rounded-sm">
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold bg-[var(--subtle-bg)] border border-[var(--ink-border)] text-[var(--paper-muted)] self-start uppercase rounded-sm">
           {post.mediaType === 'photo' && <ImageIcon className="w-3.5 h-3.5 text-[#d97706]" />}
           {post.mediaType === 'video' && <Video className="w-3.5 h-3.5 text-[#d97706]" />}
           {post.mediaType === 'document' && <FileText className="w-3.5 h-3.5 text-[#d97706]" />}
@@ -271,7 +271,7 @@ export function PostCard({ post }: PostCardProps) {
       )}
 
       {/* Social Engagement & Action Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5 pt-3 border-t border-[#262936]">
+      <div className="flex flex-wrap items-center justify-between gap-2.5 pt-3 border-t border-[var(--ink-border)]">
         {/* Reactions (Thumb-friendly row) */}
         <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
           {AVAILABLE_REACTIONS.map(({ emoji, label }) => {

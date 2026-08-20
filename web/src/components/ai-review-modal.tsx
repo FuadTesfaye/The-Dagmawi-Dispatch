@@ -82,27 +82,27 @@ export function AIReviewModal({ isOpen, onClose, post }: AIReviewModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-sm font-teletype animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm font-teletype animate-in fade-in duration-150">
       <div
-        className="relative w-full max-w-xl bg-[#12141c] border-2 border-[#3d4257] p-4 sm:p-6 shadow-[6px_6px_0px_0px_#000000] sm:shadow-[8px_8px_0px_0px_#000000] flex flex-col gap-3.5 sm:gap-4 max-h-[90vh] overflow-y-auto no-scrollbar animate-in zoom-in-95 duration-150"
+        className="relative w-full max-w-xl bg-[var(--card-bg)] border-2 border-[var(--ink-border-heavy)] p-4 sm:p-6 shadow-[6px_6px_0px_0px_var(--shadow-color)] sm:shadow-[8px_8px_0px_0px_var(--shadow-color)] flex flex-col gap-3.5 sm:gap-4 max-h-[90vh] overflow-y-auto no-scrollbar animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Masthead Header */}
-        <div className="flex items-center justify-between border-b-2 border-[#262936] pb-2.5">
+        <div className="flex items-center justify-between border-b-2 border-[var(--ink-border)] pb-2.5">
           <div className="flex items-center gap-2 min-w-0">
             <Sparkles className="w-4 h-4 text-[#d97706] shrink-0" />
             <div className="min-w-0">
-              <h3 className="font-bold text-xs sm:text-sm text-[#f4f0e6] uppercase truncate">
+              <h3 className="font-bold text-xs sm:text-sm text-[var(--paper-cream)] uppercase truncate">
                 Royal Scribe Synthesis
               </h3>
-              <p className="text-[10px] text-[#a39e93] truncate">
+              <p className="text-[10px] text-[var(--paper-muted)] truncate">
                 DISPATCH #{post.id} · @{post.channel}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1 border border-[#262936] text-[#a39e93] hover:text-[#f4f0e6] hover:bg-[#171a24] transition-colors active:scale-95 shrink-0"
+            className="p-1 border border-[var(--ink-border)] text-[var(--paper-muted)] hover:text-[var(--paper-cream)] hover:bg-[var(--subtle-bg)] transition-colors active:scale-95 shrink-0"
             aria-label="Close"
           >
             <X className="w-4 h-4" />
@@ -119,8 +119,8 @@ export function AIReviewModal({ isOpen, onClose, post }: AIReviewModalProps) {
                 onClick={() => handleGenerate(id)}
                 className={`flex flex-col items-center justify-center py-2 px-1.5 border text-xs font-bold uppercase transition-all active:scale-95 ${
                   isSelected
-                    ? 'bg-[#d97706] text-black border-[#d97706] shadow-[2px_2px_0px_0px_#000000]'
-                    : 'bg-[#171a24] text-[#a39e93] border-[#262936] hover:text-[#f4f0e6] hover:border-[#f4f0e6]'
+                    ? 'bg-[#d97706] text-black border-[#d97706] shadow-[2px_2px_0px_0px_var(--shadow-color)]'
+                    : 'bg-[var(--subtle-bg)] text-[var(--paper-muted)] border-[var(--ink-border)] hover:text-[var(--paper-cream)] hover:border-[var(--paper-cream)]'
                 }`}
               >
                 <span className="text-[11px] sm:text-xs">{label}</span>
@@ -131,19 +131,19 @@ export function AIReviewModal({ isOpen, onClose, post }: AIReviewModalProps) {
         </div>
 
         {/* Synthesis Output Area */}
-        <div className="p-3 sm:p-4 bg-[#0c0d10] border border-[#262936] min-h-[140px] flex flex-col justify-center">
+        <div className="p-3 sm:p-4 bg-[var(--subtle-bg)] border border-[var(--ink-border)] min-h-[140px] flex flex-col justify-center">
           {loading ? (
-            <div className="flex flex-col items-center justify-center gap-2 text-[#a39e93] py-6">
+            <div className="flex flex-col items-center justify-center gap-2 text-[var(--paper-muted)] py-6">
               <Loader2 className="w-5 h-5 animate-spin text-[#d97706]" />
               <span className="text-xs uppercase">[ CONSULTING GROQ LLM POOL... ]</span>
             </div>
           ) : reviews[selectedKind] ? (
             <div className="flex flex-col gap-3">
-              <div className="text-xs sm:text-sm text-[#f4f0e6] font-sans leading-relaxed whitespace-pre-wrap break-words">
+              <div className="text-xs sm:text-sm text-[var(--paper-cream)] font-sans leading-relaxed whitespace-pre-wrap break-words">
                 {reviews[selectedKind]}
               </div>
 
-              <div className="flex items-center justify-between pt-2 border-t border-[#262936] text-[10px]">
+              <div className="flex items-center justify-between pt-2 border-t border-[var(--ink-border)] text-[10px]">
                 <button
                   onClick={() => handleGenerate(selectedKind)}
                   className="text-[#d97706] hover:underline flex items-center gap-1 uppercase font-bold active:scale-95"
@@ -163,7 +163,7 @@ export function AIReviewModal({ isOpen, onClose, post }: AIReviewModalProps) {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center gap-2 py-4 text-center">
-              <p className="text-xs text-[#a39e93] max-w-xs font-sans">
+              <p className="text-xs text-[var(--paper-muted)] max-w-xs font-sans">
                 Select an editorial mode above to synthesize this dispatch with Groq Llama-3.3.
               </p>
               <button
@@ -177,7 +177,7 @@ export function AIReviewModal({ isOpen, onClose, post }: AIReviewModalProps) {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between text-[9px] sm:text-[10px] text-[#a39e93]">
+        <div className="flex items-center justify-between text-[9px] sm:text-[10px] text-[var(--paper-muted)]">
           <span>GROQ LLAMA-3.3-70B ENGINE</span>
           <span>DISPATCH #{post.id}</span>
         </div>

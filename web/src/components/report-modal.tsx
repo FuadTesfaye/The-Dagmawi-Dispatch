@@ -70,40 +70,40 @@ export function ReportModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-sm font-teletype animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm font-teletype animate-in fade-in duration-150">
       <div
-        className="relative w-full max-w-md bg-[#12141c] border-2 border-[#3d4257] p-4 sm:p-6 shadow-[6px_6px_0px_0px_#000000] sm:shadow-[8px_8px_0px_0px_#000000] flex flex-col gap-3.5 sm:gap-4 animate-in zoom-in-95 duration-150"
+        className="relative w-full max-w-md bg-[var(--card-bg)] border-2 border-[var(--ink-border-heavy)] p-4 sm:p-6 shadow-[6px_6px_0px_0px_var(--shadow-color)] sm:shadow-[8px_8px_0px_0px_var(--shadow-color)] flex flex-col gap-3.5 sm:gap-4 animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b-2 border-[#262936] pb-2.5">
+        <div className="flex items-center justify-between border-b-2 border-[var(--ink-border)] pb-2.5">
           <div className="flex items-center gap-2 text-[#d97706] min-w-0">
             <Flag className="w-4 h-4 shrink-0" />
-            <h3 className="font-bold text-xs sm:text-sm text-[#f4f0e6] uppercase truncate">
+            <h3 className="font-bold text-xs sm:text-sm text-[var(--paper-cream)] uppercase truncate">
               File Inquest Citation [{targetType.toUpperCase()}]
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1 border border-[#262936] text-[#a39e93] hover:text-[#f4f0e6] transition-colors active:scale-95 shrink-0"
+            className="p-1 border border-[var(--ink-border)] text-[var(--paper-muted)] hover:text-[var(--paper-cream)] hover:bg-[var(--subtle-bg)] transition-colors active:scale-95 shrink-0"
             aria-label="Close"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <p className="text-[11px] text-[#a39e93] leading-relaxed font-sans">
+        <p className="text-[11px] text-[var(--paper-muted)] leading-relaxed font-sans">
           Cite this dispatch to the royal court moderators for review against realm decorum guidelines.
         </p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:gap-4">
           {/* Reason Selector */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[11px] font-bold text-[#f4f0e6] uppercase">Citation Reason</label>
+            <label className="text-[11px] font-bold text-[var(--paper-cream)] uppercase">Citation Reason</label>
             <select
               value={selectedReason}
               onChange={(e) => setSelectedReason(e.target.value)}
-              className="w-full py-2 px-3 bg-[#0c0d10] border border-[#262936] text-xs text-[#f4f0e6] font-teletype uppercase focus:outline-none focus:border-[#d97706]"
+              className="w-full py-2 px-3 bg-[var(--input-bg)] border border-[var(--ink-border)] text-xs text-[var(--paper-cream)] font-teletype uppercase focus:outline-none focus:border-[#d97706]"
             >
               {REPORT_REASONS.map((r) => (
                 <option key={r} value={r}>
@@ -115,7 +115,7 @@ export function ReportModal({
 
           {/* Details Input */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[11px] font-bold text-[#f4f0e6] uppercase">
+            <label className="text-[11px] font-bold text-[var(--paper-cream)] uppercase">
               Violation Details (Optional)
             </label>
             <textarea
@@ -123,16 +123,16 @@ export function ReportModal({
               value={details}
               onChange={(e) => setDetails(e.target.value)}
               placeholder="ENTER SPECIFIC VIOLATION CONTEXT..."
-              className="w-full p-2.5 bg-[#0c0d10] border border-[#262936] text-xs text-[#f4f0e6] placeholder-[#6b665c] font-teletype uppercase focus:outline-none focus:border-[#d97706] resize-none"
+              className="w-full p-2.5 bg-[var(--input-bg)] border border-[var(--ink-border)] text-xs text-[var(--paper-cream)] placeholder-[var(--paper-faint)] font-teletype uppercase focus:outline-none focus:border-[#d97706] resize-none"
             />
           </div>
 
           {/* Buttons */}
-          <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#262936]">
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-[var(--ink-border)]">
             <button
               type="button"
               onClick={onClose}
-              className="stamp-btn !bg-[#12141c] !text-[#a39e93] hover:!text-[#f4f0e6] active:scale-95 text-xs"
+              className="stamp-btn !bg-[var(--card-bg)] !text-[var(--paper-muted)] hover:!text-[var(--paper-cream)] active:scale-95 text-xs"
             >
               CANCEL
             </button>

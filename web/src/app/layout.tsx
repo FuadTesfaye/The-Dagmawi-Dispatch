@@ -36,15 +36,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark h-full">
-      <body className="min-h-full bg-[#0c0d10] text-[#f4f0e6] font-sans antialiased selection:bg-[#d97706] selection:text-black">
+    <html lang="en" className="dark h-full" suppressHydrationWarning>
+      <body className="min-h-full font-sans antialiased selection:bg-[#d97706] selection:text-black bg-[var(--ink-bg)] text-[var(--paper-cream)]">
         <Providers>
           {/* Broadsheet Top Bulletin Banner */}
-          <div className="w-full bg-[#12141c] border-b border-[#262936] py-1 px-3 sm:px-4 text-center font-teletype text-[9px] sm:text-[10px] tracking-wider sm:tracking-widest text-[#a39e93] uppercase flex items-center justify-between overflow-hidden shrink-0">
+          <div className="w-full bg-[var(--ink-surface)] border-b border-[var(--ink-border)] py-1 px-3 sm:px-4 text-center font-teletype text-[9px] sm:text-[10px] tracking-wider sm:tracking-widest text-[var(--paper-muted)] uppercase flex items-center justify-between overflow-hidden shrink-0">
             <span className="hidden sm:inline">✦ VOL. 2026 · NO. 88</span>
             <div className="flex items-center gap-1.5 mx-auto sm:mx-0 truncate">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-              <span className="truncate">THE LURKENING · TELEGRAM AI WIRE INDEX</span>
+              <span className="truncate font-bold">THE LURKENING · TELEGRAM AI WIRE INDEX</span>
             </div>
             <span className="hidden sm:inline">REAL-TIME INGESTION ✦</span>
           </div>

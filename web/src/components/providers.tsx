@@ -56,13 +56,70 @@ const RealtimeContext = createContext<RealtimeContextType>({
 
 export const useRealtime = () => useContext(RealtimeContext);
 
+// ─── THEME CONTEXT ───────────────────────────────────────────────
+export type Theme = 'light' | 'dark';
+
+interface ThemeContextType {
+  theme: Theme;
+  toggleTheme: () => void;
+  setTheme: (theme: Theme) => void;
+}
+
+const ThemeContext = createContext<ThemeContextType>({
+  theme: 'dark',
+  toggleTheme: () => {},
+  setTheme: () => {},
+});
+
+export const useTheme = () => useContext(ThemeContext);
+
 // ─── ROOT PROVIDERS COMPONENT ───────────────────────────────────
 export function Providers({ children }: { children: React.ReactNode }) {
+  const [theme, setThemeState] = useState<Theme>('dark');
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [listeners] = useState<Set<RealtimeCallback>>(new Set());
+
+  // Initialize theme from localStorage / system preference
+  useEffect(() => {
+    try {
+      const savedTheme = localStorage.getItem('broadsheet_theme') as Theme | null;
+      if (savedTheme === 'light' || savedTheme === 'dark') {
+        setThemeState(savedTheme);
+        document.documentElement.classList.remove('light', 'dark');
+        document.documentElement.classList.add(savedTheme);
+      } else {
+        const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+        const initialTheme: Theme = prefersLight ? 'light' : 'dark';
+        setThemeState(initialTheme);
+        document.documentElement.classList.remove('light', 'dark');
+        document.documentElement.classList.add(initialTheme);
+      }
+    } catch {}
+  }, []);
+
+  const setTheme = useCallback((newTheme: Theme) => {
+    setThemeState(newTheme);
+    try {
+      localStorage.setItem('broadsheet_theme', newTheme);
+      document.documentElement.classList.remove('light', 'dark');
+      document.documentElement.classList.add(newTheme);
+    } catch {}
+  }, []);
+
+  const toggleTheme = useCallback(() => {
+    setThemeState((prev) => {
+      const next: Theme = prev === 'dark' ? 'light' : 'dark';
+      try {
+        localStorage.setItem('broadsheet_theme', next);
+        document.documentElement.classList.remove('light', 'dark');
+        document.documentElement.classList.add(next);
+      } catch {}
+      return next;
+    });
+  }, []);
 
   const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'info') => {
     const id = Math.random().toString(36).substring(2, 9);
@@ -187,31 +244,33 @@ export function Providers({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <AuthContext.Provider value={{ user, loading, loginDemo, loginWithHandle, logout, refreshUser }}>
-      <ToastContext.Provider value={{ showToast }}>
-        <RealtimeContext.Provider value={{ isConnected, subscribe: subscribeRealtime }}>
-          {children}
+    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>
+      <AuthContext.Provider value={{ user, loading, loginDemo, loginWithHandle, logout, refreshUser }}>
+        <ToastContext.Provider value={{ showToast }}>
+          <RealtimeContext.Provider value={{ isConnected, subscribe: subscribeRealtime }}>
+            {children}
 
-          {/* Floating Toast Notification Stack */}
-          <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none">
-            {toasts.map((t) => (
-              <div
-                key={t.id}
-                className={`pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium shadow-2xl backdrop-blur-xl border transition-all duration-300 animate-in slide-in-from-bottom-2 ${
-                  t.type === 'success'
-                    ? 'bg-amber-950/90 text-amber-200 border-amber-500/40'
-                    : t.type === 'error'
-                    ? 'bg-rose-950/90 text-rose-200 border-rose-500/40'
-                    : 'bg-zinc-900/90 text-zinc-200 border-zinc-700/40'
-                }`}
-              >
-                <span>{t.type === 'success' ? '👑' : t.type === 'error' ? '⚠️' : '📜'}</span>
-                <span>{t.message}</span>
-              </div>
-            ))}
-          </div>
-        </RealtimeContext.Provider>
-      </ToastContext.Provider>
-    </AuthContext.Provider>
+            {/* Floating Toast Notification Stack */}
+            <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none">
+              {toasts.map((t) => (
+                <div
+                  key={t.id}
+                  className={`pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium shadow-2xl backdrop-blur-xl border transition-all duration-300 animate-in slide-in-from-bottom-2 ${
+                    t.type === 'success'
+                      ? 'bg-amber-950/90 text-amber-200 border-amber-500/40'
+                      : t.type === 'error'
+                      ? 'bg-rose-950/90 text-rose-200 border-rose-500/40'
+                      : 'bg-zinc-900/90 text-zinc-200 border-zinc-700/40'
+                  }`}
+                >
+                  <span>{t.type === 'success' ? '👑' : t.type === 'error' ? '⚠️' : '📜'}</span>
+                  <span>{t.message}</span>
+                </div>
+              ))}
+            </div>
+          </RealtimeContext.Provider>
+        </ToastContext.Provider>
+      </AuthContext.Provider>
+    </ThemeContext.Provider>
   );
 }

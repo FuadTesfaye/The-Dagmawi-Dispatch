@@ -144,7 +144,7 @@ export default function HomePage() {
   return (
     <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 flex flex-col gap-6 sm:gap-8 font-teletype">
       {/* Frontpage Broadsheet Masthead Banner */}
-      <div className="p-4 sm:p-8 md:p-10 bg-[#12141c] border-2 border-[#262936] shadow-[4px_4px_0px_0px_#000000] sm:shadow-[6px_6px_0px_0px_#000000] flex flex-col gap-4 sm:gap-6 text-center items-center">
+      <div className="p-4 sm:p-8 md:p-10 bg-[var(--card-bg)] border-2 border-[var(--ink-border-heavy)] shadow-[4px_4px_0px_0px_var(--shadow-color)] sm:shadow-[6px_6px_0px_0px_var(--shadow-color)] flex flex-col gap-4 sm:gap-6 text-center items-center">
         {/* Scribe Stamp */}
         <div className="inline-flex items-center gap-1.5 sm:gap-2 stamp-badge-gold stamp-badge text-[10px] sm:text-xs">
           <span>§ UNIVERSAL TELEGRAM COMMUNITY LURKER</span>
@@ -154,16 +154,16 @@ export default function HomePage() {
 
         {/* Masthead Title */}
         <div className="flex flex-col gap-1.5 sm:gap-2">
-          <h1 className="font-broadsheet font-black text-3xl sm:text-6xl lg:text-7xl text-[#f4f0e6] tracking-tight uppercase">
+          <h1 className="font-broadsheet font-black text-3xl sm:text-6xl lg:text-7xl text-[var(--paper-cream)] tracking-tight uppercase">
             The Lurkening
           </h1>
-          <p className="font-teletype text-[11px] sm:text-sm text-[#d6d0c2] max-w-2xl mx-auto leading-relaxed uppercase">
+          <p className="font-teletype text-[11px] sm:text-sm text-[var(--paper-muted)] max-w-2xl mx-auto leading-relaxed uppercase">
             Telegram channel monitoring, Groq AI editorial intelligence, and multi-channel discovery.
           </p>
         </div>
 
         {/* Action Stamps */}
-        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 pt-3 border-t border-[#262936] w-full">
+        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 pt-3 border-t border-[var(--ink-border)] w-full">
           <a
             href={`https://t.me/${botUsername}`}
             target="_blank"
@@ -176,7 +176,7 @@ export default function HomePage() {
 
           <button
             onClick={() => setIsSearchModalOpen(true)}
-            className="stamp-btn !bg-[#12141c] !text-[#a39e93] hover:!text-[#f4f0e6] flex items-center gap-1.5 !py-2 !px-3.5 sm:!py-2.5 sm:!px-5 text-xs active:scale-95"
+            className="stamp-btn flex items-center gap-1.5 !py-2 !px-3.5 sm:!py-2.5 sm:!px-5 text-xs active:scale-95"
           >
             <Search className="w-4 h-4 text-[#d97706]" />
             <span>SEARCH ARCHIVE & GRAPH</span>
@@ -186,7 +186,7 @@ export default function HomePage() {
 
       {/* Stories / Monitored Channels Carousel Bar */}
       <div className="broadsheet-card p-3 sm:p-4 flex flex-col gap-2.5 overflow-hidden">
-        <div className="flex items-center justify-between text-[11px] uppercase font-bold text-[#a39e93] px-1 border-b border-[#262936] pb-2">
+        <div className="flex items-center justify-between text-[11px] uppercase font-bold text-[var(--paper-muted)] px-1 border-b border-[var(--ink-border)] pb-2">
           <div className="flex items-center gap-1.5 text-[#d97706]">
             <Radio className="w-3.5 h-3.5 animate-pulse" />
             <span>Active Telegraph Channels</span>
@@ -208,14 +208,14 @@ export default function HomePage() {
               className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center border-2 transition-all ${
                 selectedChannel === 'all'
                   ? 'border-[#d97706] bg-[#d97706] text-black shadow-[0_0_12px_rgba(217,119,6,0.5)]'
-                  : 'border-[#262936] bg-[#171a24] text-[#f4f0e6] group-hover:border-[#f4f0e6]'
+                  : 'border-[var(--ink-border)] bg-[var(--subtle-bg)] text-[var(--paper-cream)] group-hover:border-[var(--paper-cream)]'
               }`}
             >
               <Compass className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <span
               className={`text-[10px] sm:text-[11px] font-bold uppercase max-w-[64px] truncate text-center ${
-                selectedChannel === 'all' ? 'text-[#d97706]' : 'text-[#a39e93] group-hover:text-[#f4f0e6]'
+                selectedChannel === 'all' ? 'text-[#d97706]' : 'text-[var(--paper-muted)] group-hover:text-[var(--paper-cream)]'
               }`}
             >
               All Wires
@@ -235,24 +235,24 @@ export default function HomePage() {
                   className={`relative p-0.5 rounded-full border-2 transition-all ${
                     isSelected
                       ? 'border-[#d97706] shadow-[0_0_12px_rgba(217,119,6,0.6)]'
-                      : 'border-[#262936] group-hover:border-[#a39e93]'
+                      : 'border-[var(--ink-border)] group-hover:border-[var(--paper-muted)]'
                   }`}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={ch.avatarUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${ch.id}`}
                     alt={ch.name}
-                    className="w-11 h-11 sm:w-13 sm:h-13 rounded-full object-cover bg-[#0c0d10]"
+                    className="w-11 h-11 sm:w-13 sm:h-13 rounded-full object-cover bg-[var(--ink-bg)]"
                   />
                   {ch.isVerified && (
-                    <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-[#d97706] text-black text-[9px] font-bold flex items-center justify-center border border-[#0c0d10]">
+                    <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-[#d97706] text-black text-[9px] font-bold flex items-center justify-center border border-[var(--ink-bg)]">
                       ✓
                     </span>
                   )}
                 </div>
                 <span
                   className={`text-[10px] sm:text-[11px] font-bold uppercase max-w-[68px] sm:max-w-[76px] truncate text-center ${
-                    isSelected ? 'text-[#d97706]' : 'text-[#a39e93] group-hover:text-[#f4f0e6]'
+                    isSelected ? 'text-[#d97706]' : 'text-[var(--paper-muted)] group-hover:text-[var(--paper-cream)]'
                   }`}
                 >
                   {ch.name.split(' ')[0]}
@@ -266,10 +266,10 @@ export default function HomePage() {
             href="/channels"
             className="flex flex-col items-center gap-1.5 shrink-0 transition-transform active:scale-95 group focus:outline-none"
           >
-            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 border-dashed border-[#262936] bg-[#12141c] text-[#a39e93] group-hover:border-[#d97706] group-hover:text-[#d97706] flex items-center justify-center transition-all">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 border-dashed border-[var(--ink-border)] bg-[var(--card-bg)] text-[var(--paper-muted)] group-hover:border-[#d97706] group-hover:text-[#d97706] flex items-center justify-center transition-all">
               <Plus className="w-5 h-5" />
             </div>
-            <span className="text-[10px] sm:text-[11px] font-bold uppercase text-[#a39e93] group-hover:text-[#d97706] text-center">
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase text-[var(--paper-muted)] group-hover:text-[#d97706] text-center">
               More
             </span>
           </Link>
@@ -288,8 +288,8 @@ export default function HomePage() {
                 onClick={() => setSelectedChannel('all')}
                 className={`px-3 py-1.5 text-xs font-bold uppercase border transition-all shrink-0 active:scale-95 ${
                   selectedChannel === 'all'
-                    ? 'bg-[#f4f0e6] text-[#0c0d10] border-[#f4f0e6] shadow-[2px_2px_0px_0px_#000000]'
-                    : 'bg-[#12141c] text-[#a39e93] border-[#262936] hover:border-[#f4f0e6] hover:text-[#f4f0e6]'
+                    ? 'bg-[var(--paper-cream)] text-[var(--ink-bg)] border-[var(--paper-cream)] shadow-[2px_2px_0px_0px_var(--shadow-color)]'
+                    : 'bg-[var(--card-bg)] text-[var(--paper-muted)] border-[var(--ink-border)] hover:border-[var(--paper-cream)] hover:text-[var(--paper-cream)]'
                 }`}
               >
                 [ ALL CHANNELS ]
@@ -300,8 +300,8 @@ export default function HomePage() {
                   onClick={() => setSelectedChannel(ch.id)}
                   className={`px-3 py-1.5 text-xs font-bold uppercase border transition-all shrink-0 active:scale-95 ${
                     selectedChannel === ch.id
-                      ? 'bg-[#f4f0e6] text-[#0c0d10] border-[#f4f0e6] shadow-[2px_2px_0px_0px_#000000]'
-                      : 'bg-[#12141c] text-[#a39e93] border-[#262936] hover:border-[#f4f0e6] hover:text-[#f4f0e6]'
+                      ? 'bg-[var(--paper-cream)] text-[var(--ink-bg)] border-[var(--paper-cream)] shadow-[2px_2px_0px_0px_var(--shadow-color)]'
+                      : 'bg-[var(--card-bg)] text-[var(--paper-muted)] border-[var(--ink-border)] hover:border-[var(--paper-cream)] hover:text-[var(--paper-cream)]'
                   }`}
                 >
                   @{ch.id}
@@ -324,23 +324,23 @@ export default function HomePage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="FILTER FEED..."
-                className="w-full py-1.5 pl-8 pr-3 bg-[#12141c] border border-[#262936] text-xs text-[#f4f0e6] placeholder-[#6b665c] font-teletype uppercase focus:outline-none focus:border-[#d97706]"
+                className="w-full py-1.5 pl-8 pr-3 bg-[var(--input-bg)] border border-[var(--ink-border)] text-xs text-[var(--paper-cream)] placeholder-[var(--paper-faint)] font-teletype uppercase focus:outline-none focus:border-[#d97706]"
               />
-              <Search className="w-3.5 h-3.5 text-[#a39e93] absolute left-2.5 top-2.5" />
+              <Search className="w-3.5 h-3.5 text-[var(--paper-muted)] absolute left-2.5 top-2.5" />
             </div>
           </div>
 
           {/* Posts Feed Stream */}
           <div className="flex flex-col gap-3.5 sm:gap-4">
             {loading ? (
-              <div className="flex flex-col items-center justify-center py-20 gap-2 text-[#a39e93] font-teletype">
+              <div className="flex flex-col items-center justify-center py-20 gap-2 text-[var(--paper-muted)] font-teletype">
                 <Loader2 className="w-6 h-6 animate-spin text-[#d97706]" />
                 <span className="text-xs tracking-wider uppercase">[ DECODING TELETYPE WIRES... ]</span>
               </div>
             ) : posts.length === 0 ? (
               <div className="broadsheet-card p-8 sm:p-12 text-center flex flex-col items-center justify-center gap-2 font-teletype">
-                <h3 className="font-bold text-sm text-[#f4f0e6] uppercase">[ NO DISPATCHES FOUND ]</h3>
-                <p className="text-xs text-[#a39e93] max-w-sm font-sans">
+                <h3 className="font-bold text-sm text-[var(--paper-cream)] uppercase">[ NO DISPATCHES FOUND ]</h3>
+                <p className="text-xs text-[var(--paper-muted)] max-w-sm font-sans">
                   {searchQuery
                     ? `No records matched "${searchQuery.toUpperCase()}".`
                     : 'No transmissions logged for this channel.'}
@@ -383,10 +383,10 @@ export default function HomePage() {
 
           {/* Monitored Channels Card */}
           <div className="broadsheet-card p-5 flex flex-col gap-4">
-            <div className="flex items-center justify-between border-b border-[#262936] pb-2.5">
+            <div className="flex items-center justify-between border-b border-[var(--ink-border)] pb-2.5">
               <div className="flex items-center gap-2">
                 <Radio className="w-3.5 h-3.5 text-[#d97706]" />
-                <h3 className="text-xs font-bold uppercase text-[#f4f0e6] tracking-wider">
+                <h3 className="text-xs font-bold uppercase text-[var(--paper-cream)] tracking-wider">
                   Monitored Channels
                 </h3>
               </div>
@@ -403,13 +403,13 @@ export default function HomePage() {
                     <img
                       src={ch.avatarUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${ch.id}`}
                       alt={ch.name}
-                      className="w-8 h-8 border border-[#262936] bg-[#12141c] object-cover shrink-0 rounded-sm"
+                      className="w-8 h-8 border border-[var(--ink-border)] bg-[var(--ink-bg)] object-cover shrink-0 rounded-sm"
                     />
                     <div className="flex flex-col min-w-0">
-                      <span className="text-xs font-bold text-[#f4f0e6] group-hover:text-[#d97706] transition-colors truncate uppercase">
+                      <span className="text-xs font-bold text-[var(--paper-cream)] group-hover:text-[#d97706] transition-colors truncate uppercase">
                         {ch.name}
                       </span>
-                      <span className="text-[10px] text-[#a39e93]">@{ch.id}</span>
+                      <span className="text-[10px] text-[var(--paper-muted)]">@{ch.id}</span>
                     </div>
                   </Link>
 
@@ -429,32 +429,32 @@ export default function HomePage() {
 
           {/* Groq AI Editorial Intelligence Card */}
           <div className="broadsheet-card p-5 flex flex-col gap-3">
-            <div className="flex items-center gap-2 text-xs font-bold text-[#d97706] uppercase tracking-wider border-b border-[#262936] pb-2">
+            <div className="flex items-center gap-2 text-xs font-bold text-[#d97706] uppercase tracking-wider border-b border-[var(--ink-border)] pb-2">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Groq AI Editorial Intelligence</span>
             </div>
-            <p className="text-xs text-[#a39e93] font-sans leading-relaxed">
+            <p className="text-xs text-[var(--paper-muted)] font-sans leading-relaxed">
               Multi-model Groq Llama-3.3 engine generates on-demand executive summaries, satire roasts, context checks, and ELI5 breakdowns for every post in real time.
             </p>
           </div>
 
           {/* Telegram Bot Card */}
-          <div className="broadsheet-card p-5 flex flex-col gap-3 border-2 border-[#785a28] bg-gradient-to-br from-[#1c160e] to-[#12141c]">
+          <div className="broadsheet-card p-5 flex flex-col gap-3 border-2 border-[#785a28] bg-gradient-to-br from-[#241c10]/20 to-[var(--card-bg)]">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Bot className="w-4 h-4 text-[#d97706]" />
-                <span className="text-xs font-bold uppercase text-[#f6d89b]">Telegram Bot</span>
+                <span className="text-xs font-bold uppercase text-[var(--paper-cream)]">Telegram Bot</span>
               </div>
               <span className="stamp-badge stamp-badge-gold text-[9px]">ACTIVE</span>
             </div>
-            <p className="text-xs text-[#a39e93] font-sans leading-relaxed">
+            <p className="text-xs text-[var(--paper-muted)] font-sans leading-relaxed">
               Command digests, channel searches, and live summaries directly in Telegram.
             </p>
             <a
               href={`https://t.me/${botUsername}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="stamp-btn !bg-[#d97706] !text-black !border-[#d97706] hover:!bg-[#f4f0e6] justify-between !py-2 text-xs active:scale-95"
+              className="stamp-btn !bg-[#d97706] !text-black !border-[#d97706] hover:!bg-[var(--paper-cream)] justify-between !py-2 text-xs active:scale-95"
             >
               <span>Summon @{botUsername}</span>
               <ArrowUpRight className="w-3.5 h-3.5" />
@@ -464,7 +464,7 @@ export default function HomePage() {
       </div>
 
       {/* Footer Notice */}
-      <div className="text-center font-teletype text-[10px] text-[#a39e93] border-t border-[#262936] pt-6 uppercase flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div className="text-center font-teletype text-[10px] text-[var(--paper-muted)] border-t border-[var(--ink-border)] pt-6 uppercase flex flex-col sm:flex-row items-center justify-between gap-2">
         <span>THE LURKENING · UNIVERSAL TELEGRAM CHRONICLE</span>
         <span>AUTONOMOUS INGESTION ENGINE ACTIVE</span>
       </div>

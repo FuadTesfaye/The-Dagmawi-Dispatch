@@ -105,14 +105,14 @@ export default function ChannelProfilePage({
       {/* Back Button */}
       <Link
         href="/channels"
-        className="inline-flex items-center gap-1.5 text-xs text-[#a39e93] hover:text-[#f4f0e6] transition-colors self-start uppercase font-bold active:scale-95"
+        className="inline-flex items-center gap-1.5 text-xs text-[var(--paper-muted)] hover:text-[var(--paper-cream)] transition-colors self-start uppercase font-bold active:scale-95"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
         <span>Return to Publication Directory</span>
       </Link>
 
       {/* Channel Profile Hero Banner */}
-      <div className="p-4 sm:p-7 bg-[#12141c] border-2 border-[#262936] shadow-[4px_4px_0px_0px_#000000] sm:shadow-[6px_6px_0px_0px_#000000] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
+      <div className="p-4 sm:p-7 bg-[var(--card-bg)] border-2 border-[var(--ink-border-heavy)] shadow-[4px_4px_0px_0px_var(--shadow-color)] sm:shadow-[6px_6px_0px_0px_var(--shadow-color)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
         <div className="flex items-center gap-3.5 sm:gap-5 min-w-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -121,11 +121,11 @@ export default function ChannelProfilePage({
               `https://api.dicebear.com/7.x/bottts/svg?seed=${username}`
             }
             alt={channelInfo?.name || username}
-            className="w-16 h-16 sm:w-20 sm:h-20 border-2 border-[#3d4257] bg-[#0c0d10] object-cover shrink-0 rounded-sm"
+            className="w-16 h-16 sm:w-20 sm:h-20 border-2 border-[var(--ink-border)] bg-[var(--ink-bg)] object-cover shrink-0 rounded-sm"
           />
           <div className="flex flex-col min-w-0 gap-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="font-broadsheet font-black text-2xl sm:text-3xl text-[#f4f0e6] tracking-tight uppercase truncate">
+              <h1 className="font-broadsheet font-black text-2xl sm:text-3xl text-[var(--paper-cream)] tracking-tight uppercase truncate">
                 {channelInfo?.name || `@${username}`}
               </h1>
               {channelInfo?.isVerified && (
@@ -134,8 +134,8 @@ export default function ChannelProfilePage({
                 </span>
               )}
             </div>
-            <span className="text-xs text-[#a39e93]">@{username}</span>
-            <div className="flex items-center gap-2.5 text-xs text-[#a39e93] mt-0.5">
+            <span className="text-xs text-[var(--paper-muted)]">@{username}</span>
+            <div className="flex items-center gap-2.5 text-xs text-[var(--paper-muted)] mt-0.5">
               <span>{formatNumber(subCount)} FOLLOWERS</span>
               <span>·</span>
               <span>{posts.length} DISPATCHES</span>
@@ -144,7 +144,7 @@ export default function ChannelProfilePage({
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#262936]">
+        <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[var(--ink-border)]">
           <button
             onClick={handleToggleSubscribe}
             className={`stamp-btn flex-1 sm:flex-initial !py-2 !px-4 text-xs font-bold active:scale-95 ${
@@ -179,7 +179,7 @@ export default function ChannelProfilePage({
 
       {/* Description */}
       {channelInfo?.description && (
-        <p className="text-xs sm:text-sm text-[#d6d0c2] leading-relaxed font-sans -mt-2 sm:-mt-4">
+        <p className="text-xs sm:text-sm text-[var(--paper-muted)] leading-relaxed font-sans -mt-2 sm:-mt-4">
           {channelInfo.description}
         </p>
       )}
@@ -189,13 +189,13 @@ export default function ChannelProfilePage({
 
       {/* Posts Feed Section */}
       <div className="flex flex-col gap-3.5 sm:gap-4">
-        <div className="flex items-center justify-between border-b border-[#262936] pb-2 text-xs uppercase tracking-wider text-[#a39e93]">
+        <div className="flex items-center justify-between border-b border-[var(--ink-border)] pb-2 text-xs uppercase tracking-wider text-[var(--paper-muted)]">
           <span>Dispatch Ledger Archive</span>
           <span>{posts.length} Transmissions</span>
         </div>
 
         {posts.length === 0 ? (
-          <div className="broadsheet-card p-10 text-center text-[#a39e93] text-xs">
+          <div className="broadsheet-card p-10 text-center text-[var(--paper-muted)] text-xs">
             [ NO TRANSMISSIONS RECORDED FOR THIS CHANNEL ]
           </div>
         ) : (

@@ -62,10 +62,10 @@ export default function ProfilePage() {
             <div className="inline-flex items-center gap-2 stamp-badge-gold stamp-badge text-xs self-start">
               <span>§ COURT REGISTRY · SCRIBE DOSSIER</span>
             </div>
-            <h1 className="font-broadsheet font-black text-2xl sm:text-4xl text-[#f4f0e6] tracking-tight uppercase">
+            <h1 className="font-broadsheet font-black text-2xl sm:text-4xl text-[var(--paper-cream)] tracking-tight uppercase">
               Court Scribe Profile
             </h1>
-            <p className="text-xs sm:text-sm text-[#a39e93] leading-relaxed max-w-md font-sans">
+            <p className="text-xs sm:text-sm text-[var(--paper-muted)] leading-relaxed max-w-md font-sans">
               Sign in via Telegram to follow publications, customize your personal ledger, and receive AI-synthesized channel briefs.
             </p>
             <div className="flex flex-wrap items-center gap-2.5 pt-2">
@@ -74,13 +74,13 @@ export default function ProfilePage() {
               </Link>
               <button
                 onClick={() => loginDemo('admin')}
-                className="stamp-btn !bg-[#12141c] !text-[#a39e93] hover:!text-[#f4f0e6] active:scale-95 text-xs"
+                className="stamp-btn !bg-[var(--card-bg)] !text-[var(--paper-muted)] hover:!text-[var(--paper-cream)] active:scale-95 text-xs"
               >
                 DEMO AS ROYAL SCRIBE
               </button>
             </div>
           </div>
-          <div className="w-16 h-16 sm:w-20 sm:h-20 border-2 border-[#3d4257] bg-[#12141c] flex items-center justify-center text-[#d97706] shrink-0">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 border-2 border-[var(--ink-border-heavy)] bg-[var(--subtle-bg)] flex items-center justify-center text-[#d97706] shrink-0">
             <User className="w-8 h-8 sm:w-10 sm:h-10" />
           </div>
         </div>
@@ -89,7 +89,7 @@ export default function ProfilePage() {
           <div className="flex items-start justify-between gap-4">
             <div className="flex flex-col gap-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="font-broadsheet font-black text-2xl sm:text-3xl text-[#f4f0e6] tracking-tight uppercase truncate">
+                <h1 className="font-broadsheet font-black text-2xl sm:text-3xl text-[var(--paper-cream)] tracking-tight uppercase truncate">
                   {user.displayName}
                 </h1>
                 <span className="stamp-badge-gold stamp-badge text-[10px]">
@@ -101,7 +101,7 @@ export default function ProfilePage() {
                   </span>
                 )}
               </div>
-              <span className="text-xs text-[#a39e93] truncate">
+              <span className="text-xs text-[var(--paper-muted)] truncate">
                 {user.username ? `@${user.username}` : `TELEGRAM ID: ${user.telegramUserId}`}
               </span>
             </div>
@@ -114,17 +114,17 @@ export default function ProfilePage() {
                 `https://api.dicebear.com/7.x/bottts/svg?seed=${user.displayName}`
               }
               alt={user.displayName}
-              className="w-16 h-16 sm:w-20 sm:h-20 border-2 border-[#3d4257] bg-[#12141c] object-cover shrink-0 rounded-sm"
+              className="w-16 h-16 sm:w-20 sm:h-20 border-2 border-[var(--ink-border)] bg-[var(--ink-bg)] object-cover shrink-0 rounded-sm"
             />
           </div>
 
           {/* Bio */}
-          <p className="text-xs sm:text-sm text-[#d6d0c2] leading-relaxed font-sans">
+          <p className="text-xs sm:text-sm text-[var(--paper-muted)] leading-relaxed font-sans">
             Universal Telegram dispatch archivist. Monitoring unfiltered opinions, tech rants, and AI synthesis across the creator networks.
           </p>
 
           {/* Stats Bar */}
-          <div className="flex items-center gap-2.5 sm:gap-3 text-xs text-[#a39e93] uppercase pt-2 border-t border-[#262936] flex-wrap">
+          <div className="flex items-center gap-2.5 sm:gap-3 text-xs text-[var(--paper-muted)] uppercase pt-2 border-t border-[var(--ink-border)] flex-wrap">
             <span>{formatNumber(subscribedChannels.length)} MONITORED CHANNELS</span>
             <span>·</span>
             <span className="text-[#d97706]">#1 IN TELEGRAM INTELLIGENCE</span>
@@ -140,13 +140,13 @@ export default function ProfilePage() {
             </button>
             <Link
               href="/channels"
-              className="stamp-btn !bg-[#12141c] !text-[#a39e93] hover:!text-[#f4f0e6] text-xs active:scale-95"
+              className="stamp-btn !bg-[var(--card-bg)] !text-[var(--paper-muted)] hover:!text-[var(--paper-cream)] text-xs active:scale-95"
             >
               DISCOVER CHANNELS
             </Link>
             <button
               onClick={logout}
-              className="stamp-btn !bg-[#12141c] !text-[#a39e93] hover:!text-rose-400 !p-2 active:scale-95"
+              className="stamp-btn !bg-[var(--card-bg)] !text-[var(--paper-muted)] hover:!text-rose-600 !p-2 active:scale-95"
               title="Sign Out"
               aria-label="Sign Out"
             >
@@ -157,7 +157,7 @@ export default function ProfilePage() {
       )}
 
       {/* Broadsheet Horizontal Tabs */}
-      <div className="flex items-center gap-1.5 sm:gap-2 border-b-2 border-[#262936] pb-2 overflow-x-auto no-scrollbar text-xs uppercase font-bold">
+      <div className="flex items-center gap-1.5 sm:gap-2 border-b-2 border-[var(--ink-border)] pb-2 overflow-x-auto no-scrollbar text-xs uppercase font-bold">
         {['Dispatches', 'Subscriptions', 'Activity'].map((tab) => {
           const isActive = activeTab === tab;
           return (
@@ -166,8 +166,8 @@ export default function ProfilePage() {
               onClick={() => setActiveTab(tab)}
               className={`px-3 py-1.5 border transition-all whitespace-nowrap active:scale-95 ${
                 isActive
-                  ? 'bg-[#f4f0e6] text-[#0c0d10] border-[#f4f0e6] shadow-[2px_2px_0px_0px_#000000]'
-                  : 'bg-[#12141c] text-[#a39e93] border-[#262936] hover:border-[#f4f0e6] hover:text-[#f4f0e6]'
+                  ? 'bg-[var(--paper-cream)] text-[var(--ink-bg)] border-[var(--paper-cream)] shadow-[2px_2px_0px_0px_var(--shadow-color)]'
+                  : 'bg-[var(--card-bg)] text-[var(--paper-muted)] border-[var(--ink-border)] hover:border-[var(--paper-cream)] hover:text-[var(--paper-cream)]'
               }`}
             >
               <span>{tab}</span>
@@ -183,11 +183,11 @@ export default function ProfilePage() {
       {activeTab === 'Subscriptions' ? (
         <div className="flex flex-col gap-3">
           {loadingSubs ? (
-            <div className="flex justify-center py-16 text-[#a39e93]">
+            <div className="flex justify-center py-16 text-[var(--paper-muted)]">
               <Loader2 className="w-6 h-6 animate-spin text-[#d97706]" />
             </div>
           ) : subscribedChannels.length === 0 ? (
-            <div className="broadsheet-card p-10 text-center text-[#a39e93] text-xs flex flex-col items-center gap-3">
+            <div className="broadsheet-card p-10 text-center text-[var(--paper-muted)] text-xs flex flex-col items-center gap-3">
               <Radio className="w-8 h-8 text-[#d97706]" />
               <p className="font-bold">[ YOU ARE NOT FOLLOWING ANY CHANNELS YET ]</p>
               <Link href="/channels" className="stamp-btn mt-1">
@@ -205,11 +205,11 @@ export default function ProfilePage() {
       ) : (
         <div className="flex flex-col gap-3.5 sm:gap-4">
           {loadingPosts ? (
-            <div className="flex justify-center py-20 text-[#a39e93]">
+            <div className="flex justify-center py-20 text-[var(--paper-muted)]">
               <Loader2 className="w-6 h-6 animate-spin text-[#d97706]" />
             </div>
           ) : posts.length === 0 ? (
-            <div className="broadsheet-card p-10 text-center text-[#a39e93] text-xs">
+            <div className="broadsheet-card p-10 text-center text-[var(--paper-muted)] text-xs">
               [ NO POSTS FOUND IN PUBLICATION LEDGER ]
             </div>
           ) : (
@@ -221,10 +221,10 @@ export default function ProfilePage() {
           {/* Not Logged In Prompt */}
           {!user && !loadingPosts && posts.length > 0 && (
             <div className="broadsheet-card p-6 sm:p-8 mt-4 flex flex-col items-center gap-3 text-center">
-              <h3 className="font-broadsheet font-bold text-xl sm:text-2xl text-[#f4f0e6] uppercase">
+              <h3 className="font-broadsheet font-bold text-xl sm:text-2xl text-[var(--paper-cream)] uppercase">
                 Log in for full archive
               </h3>
-              <p className="text-xs text-[#a39e93] max-w-sm font-sans">
+              <p className="text-xs text-[var(--paper-muted)] max-w-sm font-sans">
                 Authenticate to browse the entire multi-channel archive, command AI briefs, and join community inquests.
               </p>
               <Link href="/login" className="stamp-btn mt-1 active:scale-95">

@@ -39,10 +39,10 @@ export function BabiometerWidget({ channel = 'dagmawi_babi' }: LurkometerProps) 
   return (
     <div className="broadsheet-card p-4 sm:p-5 flex flex-col gap-3 font-teletype w-full overflow-hidden">
       {/* Header Stamp */}
-      <div className="flex items-center justify-between gap-2 border-b border-[#262936] pb-2.5">
+      <div className="flex items-center justify-between gap-2 border-b border-[var(--ink-border)] pb-2.5">
         <div className="flex items-center gap-2 min-w-0">
           <Activity className="w-3.5 h-3.5 text-[#d97706] shrink-0 animate-pulse" />
-          <span className="text-xs font-bold text-[#f4f0e6] uppercase tracking-wider truncate">
+          <span className="text-xs font-bold text-[var(--paper-cream)] uppercase tracking-wider truncate">
             Lurkometer // @{channel}
           </span>
         </div>
@@ -52,27 +52,27 @@ export function BabiometerWidget({ channel = 'dagmawi_babi' }: LurkometerProps) 
       </div>
 
       {/* Mechanical Teletype Counter */}
-      <div className="p-3 bg-[#0c0d10] border border-[#262936] flex flex-col gap-2.5">
+      <div className="p-3 bg-[var(--subtle-bg)] border border-[var(--ink-border)] flex flex-col gap-2.5">
         <div className="flex items-center justify-between text-xs flex-wrap gap-1">
-          <span className="text-[#a39e93] uppercase font-semibold text-[10px] sm:text-[11px]">
+          <span className="text-[var(--paper-muted)] uppercase font-semibold text-[10px] sm:text-[11px]">
             24h Activity Gauge
           </span>
-          <span className="font-bold text-[#f4f0e6] text-xs sm:text-sm">
+          <span className="font-bold text-[var(--paper-cream)] text-xs sm:text-sm">
             {loading ? 'CALCULATING...' : `[ ${postCount} TRANSMISSIONS ]`}
           </span>
         </div>
 
         {/* ASCII / Block Gauge */}
-        <div className="text-xs sm:text-sm font-bold tracking-wider text-[#f4f0e6] py-1 border-y border-[#262936] flex items-center justify-between gap-2 overflow-x-hidden select-none">
+        <div className="text-xs sm:text-sm font-bold tracking-wider text-[var(--paper-cream)] py-1 border-y border-[var(--ink-border)] flex items-center justify-between gap-2 overflow-x-hidden select-none">
           <span className="text-[#d97706] font-mono tracking-widest text-xs sm:text-sm truncate">
             {volume.blocks}
           </span>
-          <span className="text-[10px] sm:text-[11px] text-[#a39e93] shrink-0">
+          <span className="text-[10px] sm:text-[11px] text-[var(--paper-muted)] shrink-0">
             {volume.percent}% CAPACITY
           </span>
         </div>
 
-        <p className="text-[10px] text-[#a39e93] italic font-sans leading-relaxed">
+        <p className="text-[10px] text-[var(--paper-muted)] italic font-sans leading-relaxed">
           &ldquo;{volume.verdict}&rdquo;
         </p>
       </div>

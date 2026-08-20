@@ -3,14 +3,15 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAuth, useRealtime } from './providers';
-import { LogOut, Shield, Menu, X, ChevronDown, Radio, BookOpen, User, Bot, ArrowUpRight, Search, Sparkles } from 'lucide-react';
+import { useAuth, useRealtime, useTheme } from './providers';
+import { LogOut, Shield, Menu, X, ChevronDown, Radio, BookOpen, User, Bot, ArrowUpRight, Search, Sun, Moon } from 'lucide-react';
 import { SearchModal } from './search-modal';
 
 export function Navbar() {
   const pathname = usePathname();
   const { user, loading, logout, loginDemo } = useAuth();
   const { isConnected } = useRealtime();
+  const { theme, toggleTheme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showDemoMenu, setShowDemoMenu] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
@@ -49,19 +50,19 @@ export function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full bg-[#12141c]/95 backdrop-blur-md border-b-2 border-[#262936] font-teletype shadow-lg transition-colors">
+      <header className="sticky top-0 z-40 w-full bg-[var(--header-bg)] border-b-2 border-[var(--ink-border)] font-teletype shadow-md transition-colors">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
           {/* Left: Brand / Masthead */}
           <div className="flex items-center gap-3 sm:gap-6 min-w-0">
             <Link href="/" className="flex items-center gap-2 sm:gap-3 group shrink-0">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 border-2 border-[#f4f0e6] bg-[#f4f0e6] text-[#0c0d10] flex items-center justify-center font-black font-broadsheet text-base sm:text-lg shadow-[2px_2px_0px_0px_#262936] transition-transform group-active:scale-95">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 border-2 border-[var(--ink-border-heavy)] bg-[var(--paper-cream)] text-[var(--ink-bg)] flex items-center justify-center font-black font-broadsheet text-base sm:text-lg shadow-[2px_2px_0px_0px_var(--shadow-color)] transition-transform group-active:scale-95">
                 §
               </div>
               <div className="flex flex-col min-w-0">
-                <span className="font-broadsheet font-black text-sm sm:text-lg tracking-tight text-[#f4f0e6] uppercase group-hover:text-[#d97706] transition-colors truncate">
+                <span className="font-broadsheet font-black text-sm sm:text-lg tracking-tight text-[var(--paper-cream)] uppercase group-hover:text-[#d97706] transition-colors truncate">
                   The Lurkening
                 </span>
-                <span className="font-teletype text-[8px] sm:text-[9px] tracking-widest text-[#a39e93] uppercase hidden xs:inline">
+                <span className="font-teletype text-[8px] sm:text-[9px] tracking-widest text-[var(--paper-muted)] uppercase hidden xs:inline">
                   Gazette & Teleprinter
                 </span>
               </div>
@@ -77,8 +78,8 @@ export function Navbar() {
                     href={item.href}
                     className={`px-3 py-1.5 border transition-all uppercase font-bold text-xs active:scale-95 ${
                       isActive
-                        ? 'bg-[#f4f0e6] text-[#0c0d10] border-[#f4f0e6] shadow-[2px_2px_0px_0px_#000000]'
-                        : 'bg-[#12141c] text-[#a39e93] border-[#262936] hover:border-[#f4f0e6] hover:text-[#f4f0e6]'
+                        ? 'bg-[var(--paper-cream)] text-[var(--ink-bg)] border-[var(--paper-cream)] shadow-[2px_2px_0px_0px_var(--shadow-color)]'
+                        : 'bg-[var(--card-bg)] text-[var(--paper-muted)] border-[var(--ink-border)] hover:border-[var(--paper-cream)] hover:text-[var(--paper-cream)]'
                     }`}
                   >
                     {item.label}
@@ -88,8 +89,28 @@ export function Navbar() {
             </nav>
           </div>
 
-          {/* Right: Status, Universal Search & Actions */}
-          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          {/* Right: Theme Switcher, Status, Universal Search & Actions */}
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+            {/* Theme Toggle Button */}
+            <button
+              onClick={toggleTheme}
+              title={theme === 'dark' ? 'Switch to Broadsheet Light Mode' : 'Switch to Ink Dark Mode'}
+              className="stamp-btn !py-1.5 !px-2.5 text-xs flex items-center gap-1.5 active:scale-95 hover:border-[#d97706]"
+              aria-label="Toggle Light/Dark Theme"
+            >
+              {theme === 'dark' ? (
+                <>
+                  <Sun className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="hidden xl:inline text-[10px]">LIGHT</span>
+                </>
+              ) : (
+                <>
+                  <Moon className="w-3.5 h-3.5 text-indigo-700" />
+                  <span className="hidden xl:inline text-[10px]">DARK</span>
+                </>
+              )}
+            </button>
+
             {/* Universal Search Button */}
             <button
               onClick={() => setIsSearchModalOpen(true)}
@@ -97,16 +118,15 @@ export function Navbar() {
               title="Search Archives (Cmd+K or /)"
             >
               <Search className="w-3.5 h-3.5 text-[#d97706]" />
-              <span className="hidden md:inline font-bold">SEARCH ARCHIVE</span>
-              <span className="md:hidden text-[10px] font-bold">SEARCH</span>
-              <kbd className="hidden lg:inline px-1 bg-[#0c0d10] border border-[#3d4257] text-[9px] text-[#a39e93]">
+              <span className="hidden md:inline font-bold">SEARCH</span>
+              <kbd className="hidden lg:inline px-1 bg-[var(--subtle-bg)] border border-[var(--ink-border)] text-[9px] text-[var(--paper-muted)]">
                 ⌘K
               </kbd>
             </button>
 
             {/* Live Status Badge (Desktop) */}
-            <div className="hidden xl:flex items-center gap-1.5 font-teletype text-[10px] px-2.5 py-1 bg-[#171a24] border border-[#262936] text-[#d6d0c2]">
-              <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+            <div className="hidden xl:flex items-center gap-1.5 font-teletype text-[10px] px-2.5 py-1 bg-[var(--subtle-bg)] border border-[var(--ink-border)] text-[var(--paper-muted)]">
+              <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
               <span>{isConnected ? 'LIVE WIRE' : 'POLLING'}</span>
             </div>
 
@@ -129,7 +149,7 @@ export function Navbar() {
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <Link
                   href="/profile"
-                  className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1.5 bg-[#171a24] border border-[#262936] hover:border-[#f4f0e6] transition-all active:scale-95"
+                  className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1.5 bg-[var(--subtle-bg)] border border-[var(--ink-border)] hover:border-[var(--paper-cream)] transition-all active:scale-95"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -137,7 +157,7 @@ export function Navbar() {
                     alt={user.displayName}
                     className="w-4 h-4 sm:w-5 sm:h-5 bg-zinc-800 object-cover shrink-0"
                   />
-                  <span className="font-teletype text-xs font-semibold text-[#f4f0e6] hidden sm:inline max-w-[100px] lg:max-w-[130px] truncate">
+                  <span className="font-teletype text-xs font-semibold text-[var(--paper-cream)] hidden sm:inline max-w-[100px] lg:max-w-[130px] truncate">
                     {user.displayName}
                   </span>
                 </Link>
@@ -145,7 +165,7 @@ export function Navbar() {
                 <button
                   onClick={logout}
                   title="Sign Out"
-                  className="p-1.5 border border-[#262936] text-[#a39e93] hover:text-rose-400 hover:border-rose-500 hover:bg-[#171a24] transition-colors hidden sm:inline-flex active:scale-95"
+                  className="p-1.5 border border-[var(--ink-border)] text-[var(--paper-muted)] hover:text-rose-600 hover:border-rose-500 hover:bg-[var(--subtle-bg)] transition-colors hidden sm:inline-flex active:scale-95"
                 >
                   <LogOut className="w-3.5 h-3.5" />
                 </button>
@@ -161,17 +181,17 @@ export function Navbar() {
 
                 <button
                   onClick={() => setShowDemoMenu(!showDemoMenu)}
-                  className="stamp-btn !bg-[#12141c] !text-[#a39e93] hover:!text-[#f4f0e6] !py-1 !px-1.5 sm:!py-1.5 sm:!px-2.5 flex items-center gap-1"
+                  className="stamp-btn !bg-[var(--subtle-bg)] !text-[var(--paper-muted)] hover:!text-[var(--paper-cream)] !py-1 !px-1.5 sm:!py-1.5 sm:!px-2.5 flex items-center gap-1"
                   title="Quick Demo Persona"
                 >
                   <span className="hidden xs:inline">Demo</span>
-                  <ChevronDown className="w-3 h-3 text-[#a39e93]" />
+                  <ChevronDown className="w-3 h-3 text-[var(--paper-muted)]" />
                 </button>
 
                 {/* Demo Menu Dropdown */}
                 {showDemoMenu && (
-                  <div className="absolute right-0 top-11 w-52 p-2 bg-[#12141c] border-2 border-[#3d4257] shadow-[6px_6px_0px_0px_#000000] z-50 font-teletype text-xs animate-in fade-in zoom-in-95 duration-100">
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-[#a39e93] px-2 py-1 border-b border-[#262936] mb-1">
+                  <div className="absolute right-0 top-11 w-52 p-2 bg-[var(--card-bg)] border-2 border-[var(--ink-border-heavy)] shadow-[6px_6px_0px_0px_var(--shadow-color)] z-50 font-teletype text-xs animate-in fade-in zoom-in-95 duration-100">
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--paper-muted)] px-2 py-1 border-b border-[var(--ink-border)] mb-1">
                       Select Persona
                     </div>
                     <button
@@ -179,7 +199,7 @@ export function Navbar() {
                         loginDemo('admin');
                         setShowDemoMenu(false);
                       }}
-                      className="w-full text-left px-2.5 py-1.5 text-[#f4f0e6] hover:bg-[#f4f0e6] hover:text-[#0c0d10] transition-colors font-bold flex items-center gap-2"
+                      className="w-full text-left px-2.5 py-1.5 text-[var(--paper-cream)] hover:bg-[var(--paper-cream)] hover:text-[var(--ink-bg)] transition-colors font-bold flex items-center gap-2"
                     >
                       <span>✦ Royal Editor (Admin)</span>
                     </button>
@@ -188,7 +208,7 @@ export function Navbar() {
                         loginDemo('reader');
                         setShowDemoMenu(false);
                       }}
-                      className="w-full text-left px-2.5 py-1.5 text-[#f4f0e6] hover:bg-[#f4f0e6] hover:text-[#0c0d10] transition-colors font-bold flex items-center gap-2"
+                      className="w-full text-left px-2.5 py-1.5 text-[var(--paper-cream)] hover:bg-[var(--paper-cream)] hover:text-[var(--ink-bg)] transition-colors font-bold flex items-center gap-2"
                     >
                       <span>✦ Citizen Reader</span>
                     </button>
@@ -197,7 +217,7 @@ export function Navbar() {
                         loginDemo('vip');
                         setShowDemoMenu(false);
                       }}
-                      className="w-full text-left px-2.5 py-1.5 text-[#f4f0e6] hover:bg-[#f4f0e6] hover:text-[#0c0d10] transition-colors font-bold flex items-center gap-2"
+                      className="w-full text-left px-2.5 py-1.5 text-[var(--paper-cream)] hover:bg-[var(--paper-cream)] hover:text-[var(--ink-bg)] transition-colors font-bold flex items-center gap-2"
                     >
                       <span>✦ Foreign Envoy</span>
                     </button>
@@ -209,7 +229,7 @@ export function Navbar() {
             {/* Mobile Menu Hamburger */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 border border-[#262936] text-[#f4f0e6] hover:bg-[#171a24] active:scale-95"
+              className="md:hidden p-2 border border-[var(--ink-border)] text-[var(--paper-cream)] hover:bg-[var(--subtle-bg)] active:scale-95"
               aria-label="Toggle menu"
             >
               {isMenuOpen ? <X className="w-4 h-4 text-[#d97706]" /> : <Menu className="w-4 h-4" />}
@@ -219,15 +239,27 @@ export function Navbar() {
 
         {/* Mobile Navigation Drawer / Dropdown */}
         {isMenuOpen && (
-          <div className="md:hidden border-t-2 border-[#262936] bg-[#12141c] p-4 flex flex-col gap-2.5 font-teletype text-xs shadow-2xl animate-in slide-in-from-top-2 duration-150">
-            {/* Live connection state */}
-            <div className="flex items-center justify-between px-3 py-2 bg-[#171a24] border border-[#262936] text-[10px]">
-              <span className="text-[#a39e93]">TELETYPE SYSTEM STATUS</span>
+          <div className="md:hidden border-t-2 border-[var(--ink-border)] bg-[var(--card-bg)] p-4 flex flex-col gap-2.5 font-teletype text-xs shadow-2xl animate-in slide-in-from-top-2 duration-150">
+            {/* Live connection state & theme toggle */}
+            <div className="flex items-center justify-between px-3 py-2 bg-[var(--subtle-bg)] border border-[var(--ink-border)] text-[10px]">
+              <span className="text-[var(--paper-muted)]">TELETYPE SYSTEM STATUS</span>
               <div className="flex items-center gap-1.5">
-                <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-400' : 'bg-amber-400'}`} />
-                <span className="font-bold text-[#f4f0e6]">{isConnected ? 'ONLINE & SYNCED' : 'POLLING'}</span>
+                <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                <span className="font-bold text-[var(--paper-cream)]">{isConnected ? 'ONLINE' : 'POLLING'}</span>
               </div>
             </div>
+
+            {/* Theme Toggle in Mobile Menu */}
+            <button
+              onClick={toggleTheme}
+              className="p-3 border border-[var(--ink-border)] bg-[var(--subtle-bg)] flex items-center justify-between text-[var(--paper-cream)] font-bold uppercase"
+            >
+              <div className="flex items-center gap-2">
+                {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-600" />}
+                <span>APPEARANCE: {theme === 'dark' ? 'LIGHT MODE' : 'DARK MODE'}</span>
+              </div>
+              <span className="text-xs text-[#d97706]">[ TOGGLE ]</span>
+            </button>
 
             {/* Nav links */}
             {navLinks.map((item) => (
@@ -237,15 +269,15 @@ export function Navbar() {
                 onClick={() => setIsMenuOpen(false)}
                 className={`p-3 border transition-colors flex items-center justify-between ${
                   pathname === item.href
-                    ? 'bg-[#f4f0e6] text-[#0c0d10] border-[#f4f0e6] font-bold'
-                    : 'text-[#f4f0e6] border-[#262936] hover:bg-[#171a24]'
+                    ? 'bg-[var(--paper-cream)] text-[var(--ink-bg)] border-[var(--paper-cream)] font-bold'
+                    : 'text-[var(--paper-cream)] border-[var(--ink-border)] hover:bg-[var(--subtle-bg)]'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
                   <item.icon className="w-4 h-4 text-[#d97706]" />
                   <span className="font-bold uppercase tracking-wider">{item.label}</span>
                 </div>
-                <span className="text-[10px] text-[#a39e93]">→</span>
+                <span className="text-[10px] text-[var(--paper-muted)]">→</span>
               </Link>
             ))}
 
@@ -270,7 +302,7 @@ export function Navbar() {
                   logout();
                   setIsMenuOpen(false);
                 }}
-                className="p-2.5 border border-rose-900/60 bg-rose-950/20 text-rose-300 hover:bg-rose-900/40 flex items-center justify-center gap-2 font-bold uppercase transition-colors"
+                className="p-2.5 border border-rose-900/60 bg-rose-950/20 text-rose-500 hover:bg-rose-900/40 flex items-center justify-center gap-2 font-bold uppercase transition-colors"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 <span>Sign Out ({user.displayName})</span>

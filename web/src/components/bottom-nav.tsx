@@ -27,7 +27,7 @@ export function BottomNav() {
     <>
       <nav
         aria-label="Mobile Navigation"
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#12141c]/95 backdrop-blur-xl border-t border-[#262936] px-3 pt-2 pb-[max(0.6rem,env(safe-area-inset-bottom))] flex items-center justify-around font-teletype shadow-[0_-8px_20px_rgba(0,0,0,0.6)]"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[var(--header-bg)]/95 backdrop-blur-xl border-t-2 border-[var(--ink-border)] px-3 pt-2 pb-[max(0.6rem,env(safe-area-inset-bottom))] flex items-center justify-around font-teletype shadow-[0_-8px_20px_var(--shadow-color)]"
       >
         {/* Main Links */}
         {links.map((link) => {
@@ -39,8 +39,8 @@ export function BottomNav() {
               href={link.href}
               className={`flex-1 flex flex-col items-center justify-center py-1 px-1 text-[10px] font-bold transition-all rounded-sm active:scale-90 ${
                 isActive
-                  ? 'bg-[#f4f0e6] text-[#0c0d10] shadow-[2px_2px_0px_0px_#000000]'
-                  : 'text-[#a39e93] hover:text-[#f4f0e6]'
+                  ? 'bg-[var(--paper-cream)] text-[var(--ink-bg)] shadow-[2px_2px_0px_0px_var(--shadow-color)]'
+                  : 'text-[var(--paper-muted)] hover:text-[var(--paper-cream)]'
               }`}
             >
               {link.href === '/profile' && user?.photoUrl ? (
@@ -53,7 +53,7 @@ export function BottomNav() {
                   }`}
                 />
               ) : (
-                <Icon className={`w-4 h-4 mb-0.5 ${isActive ? 'text-[#0c0d10]' : ''}`} />
+                <Icon className={`w-4 h-4 mb-0.5 ${isActive ? 'text-[var(--ink-bg)]' : ''}`} />
               )}
               <span className="tracking-wider">{link.label}</span>
             </Link>

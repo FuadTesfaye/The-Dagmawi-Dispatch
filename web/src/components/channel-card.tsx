@@ -67,11 +67,11 @@ export function ChannelCard({ channel }: ChannelCardProps) {
               `https://api.dicebear.com/7.x/bottts/svg?seed=${channel.id}`
             }
             alt={channel.name}
-            className="w-11 h-11 sm:w-12 sm:h-12 border-2 border-[#262936] bg-[#12141c] object-cover shrink-0 rounded-sm"
+            className="w-11 h-11 sm:w-12 sm:h-12 border-2 border-[var(--ink-border)] bg-[var(--ink-bg)] object-cover shrink-0 rounded-sm"
           />
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <h3 className="font-bold text-xs sm:text-sm text-[#f4f0e6] uppercase group-hover:text-[#d97706] transition-colors truncate">
+              <h3 className="font-bold text-xs sm:text-sm text-[var(--paper-cream)] uppercase group-hover:text-[#d97706] transition-colors truncate">
                 {channel.name}
               </h3>
               {channel.isVerified && (
@@ -80,7 +80,7 @@ export function ChannelCard({ channel }: ChannelCardProps) {
                 </span>
               )}
             </div>
-            <span className="text-[11px] text-[#a39e93] truncate">@{channel.id}</span>
+            <span className="text-[11px] text-[var(--paper-muted)] truncate">@{channel.id}</span>
           </div>
         </Link>
 
@@ -107,12 +107,12 @@ export function ChannelCard({ channel }: ChannelCardProps) {
       </div>
 
       {/* Description */}
-      <p className="text-xs text-[#d6d0c2] leading-relaxed line-clamp-2 font-sans">
+      <p className="text-xs text-[var(--paper-muted)] leading-relaxed line-clamp-2 font-sans">
         {channel.description || 'Public Telegram broadcast feed indexed for autonomous intelligence.'}
       </p>
 
       {/* Footer Metrics */}
-      <div className="flex items-center justify-between text-[10px] text-[#a39e93] pt-2.5 border-t border-[#262936] uppercase">
+      <div className="flex items-center justify-between text-[10px] text-[var(--paper-muted)] pt-2.5 border-t border-[var(--ink-border)] uppercase">
         <div className="flex items-center gap-1.5">
           <Users className="w-3.5 h-3.5 text-[#d97706]" />
           <span>{formatNumber(subCount)} FOLLOWERS</span>

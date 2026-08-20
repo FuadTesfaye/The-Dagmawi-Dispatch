@@ -51,7 +51,7 @@ export default function AdminModerationPage() {
 
   if (authLoading) {
     return (
-      <div className="flex justify-center items-center py-20 text-[#a39e93] font-teletype">
+      <div className="flex justify-center items-center py-20 text-[var(--paper-muted)] font-teletype">
         <Loader2 className="w-6 h-6 animate-spin text-[#d97706]" />
       </div>
     );
@@ -61,8 +61,8 @@ export default function AdminModerationPage() {
     return (
       <div className="max-w-md mx-auto py-12 px-3 text-center broadsheet-card p-6 sm:p-8 flex flex-col items-center gap-4 font-teletype">
         <AlertTriangle className="w-10 h-10 text-rose-500" />
-        <h2 className="text-sm font-bold text-[#f4f0e6] uppercase">[ COURT INQUEST ACCESS DENIED ]</h2>
-        <p className="text-xs text-[#a39e93] font-sans">
+        <h2 className="text-sm font-bold text-[var(--paper-cream)] uppercase">[ COURT INQUEST ACCESS DENIED ]</h2>
+        <p className="text-xs text-[var(--paper-muted)] font-sans">
           Only authenticated royal court scribes may inspect community inquest citations.
         </p>
         <Link
@@ -78,26 +78,26 @@ export default function AdminModerationPage() {
   return (
     <div className="flex flex-col gap-6 max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-8 font-teletype">
       {/* Header */}
-      <div className="border-b-2 border-[#262936] pb-4">
+      <div className="border-b-2 border-[var(--ink-border)] pb-4">
         <div className="flex items-center gap-2 text-[#d97706] text-[10px] font-bold uppercase tracking-widest mb-1">
           <Shield className="w-3.5 h-3.5" />
           <span>§ SECTION IV: COURT INQUEST REGISTRY</span>
         </div>
-        <h1 className="font-broadsheet font-black text-2xl sm:text-4xl text-[#f4f0e6] uppercase">
+        <h1 className="font-broadsheet font-black text-2xl sm:text-4xl text-[var(--paper-cream)] uppercase">
           Inquest Citations ({reports.length})
         </h1>
-        <p className="text-xs text-[#a39e93] mt-1 font-sans">
+        <p className="text-xs text-[var(--paper-muted)] mt-1 font-sans">
           Review citations and maintain decorum across the telegraphic broadcast network.
         </p>
       </div>
 
       {/* Reports List */}
       {loading ? (
-        <div className="flex justify-center py-16 text-[#a39e93]">
+        <div className="flex justify-center py-16 text-[var(--paper-muted)]">
           <Loader2 className="w-6 h-6 animate-spin text-[#d97706]" />
         </div>
       ) : reports.length === 0 ? (
-        <div className="broadsheet-card p-10 sm:p-12 text-center text-[#a39e93] text-xs flex flex-col items-center gap-2">
+        <div className="broadsheet-card p-10 sm:p-12 text-center text-[var(--paper-muted)] text-xs flex flex-col items-center gap-2">
           <p>[ NO PENDING COURT CITATIONS. THE REALM IS AT PEACE. ]</p>
         </div>
       ) : (
@@ -107,7 +107,7 @@ export default function AdminModerationPage() {
               key={r.id}
               className={`p-4 sm:p-5 broadsheet-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all ${
                 r.status === 'pending'
-                  ? 'border-[#785a28] bg-[#1a1710]'
+                  ? 'border-[#785a28] bg-[#1a1710]/50'
                   : r.status === 'reviewed'
                   ? 'border-emerald-900 bg-emerald-950/20'
                   : 'opacity-60'
@@ -118,7 +118,7 @@ export default function AdminModerationPage() {
                   <span className="text-xs font-bold text-[#d97706] uppercase">
                     [{r.targetType.toUpperCase()}]
                   </span>
-                  <span className="text-xs text-[#f4f0e6]">
+                  <span className="text-xs text-[var(--paper-cream)]">
                     CHANNEL: <strong>@{r.channel}</strong>
                   </span>
                   <span
@@ -134,19 +134,19 @@ export default function AdminModerationPage() {
                   </span>
                 </div>
 
-                <p className="text-xs font-bold text-[#f4f0e6] uppercase">REASON: {r.reason}</p>
+                <p className="text-xs font-bold text-[var(--paper-cream)] uppercase">REASON: {r.reason}</p>
                 {r.details && (
-                  <p className="text-xs text-[#a39e93] font-sans break-words">DETAILS: {r.details}</p>
+                  <p className="text-xs text-[var(--paper-muted)] font-sans break-words">DETAILS: {r.details}</p>
                 )}
 
-                <span className="text-[10px] text-[#a39e93]">
+                <span className="text-[10px] text-[var(--paper-muted)]">
                   FILED BY {r.user?.displayName?.toUpperCase() || 'ANONYMOUS SCRIBE'} · {r.createdAt}
                 </span>
               </div>
 
               {/* Status Action Buttons */}
               {r.status === 'pending' && (
-                <div className="flex items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#262936] w-full sm:w-auto">
+                <div className="flex items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[var(--ink-border)] w-full sm:w-auto">
                   <button
                     onClick={() => handleUpdateStatus(r.id, 'reviewed')}
                     className="stamp-btn !bg-emerald-950 !border-emerald-700 !text-emerald-300 hover:!bg-emerald-600 hover:!text-black flex items-center gap-1 !text-[10px] flex-1 sm:flex-initial active:scale-95"
@@ -156,7 +156,7 @@ export default function AdminModerationPage() {
                   </button>
                   <button
                     onClick={() => handleUpdateStatus(r.id, 'dismissed')}
-                    className="stamp-btn !bg-[#12141c] !text-[#a39e93] hover:!text-[#f4f0e6] flex items-center gap-1 !text-[10px] flex-1 sm:flex-initial active:scale-95"
+                    className="stamp-btn !bg-[var(--card-bg)] !text-[var(--paper-muted)] hover:!text-[var(--paper-cream)] flex items-center gap-1 !text-[10px] flex-1 sm:flex-initial active:scale-95"
                   >
                     <X className="w-3.5 h-3.5" />
                     <span>DISMISS</span>

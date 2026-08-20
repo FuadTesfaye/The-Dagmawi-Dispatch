@@ -11,6 +11,33 @@
   --ink-border-heavy: #3d4257;
   --royal-ochre: #d97706;
   --royal-crimson: #be123c;
+  --shadow-color: rgba(0, 0, 0, 0.9);
+  --header-bg: #12141c;
+  --card-bg: #12141c;
+  --subtle-bg: #171a24;
+  --input-bg: #0c0d10;
+  --selection-bg: #d97706;
+  --selection-text: #000000;
+}
+
+html.light, .light {
+  --ink-bg: #f6f3eb; /* Authentic creamy broadsheet newsprint paper */
+  --ink-surface: #ffffff; /* Crisp white news sheet */
+  --ink-surface-hover: #f0ebe0;
+  --paper-cream: #12141c; /* Deep rich black newsprint ink */
+  --paper-muted: #4e4a42; /* Readable charcoal newsprint subtext */
+  --paper-faint: #7a766c;
+  --ink-border: #d4cebe; /* Classic physical newspaper column rules */
+  --ink-border-heavy: #12141c;
+  --royal-ochre: #b45309; /* Imperial amber gold */
+  --royal-crimson: #9f1239;
+  --shadow-color: #12141c;
+  --header-bg: #ffffff;
+  --card-bg: #ffffff;
+  --subtle-bg: #f0ebe0;
+  --input-bg: #ffffff;
+  --selection-bg: #d97706;
+  --selection-text: #ffffff;
 }
 
 @theme {
@@ -44,6 +71,7 @@ body {
   -webkit-tap-highlight-color: transparent;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 /* Serif Masthead Utility */
@@ -58,19 +86,20 @@ body {
 
 /* Broadsheet Tactile Card */
 .broadsheet-card {
-  background-color: #12141c;
+  background-color: var(--card-bg);
+  color: var(--paper-cream);
   border: 1px solid var(--ink-border);
-  box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 0.9);
-  transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.15s cubic-bezier(0.2, 0, 0, 1), border-color 0.15s ease;
+  box-shadow: 2px 2px 0px 0px var(--shadow-color);
+  transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.15s cubic-bezier(0.2, 0, 0, 1), border-color 0.15s ease, background-color 0.2s ease;
 }
 
 @media (min-width: 640px) {
   .broadsheet-card {
-    box-shadow: 3px 3px 0px 0px rgba(0, 0, 0, 0.9);
+    box-shadow: 3px 3px 0px 0px var(--shadow-color);
   }
   .broadsheet-card:hover {
     border-color: var(--ink-border-heavy);
-    box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+    box-shadow: 4px 4px 0px 0px var(--shadow-color);
   }
 }
 
@@ -90,8 +119,8 @@ body {
   letter-spacing: 0.05em;
   padding: 2px 6px;
   border: 1px solid var(--ink-border);
-  background-color: #171a24;
-  color: #d6d0c2;
+  background-color: var(--subtle-bg);
+  color: var(--paper-muted);
   border-radius: 2px;
 }
 
@@ -108,6 +137,12 @@ body {
   color: #f6d89b;
 }
 
+html.light .stamp-badge-gold {
+  border-color: #d97706;
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
 /* Tactile Stamp Button with Mobile Haptic Feel */
 .stamp-btn {
   font-family: "SF Mono", "Menlo", monospace;
@@ -115,10 +150,10 @@ body {
   text-transform: uppercase;
   font-weight: 700;
   border: 1px solid var(--ink-border-heavy);
-  background-color: #171a24;
-  color: #ece7db;
+  background-color: var(--subtle-bg);
+  color: var(--paper-cream);
   padding: 6px 12px;
-  box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 0.8);
+  box-shadow: 2px 2px 0px 0px var(--shadow-color);
   transition: all 0.12s ease;
   display: inline-flex;
   align-items: center;
@@ -136,16 +171,16 @@ body {
 }
 
 .stamp-btn:hover {
-  background-color: #f4f0e6;
-  color: #0c0d10;
-  border-color: #f4f0e6;
+  background-color: var(--paper-cream);
+  color: var(--ink-bg);
+  border-color: var(--paper-cream);
   transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0px 0px rgba(0, 0, 0, 1);
+  box-shadow: 3px 3px 0px 0px var(--shadow-color);
 }
 
 .stamp-btn:active {
   transform: translate(1px, 1px) scale(0.98);
-  box-shadow: 0px 0px 0px 0px rgba(0, 0, 0, 1);
+  box-shadow: 0px 0px 0px 0px var(--shadow-color);
 }
 
 /* Glassmorphism & Bottom Bar Dock */
@@ -156,11 +191,21 @@ body {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+html.light .glass-dock {
+  background: rgba(255, 255, 255, 0.92);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
 .glass-panel {
   background: rgba(18, 20, 28, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+html.light .glass-panel {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 /* Social Story / Channel Ring */
@@ -200,16 +245,16 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0c0d10;
+  background: var(--ink-bg);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #262936;
+  background: var(--ink-border);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #3d4257;
+  background: var(--ink-border-heavy);
 }
 
 .no-scrollbar::-webkit-scrollbar {
