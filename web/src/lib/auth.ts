@@ -61,6 +61,71 @@ export function verifyTelegramAuth(data: TelegramAuthData, botToken?: string): b
   return calculatedHash.toLowerCase() === hash.toLowerCase();
 }
 
+export interface TelegramWebAppData {
+  user?: {
+    id: number;
+    first_name: string;
+    last_name?: string;
+    username?: string;
+    language_code?: string;
+    photo_url?: string;
+  };
+  auth_date: number;
+  query_id?: string;
+  hash: string;
+}
+
+/**
+ * Verifies Telegram Mini App / WebApp initData string.
+ */
+export function verifyTelegramWebAppData(initData: string, botToken?: string): TelegramWebAppData | null {
+  const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
+  if (!token || !initData) {
+    return null;
+  }
+
+  try {
+    const params = new URLSearchParams(initData);
+    const hash = params.get('hash');
+    if (!hash) return null;
+
+    params.delete('hash');
+
+    const authDate = parseInt(params.get('auth_date') || '0', 10);
+    const now = Math.floor(Date.now() / 1000);
+    // Allow within 24 hours
+    if (isNaN(authDate) || now - authDate > 86400) {
+      console.warn('[auth] Telegram WebApp auth date expired');
+      return null;
+    }
+
+    const entries = Array.from(params.entries()).sort(([a], [b]) => a.localeCompare(b));
+    const dataCheckString = entries.map(([key, val]) => `${key}=${val}`).join('\n');
+
+    // Secret key = HMAC_SHA256("WebAppData", bot_token)
+    const secretKey = crypto.createHmac('sha256', 'WebAppData').update(token).digest();
+    const calculatedHash = crypto.createHmac('sha256', secretKey).update(dataCheckString).digest('hex');
+
+    if (calculatedHash.toLowerCase() !== hash.toLowerCase()) {
+      console.warn('[auth] Telegram WebApp signature mismatch');
+      return null;
+    }
+
+    const userRaw = params.get('user');
+    const user = userRaw ? JSON.parse(userRaw) : undefined;
+
+    return {
+      user,
+      auth_date: authDate,
+      query_id: params.get('query_id') || undefined,
+      hash,
+    };
+  } catch (err) {
+    console.error('[auth] Failed to verify WebApp initData:', err);
+    return null;
+  }
+}
+
 /**
  * Creates and sets a secure HttpOnly JWT session cookie.
  */
