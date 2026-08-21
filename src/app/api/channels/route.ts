@@ -62,7 +62,9 @@ export async function GET(req: NextRequest) {
 
     const postCountMap = new Map<string, number>();
     for (const pc of postCounts) {
-      postCountMap.set(pc.channel, pc.count);
+      if (pc.channel) {
+        postCountMap.set(pc.channel.toLowerCase(), pc.count);
+      }
     }
 
     const channels = channelRows.map((ch) => ({
@@ -75,7 +77,7 @@ export async function GET(req: NextRequest) {
       createdAt: ch.createdAt?.toISOString() || new Date().toISOString(),
       isSubscribed: userSubscribedChannelIds.has(ch.id),
       isMuted: userMutedChannelIds.has(ch.id),
-      postCount: postCountMap.get(ch.id) || 0,
+      postCount: postCountMap.get(ch.id.toLowerCase()) || 0,
     }));
 
     return NextResponse.json({ channels });

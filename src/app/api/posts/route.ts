@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
       const conditions = [];
 
       if (channel && channel !== 'all') {
-        conditions.push(eq(posts.channel, channel));
+        conditions.push(sql`lower(${posts.channel}) = lower(${channel})`);
       }
 
       if (search && search.trim()) {
@@ -71,7 +71,7 @@ export async function GET(req: NextRequest) {
           channelVerified: trackedChannels.isVerified,
         })
         .from(posts)
-        .leftJoin(trackedChannels, eq(posts.channel, trackedChannels.id))
+        .leftJoin(trackedChannels, sql`lower(${posts.channel}) = lower(${trackedChannels.id})`)
         .where(whereClause)
         .orderBy(desc(posts.date))
         .limit(limit)
