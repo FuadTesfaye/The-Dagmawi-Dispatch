@@ -4,10 +4,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Post, TrackedChannel } from '@/lib/types';
 import { PostCard } from '@/components/post-card';
 import { BabiometerWidget } from '@/components/babiometer-widget';
-import { RoastBattleCard } from '@/components/roast-battle-card';
 import { CrossChannelDigestCard } from '@/components/cross-channel-digest-card';
-import { FeedTagFilter } from '@/components/feed-tag-filter';
+import { RoastBattleCard } from '@/components/roast-battle-card';
 import { WeeklyLeaderboardWidget } from '@/components/weekly-leaderboard-widget';
+import { FeedTagFilter } from '@/components/feed-tag-filter';
 import { useRealtime, useToast, useAuth } from '@/components/providers';
 import {
   Search,
@@ -19,8 +19,8 @@ import {
   Check,
   Plus,
   Compass,
-  BarChart3,
-  Flame,
+  Zap,
+  Newspaper,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -29,9 +29,9 @@ import { TELEGRAM_BOT_USERNAME } from '@/lib/constants';
 import { fetchWithCache, getCached } from '@/lib/cache';
 
 export default function HomePage() {
-  const { subscribe } = useRealtime();
+  const { subscribe, isConnected } = useRealtime();
   const { showToast } = useToast();
-  const { user } = useAuth();
+  const { user, isTelegramWebApp } = useAuth();
 
   // Instant SWR cache initialization
   const initialChannels = getCached<{ channels: TrackedChannel[] }>('/api/channels').data?.channels || [];
@@ -42,6 +42,7 @@ export default function HomePage() {
   const [selectedChannel, setSelectedChannel] = useState<string>('all');
   const [selectedTag, setSelectedTag] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [viewMode, setViewMode] = useState<'feed' | 'catchup'>('feed');
   const [page, setPage] = useState<number>(1);
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(initialPosts.length === 0);
@@ -152,7 +153,7 @@ export default function HomePage() {
 
   const handleFollowChannel = async (channelId: string, isCurrentlySubscribed: boolean) => {
     if (!user) {
-      showToast('Authentication required to follow channel', 'info');
+      showToast('Sign in to follow channels', 'info');
       return;
     }
 
@@ -178,356 +179,227 @@ export default function HomePage() {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-6 flex flex-col gap-6 sm:gap-8 font-teletype">
-      {/* Frontpage Broadsheet Masthead Banner */}
-      <div className="p-4 sm:p-8 md:p-10 bg-[var(--card-bg)] border-2 border-[var(--ink-border-heavy)] shadow-[4px_4px_0px_0px_var(--shadow-color)] sm:shadow-[6px_6px_0px_0px_var(--shadow-color)] flex flex-col gap-4 sm:gap-6 text-center items-center">
-        {/* Scribe Stamp */}
-        <div className="inline-flex items-center gap-1.5 sm:gap-2 stamp-badge-gold stamp-badge text-[10px] sm:text-xs">
-          <span>§ UNIVERSAL TELEGRAM COMMUNITY CHRONICLE</span>
-          <span>·</span>
-          <span>ISSUE NO. 88</span>
-        </div>
-
-        {/* Masthead Title */}
-        <div className="flex flex-col gap-1.5 sm:gap-2">
-          <h1 className="font-broadsheet font-black text-3xl sm:text-6xl lg:text-7xl text-[var(--paper-cream)] tracking-tight uppercase">
-            The Lurkening
-          </h1>
-          <p className="font-teletype text-[11px] sm:text-sm text-[var(--paper-muted)] max-w-2xl mx-auto leading-relaxed uppercase font-sans">
-            Cross-channel daily digests, Groq AI editorial roasts, weekly battle arenas, and real-time archival discovery.
-          </p>
-        </div>
-
-        {/* Action Stamps */}
-        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 pt-3 border-t border-[var(--ink-border)] w-full">
-          <a
-            href={`https://t.me/${botUsername}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="stamp-btn !bg-[#241c10] !border-[#785a28] !text-[#f6d89b] hover:!bg-[#d97706] hover:!text-black flex items-center gap-1.5 !py-2 !px-3.5 sm:!py-2.5 sm:!px-5 text-xs active:scale-95"
-          >
-            <Bot className="w-4 h-4 text-[#d97706]" />
-            <span>SUMMON @{botUsername}</span>
-          </a>
-
-          <button
-            onClick={() => setIsSearchModalOpen(true)}
-            className="stamp-btn flex items-center gap-1.5 !py-2 !px-3.5 sm:!py-2.5 sm:!px-5 text-xs active:scale-95"
-          >
-            <Search className="w-4 h-4 text-[#d97706]" />
-            <span>SEARCH ARCHIVE & GRAPH</span>
-          </button>
-
-          <Link
-            href="/roadmap"
-            className="stamp-btn flex items-center gap-1.5 !py-2 !px-3.5 sm:!py-2.5 sm:!px-5 text-xs active:scale-95 hover:border-[#d97706]"
-          >
-            <Compass className="w-4 h-4 text-[#d97706]" />
-            <span>PUBLIC ROADMAP</span>
-          </Link>
-        </div>
-      </div>
-
-      {/* ─── CROSS-CHANNEL DAILY DIGEST (RETENTION FLOOR) ─────────── */}
-      <CrossChannelDigestCard />
-
-      {/* ─── WEEKLY ROAST BATTLE ARENA ───────────────────────────── */}
-      <RoastBattleCard />
-
-      {/* Stories / Monitored Channels Carousel Bar */}
-      <div className="broadsheet-card p-3 sm:p-4 flex flex-col gap-2.5 overflow-hidden">
-        <div className="flex items-center justify-between text-[11px] uppercase font-bold text-[var(--paper-muted)] px-1 border-b border-[var(--ink-border)] pb-2">
-          <div className="flex items-center gap-1.5 text-[#d97706]">
-            <Radio className="w-3.5 h-3.5 animate-pulse" />
-            <span>Active Telegraph Channels</span>
+    <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 sm:py-4 flex flex-col gap-4 sm:gap-6 font-sans">
+      {/* ─── CLEAN UTILITY HEADER: QUICK CATCH-UP & BOT CALLOUT ───── */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-[var(--card-bg)] p-4 border border-[var(--ink-border)] rounded-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 border border-[#d97706] bg-[#241c10] text-[#d97706] flex items-center justify-center font-bold text-lg rounded-sm shrink-0">
+            §
           </div>
-          <Link href="/channels" className="text-[#d97706] hover:underline flex items-center gap-0.5">
-            <span>Explore All Channels</span>
-            <ArrowUpRight className="w-3 h-3" />
-          </Link>
-        </div>
-
-        {/* Horizontal Swiper Row */}
-        <div className="flex items-center gap-3 sm:gap-4 overflow-x-auto py-1 px-1 no-scrollbar select-none">
-          {/* 'All' Channel Story Pill */}
-          <button
-            onClick={() => setSelectedChannel('all')}
-            className={`flex flex-col items-center gap-1.5 shrink-0 transition-transform active:scale-95 group focus:outline-none`}
-          >
-            <div
-              className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center border-2 transition-all ${
-                selectedChannel === 'all'
-                  ? 'border-[#d97706] bg-[#d97706] text-black shadow-[0_0_12px_rgba(217,119,6,0.5)]'
-                  : 'border-[var(--ink-border)] bg-[var(--subtle-bg)] text-[var(--paper-cream)] group-hover:border-[var(--paper-cream)]'
-              }`}
-            >
-              <Compass className="w-5 h-5 sm:w-6 sm:h-6" />
-            </div>
-            <span
-              className={`text-[10px] sm:text-[11px] font-bold uppercase max-w-[64px] truncate text-center ${
-                selectedChannel === 'all' ? 'text-[#d97706]' : 'text-[var(--paper-muted)] group-hover:text-[var(--paper-cream)]'
-              }`}
-            >
-              All Wires
-            </span>
-          </button>
-
-          {/* Individual Channel Story Avatars */}
-          {channels.map((ch) => {
-            const isSelected = selectedChannel === ch.id;
-            return (
-              <button
-                key={ch.id}
-                onClick={() => setSelectedChannel(ch.id)}
-                className={`flex flex-col items-center gap-1.5 shrink-0 transition-transform active:scale-95 group focus:outline-none`}
-              >
-                <div
-                  className={`relative p-0.5 rounded-full border-2 transition-all ${
-                    isSelected
-                      ? 'border-[#d97706] shadow-[0_0_12px_rgba(217,119,6,0.6)]'
-                      : 'border-[var(--ink-border)] group-hover:border-[var(--paper-muted)]'
-                  }`}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={ch.avatarUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${ch.id}`}
-                    alt={ch.name}
-                    className="w-11 h-11 sm:w-13 sm:h-13 rounded-full object-cover bg-[var(--ink-bg)]"
-                  />
-                  {ch.isVerified && (
-                    <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-[#d97706] text-black text-[9px] font-bold flex items-center justify-center border border-[var(--ink-bg)]">
-                      ✓
-                    </span>
-                  )}
-                </div>
-                <span
-                  className={`text-[10px] sm:text-[11px] font-bold uppercase max-w-[68px] sm:max-w-[76px] truncate text-center ${
-                    isSelected ? 'text-[#d97706]' : 'text-[var(--paper-muted)] group-hover:text-[var(--paper-cream)]'
-                  }`}
-                >
-                  {ch.name.split(' ')[0]}
-                </span>
-              </button>
-            );
-          })}
-
-          {/* Plus Add Channel Shortcut */}
-          <Link
-            href="/channels"
-            className="flex flex-col items-center gap-1.5 shrink-0 transition-transform active:scale-95 group focus:outline-none"
-          >
-            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 border-dashed border-[var(--ink-border)] bg-[var(--card-bg)] text-[var(--paper-muted)] group-hover:border-[#d97706] group-hover:text-[#d97706] flex items-center justify-center transition-all">
-              <Plus className="w-5 h-5" />
-            </div>
-            <span className="text-[10px] sm:text-[11px] font-bold uppercase text-[var(--paper-muted)] group-hover:text-[#d97706] text-center">
-              More
-            </span>
-          </Link>
-        </div>
-      </div>
-
-      {/* Main 2-Column Section: Feed on Left + Right Rail Sidebar on Desktop */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
-        {/* Left / Main Post Stream */}
-        <div className="lg:col-span-8 flex flex-col gap-4 sm:gap-6">
-          {/* Topic Tag Filtering Bar */}
-          <FeedTagFilter
-            activeTag={selectedTag}
-            onSelectTag={(t) => setSelectedTag(t)}
-          />
-
-          {/* Filter & Search Bar */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
-            {/* Filter Selection Chips */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
-              <button
-                onClick={() => setSelectedChannel('all')}
-                className={`px-3 py-1.5 text-xs font-bold uppercase border transition-all shrink-0 active:scale-95 ${
-                  selectedChannel === 'all'
-                    ? 'bg-[var(--paper-cream)] text-[var(--ink-bg)] border-[var(--paper-cream)] shadow-[2px_2px_0px_0px_var(--shadow-color)]'
-                    : 'bg-[var(--card-bg)] text-[var(--paper-muted)] border-[var(--ink-border)] hover:border-[var(--paper-cream)] hover:text-[var(--paper-cream)]'
-                }`}
-              >
-                [ ALL CHANNELS ]
-              </button>
-              {channels.slice(0, 6).map((ch) => (
-                <button
-                  key={ch.id}
-                  onClick={() => setSelectedChannel(ch.id)}
-                  className={`px-3 py-1.5 text-xs font-bold uppercase border transition-all shrink-0 active:scale-95 ${
-                    selectedChannel === ch.id
-                      ? 'bg-[var(--paper-cream)] text-[var(--ink-bg)] border-[var(--paper-cream)] shadow-[2px_2px_0px_0px_var(--shadow-color)]'
-                      : 'bg-[var(--card-bg)] text-[var(--paper-muted)] border-[var(--ink-border)] hover:border-[var(--paper-cream)] hover:text-[var(--paper-cream)]'
-                  }`}
-                >
-                  @{ch.id}
-                </button>
-              ))}
-              {channels.length > 6 && (
-                <Link
-                  href="/channels"
-                  className="px-2 text-xs font-bold text-[#d97706] hover:underline shrink-0"
-                >
-                  +{channels.length - 6} MORE
-                </Link>
-              )}
-            </div>
-
-            {/* Inline Quick Search Input */}
-            <div className="relative shrink-0 sm:w-56">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="FILTER FEED..."
-                className="w-full py-1.5 pl-8 pr-3 bg-[var(--input-bg)] border border-[var(--ink-border)] text-xs text-[var(--paper-cream)] placeholder-[var(--paper-faint)] font-teletype uppercase focus:outline-none focus:border-[#d97706]"
-              />
-              <Search className="w-3.5 h-3.5 text-[var(--paper-muted)] absolute left-2.5 top-2.5" />
-            </div>
-          </div>
-
-          {/* Posts Feed Stream */}
-          <div className="flex flex-col gap-3.5 sm:gap-4">
-            {loading ? (
-              <div className="flex flex-col items-center justify-center py-20 gap-2 text-[var(--paper-muted)] font-teletype">
-                <Loader2 className="w-6 h-6 animate-spin text-[#d97706]" />
-                <span className="text-xs tracking-wider uppercase">[ DECODING TELETYPE WIRES... ]</span>
-              </div>
-            ) : posts.length === 0 ? (
-              <div className="broadsheet-card p-8 sm:p-12 text-center flex flex-col items-center justify-center gap-2 font-teletype">
-                <h3 className="font-bold text-sm text-[var(--paper-cream)] uppercase">[ NO DISPATCHES FOUND ]</h3>
-                <p className="text-xs text-[var(--paper-muted)] max-w-sm font-sans">
-                  {searchQuery
-                    ? `No records matched "${searchQuery.toUpperCase()}".`
-                    : 'No transmissions logged for this topic filter.'}
-                </p>
-              </div>
-            ) : (
-              <>
-                {posts.map((post) => (
-                  <PostCard key={`${post.channel}-${post.id}`} post={post} />
-                ))}
-
-                {/* Pagination Button */}
-                {hasMore && (
-                  <div className="flex justify-center pt-2">
-                    <button
-                      onClick={() => fetchPosts(page + 1)}
-                      disabled={loadingMore}
-                      className="stamp-btn !py-2.5 !px-6 flex items-center gap-2 w-full sm:w-auto text-xs active:scale-95"
-                    >
-                      {loadingMore ? (
-                        <>
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          <span>RETRIEVING NEXT PARCHMENT...</span>
-                        </>
-                      ) : (
-                        <span>LOAD MORE DISPATCHES ↓</span>
-                      )}
-                    </button>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Right Rail (Sticky Desktop Broadsheet Sidebar) */}
-        <aside className="lg:col-span-4 hidden lg:flex flex-col gap-6 sticky top-20 font-teletype">
-          {/* Weekly Leaderboard Honor Roll */}
-          <WeeklyLeaderboardWidget />
-
-          {/* Lurkometer Widget */}
-          <BabiometerWidget channel={selectedChannel === 'all' ? (channels[0]?.id || 'dagmawi_babi') : selectedChannel} />
-
-          {/* Creator Report Card Callout */}
-          <div className="broadsheet-card p-5 flex flex-col gap-3 border border-[#d97706]/60 bg-[#241c10]/20">
-            <div className="flex items-center justify-between border-b border-[var(--ink-border)] pb-2">
-              <div className="flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-[#d97706]" />
-                <h3 className="text-xs font-bold uppercase text-[var(--paper-cream)] tracking-wider">
-                  Creator Pulse
-                </h3>
-              </div>
-              <span className="stamp-badge stamp-badge-gold text-[9px]">ANALYTICS</span>
-            </div>
-            <p className="text-xs text-[var(--paper-muted)] font-sans leading-relaxed">
-              Are you a channel author? Inspect your posting rhythms, audience heatmaps, and AI roast report card.
+          <div>
+            <h1 className="font-bold text-base sm:text-lg text-[var(--paper-cream)]">
+              Telegram Channel Intelligence
+            </h1>
+            <p className="text-xs text-[var(--paper-muted)]">
+              Catch up in 60 seconds. Multi-channel AI summaries, search, and real-time feeds.
             </p>
-            <Link
-              href="/creator"
-              className="stamp-btn !bg-[#d97706] !text-black !border-[#d97706] hover:!bg-[var(--paper-cream)] justify-between !py-2 text-xs active:scale-95"
-            >
-              <span>OPEN CREATOR REPORT</span>
-              <ArrowUpRight className="w-3.5 h-3.5" />
-            </Link>
           </div>
+        </div>
 
-          {/* Monitored Channels Card */}
-          <div className="broadsheet-card p-5 flex flex-col gap-4">
-            <div className="flex items-center justify-between border-b border-[var(--ink-border)] pb-2.5">
-              <div className="flex items-center gap-2">
-                <Radio className="w-3.5 h-3.5 text-[#d97706]" />
-                <h3 className="text-xs font-bold uppercase text-[var(--paper-cream)] tracking-wider">
-                  Monitored Channels
-                </h3>
-              </div>
-              <Link href="/channels" className="text-[10px] text-[#d97706] hover:underline uppercase font-bold">
-                View All
+        {/* View Switcher Tabs: Live Feed vs 60-Sec Catch-Up */}
+        <div className="flex items-center gap-2 self-stretch sm:self-auto shrink-0">
+          <button
+            onClick={() => setViewMode('feed')}
+            className={`flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-bold transition-all rounded-sm flex items-center justify-center gap-1.5 ${
+              viewMode === 'feed'
+                ? 'bg-[var(--paper-cream)] text-[var(--ink-bg)] shadow-sm'
+                : 'bg-[var(--subtle-bg)] text-[var(--paper-muted)] hover:text-[var(--paper-cream)] border border-[var(--ink-border)]'
+            }`}
+          >
+            <Newspaper className="w-3.5 h-3.5" />
+            <span>Live Feed</span>
+          </button>
+
+          <button
+            onClick={() => setViewMode('catchup')}
+            className={`flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-bold transition-all rounded-sm flex items-center justify-center gap-1.5 ${
+              viewMode === 'catchup'
+                ? 'bg-[#d97706] text-black shadow-sm'
+                : 'bg-[var(--subtle-bg)] text-[var(--paper-muted)] hover:text-[#d97706] border border-[var(--ink-border)]'
+            }`}
+          >
+            <Zap className="w-3.5 h-3.5" />
+            <span>Today&apos;s Brief</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ─── CATCH-UP BRIEF VIEW (WHEN ACTIVE) ────────────────────── */}
+      {viewMode === 'catchup' && (
+        <div className="flex flex-col gap-4 animate-in fade-in-50 duration-200">
+          <CrossChannelDigestCard />
+          <RoastBattleCard />
+        </div>
+      )}
+
+      {/* ─── LIVE FEED VIEW ──────────────────────────────────────── */}
+      {viewMode === 'feed' && (
+        <>
+          {/* Channel Story Avatar Row */}
+          <div className="bg-[var(--card-bg)] p-3 border border-[var(--ink-border)] rounded-sm flex flex-col gap-2">
+            <div className="flex items-center justify-between text-xs text-[var(--paper-muted)]">
+              <span className="font-semibold uppercase tracking-wider text-[10px]">Tracked Channels:</span>
+              <Link href="/channels" className="text-[#d97706] hover:underline text-xs flex items-center gap-0.5">
+                <span>View All ({channels.length})</span>
+                <ArrowUpRight className="w-3 h-3" />
               </Link>
             </div>
 
-            <div className="flex flex-col gap-3">
-              {channels.slice(0, 5).map((ch) => (
-                <div key={ch.id} className="flex items-center justify-between gap-3">
-                  <Link href={`/channel/${ch.id}`} className="flex items-center gap-2.5 min-w-0 group">
+            <div className="flex items-center gap-2.5 overflow-x-auto py-1 no-scrollbar select-none">
+              {/* All Channels Pill */}
+              <button
+                onClick={() => setSelectedChannel('all')}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-bold shrink-0 transition-all ${
+                  selectedChannel === 'all'
+                    ? 'bg-[#d97706] text-black border-[#d97706]'
+                    : 'bg-[var(--subtle-bg)] text-[var(--paper-muted)] border-[var(--ink-border)] hover:text-[var(--paper-cream)]'
+                }`}
+              >
+                <Compass className="w-3.5 h-3.5" />
+                <span>All Channels</span>
+              </button>
+
+              {/* Channel Avatars */}
+              {channels.map((ch) => {
+                const isSelected = selectedChannel === ch.id;
+                return (
+                  <button
+                    key={ch.id}
+                    onClick={() => setSelectedChannel(ch.id)}
+                    className={`flex items-center gap-2 px-2.5 py-1 rounded-full border text-xs font-medium shrink-0 transition-all ${
+                      isSelected
+                        ? 'bg-[#d97706] text-black border-[#d97706] font-bold'
+                        : 'bg-[var(--subtle-bg)] text-[var(--paper-muted)] border-[var(--ink-border)] hover:text-[var(--paper-cream)]'
+                    }`}
+                  >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={ch.avatarUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${ch.id}`}
                       alt={ch.name}
-                      className="w-8 h-8 border border-[var(--ink-border)] bg-[var(--ink-bg)] object-cover shrink-0 rounded-sm"
+                      className="w-5 h-5 rounded-full object-cover bg-zinc-800"
                     />
-                    <div className="flex flex-col min-w-0">
-                      <span className="text-xs font-bold text-[var(--paper-cream)] group-hover:text-[#d97706] transition-colors truncate uppercase">
-                        {ch.name}
-                      </span>
-                      <span className="text-[10px] text-[var(--paper-muted)]">@{ch.id}</span>
-                    </div>
-                  </Link>
-
-                  <button
-                    onClick={() => handleFollowChannel(ch.id, !!ch.isSubscribed)}
-                    className={`stamp-btn !p-1.5 !text-[10px] shrink-0 active:scale-95 ${
-                      ch.isSubscribed ? '!bg-[#d97706] !text-black !border-[#d97706]' : ''
-                    }`}
-                    title={ch.isSubscribed ? 'Following' : 'Follow'}
-                  >
-                    {ch.isSubscribed ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+                    <span className="truncate max-w-[120px]">{ch.name.split(' ')[0]}</span>
                   </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
-        </aside>
-      </div>
 
-      {/* Footer Notice with Roadmap link */}
-      <div className="text-center font-teletype text-[10px] text-[var(--paper-muted)] border-t border-[var(--ink-border)] pt-6 uppercase flex flex-col sm:flex-row items-center justify-between gap-2">
-        <span>THE LURKENING · UNIVERSAL TELEGRAM CHRONICLE</span>
-        <div className="flex items-center gap-4">
-          <Link href="/roadmap" className="hover:text-[#d97706] transition-colors">
-            PUBLIC ROADMAP & VOTING
-          </Link>
-          <Link href="/creator" className="hover:text-[#d97706] transition-colors">
-            CREATOR REPORT CARD
-          </Link>
-          <Link href="/app" className="hover:text-[#d97706] transition-colors">
-            MOBILE SUITE
-          </Link>
-        </div>
-      </div>
+          {/* 2-Column Grid: Posts Feed + Desktop Sidebar */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+            {/* Main Post Stream */}
+            <div className="lg:col-span-8 flex flex-col gap-3.5">
+              {/* Topic Tag Filtering Bar */}
+              <FeedTagFilter
+                activeTag={selectedTag}
+                onSelectTag={(t) => setSelectedTag(t)}
+              />
 
-      {/* Hero Search Modal */}
+              {/* Inline Quick Search & Feed Status */}
+              <div className="flex items-center justify-between gap-2 bg-[var(--subtle-bg)] p-2 border border-[var(--ink-border)] rounded-sm">
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search dispatches in current feed..."
+                    className="w-full py-1 pl-8 pr-3 bg-transparent text-xs text-[var(--paper-cream)] placeholder-[var(--paper-faint)] focus:outline-none"
+                  />
+                  <Search className="w-3.5 h-3.5 text-[var(--paper-muted)] absolute left-2.5 top-2" />
+                </div>
+
+                {selectedChannel !== 'all' && (
+                  <button
+                    onClick={() => setSelectedChannel('all')}
+                    className="text-xs text-[#d97706] hover:underline font-mono"
+                  >
+                    Reset Filter
+                  </button>
+                )}
+              </div>
+
+              {/* Posts Stream */}
+              <div className="flex flex-col gap-3.5">
+                {loading ? (
+                  <div className="flex flex-col items-center justify-center py-20 gap-2 text-[var(--paper-muted)]">
+                    <Loader2 className="w-6 h-6 animate-spin text-[#d97706]" />
+                    <span className="text-xs font-mono">Loading telegram dispatches...</span>
+                  </div>
+                ) : posts.length === 0 ? (
+                  <div className="broadsheet-card p-10 text-center flex flex-col items-center justify-center gap-2">
+                    <h3 className="font-bold text-sm text-[var(--paper-cream)]">No dispatches found</h3>
+                    <p className="text-xs text-[var(--paper-muted)] max-w-sm">
+                      {searchQuery
+                        ? `No results matched "${searchQuery}".`
+                        : 'No transmissions logged for this filter.'}
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    {posts.map((post) => (
+                      <PostCard key={`${post.channel}-${post.id}`} post={post} />
+                    ))}
+
+                    {/* Pagination Button */}
+                    {hasMore && (
+                      <div className="flex justify-center pt-2">
+                        <button
+                          onClick={() => fetchPosts(page + 1)}
+                          disabled={loadingMore}
+                          className="stamp-btn !py-2.5 !px-6 flex items-center gap-2 w-full sm:w-auto text-xs active:scale-95"
+                        >
+                          {loadingMore ? (
+                            <>
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              <span>Loading more...</span>
+                            </>
+                          ) : (
+                            <span>Load More Dispatches ↓</span>
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Desktop Right Rail */}
+            <aside className="lg:col-span-4 hidden lg:flex flex-col gap-5 sticky top-20">
+              {/* Lurkometer Widget */}
+              <BabiometerWidget channel={selectedChannel === 'all' ? (channels[0]?.id || 'dagmawi_babi') : selectedChannel} />
+
+              {/* Weekly Honor Roll */}
+              <WeeklyLeaderboardWidget />
+
+              {/* Telegram Bot Direct Access */}
+              <div className="bg-[var(--card-bg)] p-4 border border-[var(--ink-border)] rounded-sm flex flex-col gap-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Bot className="w-4 h-4 text-[#d97706]" />
+                    <span className="text-xs font-bold text-[var(--paper-cream)]">Telegram Bot</span>
+                  </div>
+                  <span className="text-[10px] text-emerald-400 font-mono">ONLINE</span>
+                </div>
+                <p className="text-xs text-[var(--paper-muted)] leading-relaxed">
+                  Prefer staying in Telegram? Get instant daily digests, channel searches, and AI briefs directly from @{botUsername}.
+                </p>
+                <a
+                  href={`https://t.me/${botUsername}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="stamp-btn !bg-[#d97706] !text-black !border-[#d97706] hover:!bg-[var(--paper-cream)] justify-between !py-2 text-xs active:scale-95 flex items-center"
+                >
+                  <span>Open @{botUsername}</span>
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                </a>
+              </div>
+            </aside>
+          </div>
+        </>
+      )}
+
+      {/* Global Search Modal */}
       <SearchModal
         isOpen={isSearchModalOpen}
         onClose={() => setIsSearchModalOpen(false)}

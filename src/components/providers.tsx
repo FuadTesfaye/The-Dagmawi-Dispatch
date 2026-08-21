@@ -7,19 +7,23 @@ import { User, RealtimeEvent } from '@/lib/types';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  isTelegramWebApp: boolean;
   loginDemo: (persona: 'admin' | 'reader' | 'vip') => Promise<void>;
   loginWithHandle: (username: string, displayName?: string) => Promise<boolean>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  triggerHaptic: (style?: 'light' | 'medium' | 'heavy' | 'selection') => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
+  isTelegramWebApp: false,
   loginDemo: async () => {},
   loginWithHandle: async () => false,
   logout: async () => {},
   refreshUser: async () => {},
+  triggerHaptic: () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -81,6 +85,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [listeners] = useState<Set<RealtimeCallback>>(new Set());
+  const [isTelegramWebApp, setIsTelegramWebApp] = useState(false);
 
   // Initialize theme from localStorage / system preference
   useEffect(() => {
@@ -121,6 +126,20 @@ export function Providers({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const triggerHaptic = useCallback((style: 'light' | 'medium' | 'heavy' | 'selection' = 'light') => {
+    if (typeof window === 'undefined') return;
+    const tg = (window as any).Telegram?.WebApp;
+    if (tg?.HapticFeedback) {
+      if (style === 'selection') {
+        tg.HapticFeedback.selectionChanged();
+      } else {
+        tg.HapticFeedback.impactOccurred(style);
+      }
+    } else if ('vibrate' in navigator) {
+      navigator.vibrate(style === 'heavy' ? 40 : style === 'medium' ? 25 : 15);
+    }
+  }, []);
+
   const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'info') => {
     const id = Math.random().toString(36).substring(2, 9);
     setToasts((prev) => [...prev, { id, message, type }]);
@@ -143,8 +162,31 @@ export function Providers({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Auto-authenticate & initialize Telegram WebApp when inside Telegram
   useEffect(() => {
-    refreshUser();
+    if (typeof window === 'undefined') return;
+    const tg = (window as any).Telegram?.WebApp;
+    if (tg && tg.initData) {
+      setIsTelegramWebApp(true);
+      tg.ready();
+      tg.expand?.();
+
+      fetch('/api/auth/telegram-webapp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData: tg.initData }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data?.user) {
+            setUser(data.user);
+          }
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    } else {
+      refreshUser();
+    }
   }, [refreshUser]);
 
   const loginWithHandle = async (username: string, displayName?: string): Promise<boolean> => {
@@ -157,7 +199,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       if (res.ok) {
         const data = await res.json();
         setUser(data.user);
-        showToast(`Entered archive as ${data.user.displayName}`, 'success');
+        showToast(`Signed in as ${data.user.displayName}`, 'success');
         return true;
       } else {
         const data = await res.json().catch(() => ({}));
@@ -182,7 +224,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         setUser(data.user);
         showToast(`Welcome, ${data.user.displayName}!`, 'success');
       }
-    } catch (err) {
+    } catch {
       showToast('Failed to sign in demo session', 'error');
     }
   };
@@ -191,8 +233,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
     try {
       await fetch('/api/auth/me', { method: 'POST' });
       setUser(null);
-      showToast('Signed out of the realm', 'info');
-    } catch (err) {
+      showToast('Signed out', 'info');
+    } catch {
       showToast('Logout error', 'error');
     }
   };
@@ -200,40 +242,44 @@ export function Providers({ children }: { children: React.ReactNode }) {
   // Real-time SSE listener
   useEffect(() => {
     let eventSource: EventSource | null = null;
-    let reconnectTimeout: NodeJS.Timeout | null = null;
+    let reconnectTimeout: NodeJS.Timeout;
 
-    const connectSSE = () => {
+    const connect = () => {
       eventSource = new EventSource('/api/realtime/sse');
 
-      eventSource.addEventListener('connected', () => {
+      eventSource.onopen = () => {
         setIsConnected(true);
-      });
+      };
 
-      eventSource.addEventListener('message', (e) => {
+      eventSource.onmessage = (event) => {
         try {
-          const event = JSON.parse(e.data) as RealtimeEvent;
-          listeners.forEach((fn) => fn(event));
-        } catch {
-          // Ignored
+          const payload: RealtimeEvent = JSON.parse(event.data);
+          listeners.forEach((callback) => callback(payload));
+        } catch (e) {
+          console.error('[Realtime SSE] Error parsing payload:', e);
         }
-      });
+      };
 
       eventSource.onerror = () => {
         setIsConnected(false);
-        if (eventSource) eventSource.close();
-        reconnectTimeout = setTimeout(connectSSE, 5000);
+        if (eventSource) {
+          eventSource.close();
+        }
+        reconnectTimeout = setTimeout(connect, 4000);
       };
     };
 
-    connectSSE();
+    connect();
 
     return () => {
-      if (eventSource) eventSource.close();
-      if (reconnectTimeout) clearTimeout(reconnectTimeout);
+      if (eventSource) {
+        eventSource.close();
+      }
+      clearTimeout(reconnectTimeout);
     };
   }, [listeners]);
 
-  const subscribeRealtime = useCallback(
+  const subscribe = useCallback(
     (callback: RealtimeCallback) => {
       listeners.add(callback);
       return () => {
@@ -243,55 +289,47 @@ export function Providers({ children }: { children: React.ReactNode }) {
     [listeners]
   );
 
-  // Memoized context values to prevent cascading re-renders across the app
-  const themeValue = React.useMemo(
-    () => ({ theme, toggleTheme, setTheme }),
-    [theme, toggleTheme, setTheme]
-  );
-
-  const authValue = React.useMemo(
-    () => ({ user, loading, loginDemo, loginWithHandle, logout, refreshUser }),
-    [user, loading, loginDemo, loginWithHandle, logout, refreshUser]
-  );
-
-  const toastValue = React.useMemo(
-    () => ({ showToast }),
-    [showToast]
-  );
-
-  const realtimeValue = React.useMemo(
-    () => ({ isConnected, subscribe: subscribeRealtime }),
-    [isConnected, subscribeRealtime]
-  );
-
   return (
-    <ThemeContext.Provider value={themeValue}>
-      <AuthContext.Provider value={authValue}>
-        <ToastContext.Provider value={toastValue}>
-          <RealtimeContext.Provider value={realtimeValue}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        isTelegramWebApp,
+        loginDemo,
+        loginWithHandle,
+        logout,
+        refreshUser,
+        triggerHaptic,
+      }}
+    >
+      <ToastContext.Provider value={{ showToast }}>
+        <RealtimeContext.Provider value={{ isConnected, subscribe }}>
+          <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>
             {children}
 
-            {/* Floating Toast Notification Stack */}
-            <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none">
-              {toasts.map((t) => (
+            {/* Clean Toast Notification Deck */}
+            <div
+              aria-live="polite"
+              className="fixed bottom-[max(5.5rem,calc(env(safe-area-inset-bottom)+4.5rem))] lg:bottom-5 right-4 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full"
+            >
+              {toasts.map((toast) => (
                 <div
-                  key={t.id}
-                  className={`pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium shadow-2xl backdrop-blur-xl border transition-all duration-300 animate-in slide-in-from-bottom-2 ${
-                    t.type === 'success'
-                      ? 'bg-amber-950/90 text-amber-200 border-amber-500/40'
-                      : t.type === 'error'
-                      ? 'bg-rose-950/90 text-rose-200 border-rose-500/40'
-                      : 'bg-zinc-900/90 text-zinc-200 border-zinc-700/40'
+                  key={toast.id}
+                  className={`pointer-events-auto px-4 py-2.5 rounded-sm shadow-lg font-teletype text-xs border transition-all animate-in slide-in-from-bottom-2 flex items-center justify-between gap-3 ${
+                    toast.type === 'error'
+                      ? 'bg-rose-950/90 text-rose-200 border-rose-600/70'
+                      : toast.type === 'success'
+                      ? 'bg-emerald-950/90 text-emerald-200 border-emerald-600/70'
+                      : 'bg-zinc-900/95 text-zinc-200 border-zinc-700'
                   }`}
                 >
-                  <span>{t.type === 'success' ? '👑' : t.type === 'error' ? '⚠️' : '📜'}</span>
-                  <span>{t.message}</span>
+                  <span className="leading-snug">{toast.message}</span>
                 </div>
               ))}
             </div>
-          </RealtimeContext.Provider>
-        </ToastContext.Provider>
-      </AuthContext.Provider>
-    </ThemeContext.Provider>
+          </ThemeContext.Provider>
+        </RealtimeContext.Provider>
+      </ToastContext.Provider>
+    </AuthContext.Provider>
   );
 }
