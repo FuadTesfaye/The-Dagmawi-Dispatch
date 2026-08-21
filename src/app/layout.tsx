@@ -4,6 +4,7 @@ import { Providers } from '@/components/providers';
 import { Navbar } from '@/components/navbar';
 import { BottomNav } from '@/components/bottom-nav';
 import { PwaInstallPrompt } from '@/components/pwa-install-prompt';
+import { AppUpdateProvider } from '@/components/app-update-prompt';
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://thelurkening.com';
 
@@ -33,6 +34,7 @@ export const metadata: Metadata = {
     'Real-time Telegram Feed',
     'Telegram Archive',
     'Telegram Broadcaster',
+    'Android APK',
   ],
   manifest: '/manifest.webmanifest',
   alternates: {
@@ -150,27 +152,29 @@ export default function RootLayout({
       </head>
       <body className="min-h-full bg-[#0c0d10] text-[#f4f0e6] font-sans antialiased selection:bg-[#d97706] selection:text-black">
         <Providers>
-          {/* Broadsheet Top Bulletin Banner */}
-          <div className="w-full bg-[#12141c] border-b border-[#262936] py-1 px-3 sm:px-4 text-center font-teletype text-[9px] sm:text-[10px] tracking-wider sm:tracking-widest text-[#a39e93] uppercase flex items-center justify-between overflow-hidden shrink-0">
-            <span className="hidden sm:inline">✦ VOL. 2026 · NO. 88</span>
-            <div className="flex items-center gap-1.5 mx-auto sm:mx-0 truncate">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-              <span className="truncate">THE LURKENING · TELEGRAM AI WIRE INDEX</span>
+          <AppUpdateProvider>
+            {/* Broadsheet Top Bulletin Banner with Safe Area Top Padding */}
+            <div className="w-full bg-[#12141c] border-b border-[#262936] pt-[max(0.35rem,env(safe-area-inset-top,0px))] pb-1 px-3 sm:px-4 text-center font-teletype text-[9px] sm:text-[10px] tracking-wider sm:tracking-widest text-[#a39e93] uppercase flex items-center justify-between overflow-hidden shrink-0">
+              <span className="hidden sm:inline">✦ VOL. 2026 · NO. 88</span>
+              <div className="flex items-center gap-1.5 mx-auto sm:mx-0 truncate">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                <span className="truncate">THE LURKENING · TELEGRAM AI WIRE INDEX</span>
+              </div>
+              <span className="hidden sm:inline">REAL-TIME INGESTION ✦</span>
             </div>
-            <span className="hidden sm:inline">REAL-TIME INGESTION ✦</span>
-          </div>
 
-          <div className="min-h-screen flex flex-col">
-            <Navbar />
+            <div className="min-h-screen flex flex-col">
+              <Navbar />
 
-            {/* Expansive Content Canvas with safe area bottom padding on mobile */}
-            <main className="flex-1 w-full pb-24 lg:pb-12 pt-2 sm:pt-4">
-              {children}
-            </main>
+              {/* Expansive Content Canvas with safe area bottom padding on mobile */}
+              <main className="flex-1 w-full pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] lg:pb-12 pt-2 sm:pt-4 pl-[env(safe-area-inset-left,0px)] pr-[env(safe-area-inset-right,0px)]">
+                {children}
+              </main>
 
-            <BottomNav />
-            <PwaInstallPrompt />
-          </div>
+              <BottomNav />
+              <PwaInstallPrompt />
+            </div>
+          </AppUpdateProvider>
         </Providers>
       </body>
     </html>

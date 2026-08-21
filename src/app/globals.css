@@ -19,6 +19,12 @@
   --input-bg: #0c0d10;
   --selection-bg: #d97706;
   --selection-text: #000000;
+
+  /* Safe Area Inset Environment Variables */
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
 }
 
 html.light, .light {
@@ -60,6 +66,8 @@ html.light, .light {
 html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
+  height: 100%;
+  overscroll-behavior-y: none;
 }
 
 body {
@@ -74,6 +82,19 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Standalone & Native Mobile App Optimizations */
+@media (display-mode: standalone) {
+  body {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  p, article, .selectable-text, [data-selectable="true"] {
+    -webkit-user-select: text;
+    user-select: text;
+  }
 }
 
 /* Serif Masthead Utility */
@@ -187,26 +208,26 @@ html.light .stamp-badge-gold {
 
 /* Glassmorphism & Bottom Bar Dock */
 .glass-dock {
-  background: rgba(18, 20, 28, 0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(18, 20, 28, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 html.light .glass-dock {
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.94);
   border-top: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .glass-panel {
-  background: rgba(18, 20, 28, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(18, 20, 28, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 html.light .glass-panel {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.92);
   border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
@@ -220,13 +241,29 @@ html.light .glass-panel {
   justify-content: center;
 }
 
-/* Safe Area Inset Helpers */
+/* Precision Safe Area Inset Helpers */
 .pb-safe {
-  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
 }
 
 .pt-safe {
-  padding-top: max(0.5rem, env(safe-area-inset-top));
+  padding-top: max(0.5rem, env(safe-area-inset-top, 0px));
+}
+
+.pl-safe {
+  padding-left: max(0.75rem, env(safe-area-inset-left, 0px));
+}
+
+.pr-safe {
+  padding-right: max(0.75rem, env(safe-area-inset-right, 0px));
+}
+
+.safe-top-bar {
+  padding-top: max(0.25rem, env(safe-area-inset-top, 0px));
+}
+
+.safe-bottom-dock {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
 }
 
 /* Micro-Interactions & Pop Animations */
