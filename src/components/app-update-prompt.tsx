@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, createContext, useContext } from 'react';
-import { Sparkles, Download, RefreshCw, X, ArrowUpRight, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { Sparkles, Download, RefreshCw, X, CheckCircle2 } from 'lucide-react';
 
 export interface AppVersionInfo {
   appName: string;
@@ -18,9 +18,9 @@ export interface AppVersionInfo {
   mandatoryUpdate?: boolean;
 }
 
-// Current client built-in baseline version
-export const CURRENT_CLIENT_VERSION = '1.0.0';
-export const CURRENT_CLIENT_BUILD = 202688;
+// Current baseline version
+export const CURRENT_CLIENT_VERSION = '1.0.1';
+export const CURRENT_CLIENT_BUILD = 202689;
 
 interface AppUpdateContextType {
   isUpdateAvailable: boolean;
@@ -105,14 +105,17 @@ export function AppUpdateProvider({ children }: { children: React.ReactNode }) {
         setUpdateInfo(data);
         setLastChecked(new Date());
 
-        // Compare build code or version
-        const isNewer = data.buildCode > CURRENT_CLIENT_BUILD || data.version !== CURRENT_CLIENT_VERSION;
-        if (isNewer || waitingWorker) {
+        // Get currently applied build in localStorage
+        const appliedBuild = Number(localStorage.getItem('applied_app_build')) || CURRENT_CLIENT_BUILD;
+
+        // An update is truly available if server build is higher than both baseline and applied build
+        const isNewer = data.buildCode > appliedBuild;
+
+        if ((isNewer && data.buildCode > CURRENT_CLIENT_BUILD) || waitingWorker) {
           setIsUpdateAvailable(true);
-          // Check if previously dismissed in this session
           const dismissedBuild = sessionStorage.getItem('dismissed_update_build');
           if (dismissedBuild === String(data.buildCode) && !data.mandatoryUpdate && !silent) {
-            // Keep update available state for manual checker, but let prompt respect dismissal
+            // Respect dismissal for current session
           } else if (dismissedBuild !== String(data.buildCode)) {
             setIsDismissed(false);
           }
@@ -138,14 +141,12 @@ export function AppUpdateProvider({ children }: { children: React.ReactNode }) {
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
 
     const onControllerChange = () => {
-      // Reload when new SW takes control
       window.location.reload();
     };
 
     navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
 
     navigator.serviceWorker.ready.then((registration) => {
-      // Check if a worker is already waiting
       if (registration.waiting) {
         setWaitingWorker(registration.waiting);
         setIsUpdateAvailable(true);
@@ -157,7 +158,6 @@ export function AppUpdateProvider({ children }: { children: React.ReactNode }) {
 
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            // New content is available once current worker is updated
             setWaitingWorker(newWorker);
             setIsUpdateAvailable(true);
             setIsDismissed(false);
@@ -179,11 +179,18 @@ export function AppUpdateProvider({ children }: { children: React.ReactNode }) {
   }, [checkForUpdates]);
 
   const applyUpdate = useCallback(() => {
+    if (updateInfo?.buildCode) {
+      localStorage.setItem('applied_app_build', String(updateInfo.buildCode));
+      localStorage.setItem('applied_app_version', updateInfo.version);
+    }
+
     if (waitingWorker) {
       waitingWorker.postMessage({ type: 'SKIP_WAITING' });
     } else if (isNativeAndroid && updateInfo?.apkDownloadUrl) {
       window.location.href = updateInfo.apkDownloadUrl;
+      setIsUpdateAvailable(false);
     } else {
+      setIsUpdateAvailable(false);
       window.location.reload();
     }
   }, [waitingWorker, isNativeAndroid, updateInfo]);
@@ -194,6 +201,10 @@ export function AppUpdateProvider({ children }: { children: React.ReactNode }) {
       sessionStorage.setItem('dismissed_update_build', String(updateInfo.buildCode));
     }
   }, [updateInfo]);
+
+  // ONLY show pop-up card for mobile app (Standalone PWA or Android Native App)
+  // Regular browser webpages will not show this pop-up banner
+  const shouldShowBanner = (isStandalone || isNativeAndroid) && isUpdateAvailable && !isDismissed;
 
   return (
     <AppUpdateContext.Provider
@@ -210,7 +221,7 @@ export function AppUpdateProvider({ children }: { children: React.ReactNode }) {
       }}
     >
       {children}
-      {isUpdateAvailable && !isDismissed && (
+      {shouldShowBanner && (
         <AppUpdateBanner
           updateInfo={updateInfo}
           onApply={applyUpdate}
@@ -222,7 +233,7 @@ export function AppUpdateProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-// ─── TACTILE APP UPDATE BANNER POP-UP ─────────────────────────
+// ─── TACTILE APP UPDATE BANNER POP-UP (MOBILE APP ONLY) ───────────
 interface AppUpdateBannerProps {
   updateInfo: AppVersionInfo | null;
   onApply: () => void;
@@ -231,12 +242,18 @@ interface AppUpdateBannerProps {
 }
 
 function AppUpdateBanner({ updateInfo, onApply, onDismiss, isNativeAndroid }: AppUpdateBannerProps) {
+  const [isProcessing, setIsProcessing] = useState(false);
   const version = updateInfo?.version || '1.0.1';
   const build = updateInfo?.buildName || '2026.89';
   const notes = updateInfo?.notes || [
-    'Performance enhancements and fresh telegraph wire dispatches',
-    'Responsive navigation updates with safe-area padding',
+    'Super-responsive royal navbar with live teletype status & instant search launcher',
+    'Pixel-perfect safe-area handling for Android notches & gesture navigation',
   ];
+
+  const handleAction = () => {
+    setIsProcessing(true);
+    onApply();
+  };
 
   return (
     <aside
@@ -288,10 +305,16 @@ function AppUpdateBanner({ updateInfo, onApply, onDismiss, isNativeAndroid }: Ap
       {/* Action Buttons */}
       <div className="mt-2.5 pt-2 border-t border-[var(--ink-border)] flex items-center gap-2">
         <button
-          onClick={onApply}
+          onClick={handleAction}
+          disabled={isProcessing}
           className="stamp-btn flex-1 !bg-[#d97706] !text-black !border-[#d97706] hover:!bg-[var(--paper-cream)] !py-2 text-xs font-bold active:scale-95 shadow-[2px_2px_0px_0px_var(--shadow-color)]"
         >
-          {isNativeAndroid ? (
+          {isProcessing ? (
+            <>
+              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+              <span>APPLYING UPDATE...</span>
+            </>
+          ) : isNativeAndroid ? (
             <>
               <Download className="w-3.5 h-3.5" />
               <span>DOWNLOAD APK UPDATE</span>

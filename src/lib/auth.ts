@@ -181,6 +181,13 @@ export async function getCurrentUser(): Promise<User | null> {
 }
 
 /**
+ * Alias helper function
+ */
+export async function getUserFromSession(_req?: any): Promise<User | null> {
+  return getCurrentUser();
+}
+
+/**
  * Clears the session cookie.
  */
 export async function clearSessionCookie() {

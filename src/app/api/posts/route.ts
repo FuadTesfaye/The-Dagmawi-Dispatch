@@ -1,21 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withReadDb } from '@/db';
-import { posts, trackedChannels, postReactions, comments, aiReviews } from '@/db/schema';
-import { eq, desc, and, sql, ilike } from 'drizzle-orm';
+import { posts, trackedChannels, postReactions, comments, aiReviews, postTags } from '@/db/schema';
+import { eq, desc, and, sql, ilike, inArray } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/auth';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = req.nextUrl;
     const channel = searchParams.get('channel');
     const search = searchParams.get('search');
+    const tag = searchParams.get('tag');
     const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
     const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)));
     const offset = (page - 1) * limit;
 
     const user = await getCurrentUser();
 
-    // Query posts with channel info
+    // Query posts with channel info & tag filtering
     const postRows = await withReadDb(async (db) => {
       const conditions = [];
 
@@ -25,6 +28,27 @@ export async function GET(req: NextRequest) {
 
       if (search && search.trim()) {
         conditions.push(ilike(posts.text, `%${search.trim()}%`));
+      }
+
+      // If topic tag requested, filter by postTags or text match
+      if (tag && tag !== 'all') {
+        const taggedPosts = await db
+          .select({ channel: postTags.channel, postId: postTags.postId })
+          .from(postTags)
+          .where(eq(postTags.tag, tag.toLowerCase()))
+          .limit(100);
+
+        if (taggedPosts.length > 0) {
+          conditions.push(
+            sql`(${posts.channel}, ${posts.id}) IN (${sql.join(
+              taggedPosts.map((tp) => sql`(${tp.channel}, ${tp.postId})`),
+              sql`, `
+            )})`
+          );
+        } else {
+          // Fallback keyword search for this tag
+          conditions.push(ilike(posts.text, `%${tag}%`));
+        }
       }
 
       const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
@@ -132,6 +156,21 @@ export async function GET(req: NextRequest) {
         )
         .groupBy(aiReviews.channel, aiReviews.postId);
 
+      // Fetch tags for these posts
+      const tagsRaw = await db
+        .select({
+          channel: postTags.channel,
+          postId: postTags.postId,
+          tag: postTags.tag,
+        })
+        .from(postTags)
+        .where(
+          sql`(${postTags.channel}, ${postTags.postId}) IN (${sql.join(
+            postKeys.map((pk) => sql`(${pk.channel}, ${pk.id})`),
+            sql`, `
+          )})`
+        );
+
       return postRows.map((p) => {
         const reactions: Record<string, number> = {};
         for (const r of reactionsRaw) {
@@ -149,6 +188,10 @@ export async function GET(req: NextRequest) {
 
         const aiReviewCount =
           aiCountRaw.find((a) => a.channel === p.channel && a.postId === p.id)?.count || 0;
+
+        const postTagList = tagsRaw
+          .filter((t) => t.channel === p.channel && t.postId === p.id)
+          .map((t) => t.tag);
 
         const raw = p.rawJson as any;
         const forwardFrom = raw?.forwardFrom || (raw?.fwdFrom ? {
@@ -179,6 +222,7 @@ export async function GET(req: NextRequest) {
           ...p,
           forwardFrom,
           replyTo,
+          tags: postTagList,
           channelInfo: {
             id: p.channel,
             name: p.channelName || p.channel,
@@ -199,58 +243,9 @@ export async function GET(req: NextRequest) {
       page,
     });
   } catch (err: any) {
-    console.error('[api/posts] Error querying posts (returning initial sample dispatches):', err);
-    const fallbackPosts = [
-      {
-        channel: 'dagmawi_babi',
-        id: 1042,
-        date: new Date().toISOString(),
-        localDate: new Date().toISOString().split('T')[0],
-        text: '✦ ROYAL DISPATCH #1042: Telegram broadsheet indexing engine operational.\nAll autonomous intelligence layers, Groq AI pools, and instant teletype feeds are now synchronized.',
-        mediaType: 'text',
-        hasCaptionOnly: false,
-        permalink: 'https://t.me/dagmawi_babi/1042',
-        viewsCount: 14200,
-        createdAt: new Date().toISOString(),
-        channelInfo: {
-          id: 'dagmawi_babi',
-          name: 'Dagmawi Babi',
-          avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=dagmawi_babi',
-          isVerified: true,
-          subscriberCount: 24500,
-        },
-        reactions: { '👑': 24, '🔥': 18, '⚡': 12 },
-        userReactions: [],
-        commentCount: 6,
-        aiReviewCount: 1,
-      },
-      {
-        channel: 'tikvahethiopia',
-        id: 8840,
-        date: new Date(Date.now() - 3600000).toISOString(),
-        localDate: new Date().toISOString().split('T')[0],
-        text: '📰 የዜና ማጠቃለያ — The Lurkening real-time wire ingestion confirms active monitoring for breaking developments and regional bulletins.',
-        mediaType: 'text',
-        hasCaptionOnly: false,
-        permalink: 'https://t.me/tikvahethiopia/8840',
-        viewsCount: 84000,
-        createdAt: new Date(Date.now() - 3600000).toISOString(),
-        channelInfo: {
-          id: 'tikvahethiopia',
-          name: 'Tikvah Ethiopia',
-          avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=tikvahethiopia',
-          isVerified: true,
-          subscriberCount: 1240000,
-        },
-        reactions: { '⚡': 45, '👑': 32 },
-        userReactions: [],
-        commentCount: 14,
-        aiReviewCount: 0,
-      },
-    ];
-
+    console.error('[api/posts] Error querying posts:', err);
     return NextResponse.json({
-      posts: fallbackPosts,
+      posts: [],
       hasMore: false,
       page: 1,
     });

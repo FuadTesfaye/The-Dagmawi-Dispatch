@@ -4,8 +4,24 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Post, TrackedChannel } from '@/lib/types';
 import { PostCard } from '@/components/post-card';
 import { BabiometerWidget } from '@/components/babiometer-widget';
+import { RoastBattleCard } from '@/components/roast-battle-card';
+import { CrossChannelDigestCard } from '@/components/cross-channel-digest-card';
+import { FeedTagFilter } from '@/components/feed-tag-filter';
+import { WeeklyLeaderboardWidget } from '@/components/weekly-leaderboard-widget';
 import { useRealtime, useToast, useAuth } from '@/components/providers';
-import { Search, Radio, Loader2, ArrowUpRight, Bot, Sparkles, Check, Plus, Users, Compass } from 'lucide-react';
+import {
+  Search,
+  Radio,
+  Loader2,
+  ArrowUpRight,
+  Bot,
+  Sparkles,
+  Check,
+  Plus,
+  Compass,
+  BarChart3,
+  Flame,
+} from 'lucide-react';
 import Link from 'next/link';
 
 import { SearchModal } from '@/components/search-modal';
@@ -24,6 +40,7 @@ export default function HomePage() {
   const [posts, setPosts] = useState<Post[]>(initialPosts);
   const [channels, setChannels] = useState<TrackedChannel[]>(initialChannels);
   const [selectedChannel, setSelectedChannel] = useState<string>('all');
+  const [selectedTag, setSelectedTag] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [page, setPage] = useState<number>(1);
   const [hasMore, setHasMore] = useState<boolean>(true);
@@ -43,7 +60,7 @@ export default function HomePage() {
       .catch(() => {});
   }, []);
 
-  // Fetch Posts with SWR cache
+  // Fetch Posts with SWR cache & topic tag filtering
   const fetchPosts = useCallback(
     async (pageNum = 1, isInitial = false) => {
       const queryParams = new URLSearchParams({
@@ -52,6 +69,9 @@ export default function HomePage() {
       });
       if (selectedChannel && selectedChannel !== 'all') {
         queryParams.set('channel', selectedChannel);
+      }
+      if (selectedTag && selectedTag !== 'all') {
+        queryParams.set('tag', selectedTag);
       }
       if (searchQuery.trim()) {
         queryParams.set('search', searchQuery.trim());
@@ -90,7 +110,7 @@ export default function HomePage() {
         setLoadingMore(false);
       }
     },
-    [selectedChannel, searchQuery, showToast]
+    [selectedChannel, selectedTag, searchQuery, showToast]
   );
 
   useEffect(() => {
@@ -158,12 +178,12 @@ export default function HomePage() {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 flex flex-col gap-6 sm:gap-8 font-teletype">
+    <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-6 flex flex-col gap-6 sm:gap-8 font-teletype">
       {/* Frontpage Broadsheet Masthead Banner */}
       <div className="p-4 sm:p-8 md:p-10 bg-[var(--card-bg)] border-2 border-[var(--ink-border-heavy)] shadow-[4px_4px_0px_0px_var(--shadow-color)] sm:shadow-[6px_6px_0px_0px_var(--shadow-color)] flex flex-col gap-4 sm:gap-6 text-center items-center">
         {/* Scribe Stamp */}
         <div className="inline-flex items-center gap-1.5 sm:gap-2 stamp-badge-gold stamp-badge text-[10px] sm:text-xs">
-          <span>§ UNIVERSAL TELEGRAM COMMUNITY LURKER</span>
+          <span>§ UNIVERSAL TELEGRAM COMMUNITY CHRONICLE</span>
           <span>·</span>
           <span>ISSUE NO. 88</span>
         </div>
@@ -173,8 +193,8 @@ export default function HomePage() {
           <h1 className="font-broadsheet font-black text-3xl sm:text-6xl lg:text-7xl text-[var(--paper-cream)] tracking-tight uppercase">
             The Lurkening
           </h1>
-          <p className="font-teletype text-[11px] sm:text-sm text-[var(--paper-muted)] max-w-2xl mx-auto leading-relaxed uppercase">
-            Telegram channel monitoring, Groq AI editorial intelligence, and multi-channel discovery.
+          <p className="font-teletype text-[11px] sm:text-sm text-[var(--paper-muted)] max-w-2xl mx-auto leading-relaxed uppercase font-sans">
+            Cross-channel daily digests, Groq AI editorial roasts, weekly battle arenas, and real-time archival discovery.
           </p>
         </div>
 
@@ -197,8 +217,22 @@ export default function HomePage() {
             <Search className="w-4 h-4 text-[#d97706]" />
             <span>SEARCH ARCHIVE & GRAPH</span>
           </button>
+
+          <Link
+            href="/roadmap"
+            className="stamp-btn flex items-center gap-1.5 !py-2 !px-3.5 sm:!py-2.5 sm:!px-5 text-xs active:scale-95 hover:border-[#d97706]"
+          >
+            <Compass className="w-4 h-4 text-[#d97706]" />
+            <span>PUBLIC ROADMAP</span>
+          </Link>
         </div>
       </div>
+
+      {/* ─── CROSS-CHANNEL DAILY DIGEST (RETENTION FLOOR) ─────────── */}
+      <CrossChannelDigestCard />
+
+      {/* ─── WEEKLY ROAST BATTLE ARENA ───────────────────────────── */}
+      <RoastBattleCard />
 
       {/* Stories / Monitored Channels Carousel Bar */}
       <div className="broadsheet-card p-3 sm:p-4 flex flex-col gap-2.5 overflow-hidden">
@@ -208,7 +242,7 @@ export default function HomePage() {
             <span>Active Telegraph Channels</span>
           </div>
           <Link href="/channels" className="text-[#d97706] hover:underline flex items-center gap-0.5">
-            <span>Explore All</span>
+            <span>Explore All Channels</span>
             <ArrowUpRight className="w-3 h-3" />
           </Link>
         </div>
@@ -296,6 +330,12 @@ export default function HomePage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
         {/* Left / Main Post Stream */}
         <div className="lg:col-span-8 flex flex-col gap-4 sm:gap-6">
+          {/* Topic Tag Filtering Bar */}
+          <FeedTagFilter
+            activeTag={selectedTag}
+            onSelectTag={(t) => setSelectedTag(t)}
+          />
+
           {/* Filter & Search Bar */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
             {/* Filter Selection Chips */}
@@ -359,7 +399,7 @@ export default function HomePage() {
                 <p className="text-xs text-[var(--paper-muted)] max-w-sm font-sans">
                   {searchQuery
                     ? `No records matched "${searchQuery.toUpperCase()}".`
-                    : 'No transmissions logged for this channel.'}
+                    : 'No transmissions logged for this topic filter.'}
                 </p>
               </div>
             ) : (
@@ -394,8 +434,34 @@ export default function HomePage() {
 
         {/* Right Rail (Sticky Desktop Broadsheet Sidebar) */}
         <aside className="lg:col-span-4 hidden lg:flex flex-col gap-6 sticky top-20 font-teletype">
+          {/* Weekly Leaderboard Honor Roll */}
+          <WeeklyLeaderboardWidget />
+
           {/* Lurkometer Widget */}
           <BabiometerWidget channel={selectedChannel === 'all' ? (channels[0]?.id || 'dagmawi_babi') : selectedChannel} />
+
+          {/* Creator Report Card Callout */}
+          <div className="broadsheet-card p-5 flex flex-col gap-3 border border-[#d97706]/60 bg-[#241c10]/20">
+            <div className="flex items-center justify-between border-b border-[var(--ink-border)] pb-2">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-[#d97706]" />
+                <h3 className="text-xs font-bold uppercase text-[var(--paper-cream)] tracking-wider">
+                  Creator Pulse
+                </h3>
+              </div>
+              <span className="stamp-badge stamp-badge-gold text-[9px]">ANALYTICS</span>
+            </div>
+            <p className="text-xs text-[var(--paper-muted)] font-sans leading-relaxed">
+              Are you a channel author? Inspect your posting rhythms, audience heatmaps, and AI roast report card.
+            </p>
+            <Link
+              href="/creator"
+              className="stamp-btn !bg-[#d97706] !text-black !border-[#d97706] hover:!bg-[var(--paper-cream)] justify-between !py-2 text-xs active:scale-95"
+            >
+              <span>OPEN CREATOR REPORT</span>
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
 
           {/* Monitored Channels Card */}
           <div className="broadsheet-card p-5 flex flex-col gap-4">
@@ -442,48 +508,23 @@ export default function HomePage() {
               ))}
             </div>
           </div>
-
-          {/* Groq AI Editorial Intelligence Card */}
-          <div className="broadsheet-card p-5 flex flex-col gap-3">
-            <div className="flex items-center gap-2 text-xs font-bold text-[#d97706] uppercase tracking-wider border-b border-[var(--ink-border)] pb-2">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Groq AI Editorial Intelligence</span>
-            </div>
-            <p className="text-xs text-[var(--paper-muted)] font-sans leading-relaxed">
-              Multi-model Groq Llama-3.3 engine generates on-demand executive summaries, satire roasts, context checks, and ELI5 breakdowns for every post in real time.
-            </p>
-          </div>
-
-          {/* Telegram Bot Card */}
-          <div className="broadsheet-card p-5 flex flex-col gap-3 border-2 border-[#785a28] bg-gradient-to-br from-[#241c10]/20 to-[var(--card-bg)]">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Bot className="w-4 h-4 text-[#d97706]" />
-                <span className="text-xs font-bold uppercase text-[var(--paper-cream)]">Telegram Bot</span>
-              </div>
-              <span className="stamp-badge stamp-badge-gold text-[9px]">ACTIVE</span>
-            </div>
-            <p className="text-xs text-[var(--paper-muted)] font-sans leading-relaxed" suppressHydrationWarning>
-              Command digests, channel searches, and live summaries directly in Telegram.
-            </p>
-            <a
-              href={`https://t.me/${botUsername}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              suppressHydrationWarning
-              className="stamp-btn !bg-[#d97706] !text-black !border-[#d97706] hover:!bg-[var(--paper-cream)] justify-between !py-2 text-xs active:scale-95"
-            >
-              <span suppressHydrationWarning>Summon @{botUsername}</span>
-              <ArrowUpRight className="w-3.5 h-3.5" />
-            </a>
-          </div>
         </aside>
       </div>
 
-      {/* Footer Notice */}
+      {/* Footer Notice with Roadmap link */}
       <div className="text-center font-teletype text-[10px] text-[var(--paper-muted)] border-t border-[var(--ink-border)] pt-6 uppercase flex flex-col sm:flex-row items-center justify-between gap-2">
         <span>THE LURKENING · UNIVERSAL TELEGRAM CHRONICLE</span>
-        <span>AUTONOMOUS INGESTION ENGINE ACTIVE</span>
+        <div className="flex items-center gap-4">
+          <Link href="/roadmap" className="hover:text-[#d97706] transition-colors">
+            PUBLIC ROADMAP & VOTING
+          </Link>
+          <Link href="/creator" className="hover:text-[#d97706] transition-colors">
+            CREATOR REPORT CARD
+          </Link>
+          <Link href="/app" className="hover:text-[#d97706] transition-colors">
+            MOBILE SUITE
+          </Link>
+        </div>
       </div>
 
       {/* Hero Search Modal */}
